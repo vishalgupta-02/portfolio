@@ -22,13 +22,6 @@ export default function RecentExperience() {
             description2="Improved website accessibility and discoverability by developing SEO-optimized frontend pages, resulting in enhanced user engagement and search engine visibility"
             description3="Collaborated with cross-functional teams to integrate voice processing APIs and debug latency issues in real-time streaming pipelines"
           />
-          {/* <ExperienceCard
-            role="Web Development Intern"
-            company="Coginfyz Technologies"
-            description1="Developed a full-stack job portal using the MERN stack with interactive job listings and user profiles, optimizing MongoDB queries to reduce load times by 40%"
-            description2="Implemented responsive UI with Tailwind CSS, improving cross-device navigation speed by 40% and enhancing user engagement during testing phases"
-            description3="Designed RESTful APIs for authentication and job management with JWT-based security and role-based access control"
-          /> */}
         </div>
         <div>
           <Button

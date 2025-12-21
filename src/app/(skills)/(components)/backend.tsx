@@ -3,7 +3,7 @@
 export default function Backend() {
   return (
     <>
-      <ul className="space-y-2 text-md font-semibold text-zinc-700">
+      <ul className="space-y-2 text-md font-semibold text-zinc-700 dark:text-zinc-300">
         <li className="leading-relaxed text-zinc-500 uppercase tracking-widest">
           Backend
         </li>

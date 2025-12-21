@@ -10,7 +10,7 @@ export default function Exploring() {
             Currently learning and experimenting with.
           </p>
         </div>
-        <ul className="grid grid-cols-2 md:grid-cols-4 text-md px-8 py-4 gap-6 text-zinc-900 font-medium">
+        <ul className="grid grid-cols-2 md:grid-cols-4 text-md px-8 py-4 gap-6 text-zinc-900 dark:text-zinc-400 font-medium">
           <li>Kubernetes</li>
           <li>GitLab</li>
           <li>Three.js</li>

@@ -12,7 +12,7 @@ export default function WorkingKnowledge() {
             Solid understanding, comfortable in production.
           </p>
         </div>
-        <ul className="grid grid-cols-2 md:grid-cols-4 text-md px-8 py-6 gap-6 text-zinc-900 font-medium">
+        <ul className="grid grid-cols-2 md:grid-cols-4 text-md px-8 py-6 gap-6 text-zinc-900 dark:text-zinc-400 font-medium">
           <li>JavaScript</li>
           <li>Python</li>
           <li>Vue.js</li>

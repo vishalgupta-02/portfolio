@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/custom/header";
 import Footer from "@/components/custom/footer";
 import MainLayout from "@/components/custom/main-layout";
+import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/ui/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,12 +32,20 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
-        <Header />
-        <MainLayout>
-          <main>{children}</main>
-        </MainLayout>
-        <Footer />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          disableTransitionOnChange
+        >
+          <Header />
+          <MainLayout>
+            <main>{children}</main>
+          </MainLayout>
+          <Toaster />
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

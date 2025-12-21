@@ -6,10 +6,10 @@ export default function Footer() {
   return (
     <footer className="w-full border-t border-zinc-300 px-12 py-8 text-center">
       <div className="flex justify-between items-center my-4 mx-auto max-w-5xl px-8 py-4">
-        <p className="text-sm text-zinc-900">
+        <p className="text-sm text-zinc-900 dark:text-zinc-200">
           Built with Next.js + TypeScript and Tailwind CSS.
         </p>
-        <ul className="text-sm text-zinc-900">
+        <ul className="text-sm text-zinc-900 dark:text-zinc-200">
           <li className="inline mx-6 hover:text-teal-500">
             <Link href="https://www.github.com/vishal-gupta-02">GitHub</Link>
           </li>
@@ -23,7 +23,7 @@ export default function Footer() {
           </li>
         </ul>
       </div>
-      <p className="text-md text-zinc-700">
+      <p className="text-md text-zinc-700 dark:text-zinc-300">
         &copy; {new Date().getFullYear()}{" "}
         <span className="text-teal-500">Vishal Gupta</span>. All rights
         reserved.

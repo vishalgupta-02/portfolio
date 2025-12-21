@@ -13,13 +13,13 @@ export default function ExperienceCard({
         <h3 className="text-xl font-semibold mb-2 text-teal-500">{role}</h3>
         <h4 className="text-sm font-medium mb-2">{company}</h4>
         <ul className="px-4 py-2 space-y-2">
-          <li className="text-md text-zinc-700">
+          <li className="text-md text-zinc-700 dark:text-zinc-300">
             • <span className="ml-2">{description1}</span>
           </li>
-          <li className="text-md text-zinc-700">
+          <li className="text-md text-zinc-700 dark:text-zinc-300">
             • <span className="ml-2">{description2}</span>
           </li>
-          <li className="text-md text-zinc-700">
+          <li className="text-md text-zinc-700 dark:text-zinc-300">
             • <span className="ml-2">{description3}</span>
           </li>
         </ul>
