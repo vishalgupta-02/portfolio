@@ -8,7 +8,7 @@ export default function Hero() {
   const handleResumeDownload = () => {
     // Create a link element and trigger download
     const link = document.createElement("a");
-    link.href = "/resume.pdf";
+    link.href = "/pdfs/Vishal's_Resume.pdf";
     link.download = "Vishal_Gupta_Resume.pdf";
     document.body.appendChild(link);
     link.click();
@@ -44,7 +44,7 @@ export default function Hero() {
           </Link>
           <Button
             onClick={handleResumeDownload}
-            className="w-48 cursor-pointer rounded-none hover:bg-teal-600 dark:hover:bg-teal-800 dark:hover:text-white transition-colors duration-300"
+            className="w-48 cursor-pointer rounded-none hover:bg-teal-600 dark:hover:bg-teal-800 dark:hover:text-white transition-colors duration-300 border border-zinc-800 dark:border-zinc-300"
           >
             Download Resume
             <Download className="ml-2 h-8 w-8" />

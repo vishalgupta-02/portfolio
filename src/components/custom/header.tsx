@@ -9,13 +9,14 @@ export default function Header() {
       <div className="w-full max-w-5xl mx-auto px-8 py-4 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/">
-            <h1 className="text-xl font-semibold hover:text-teal-500 tracking-wide">
-              VishalGupta
+            <h1 className="text-2xl font-semibold hover:text-teal-500 tracking-wide">
+              Vishal
+              <span className="text-teal-400 dark:text-teal-700">Gupta</span>
             </h1>
           </Link>
         </div>
         <nav>
-          <ul className="flex space-x-12 justify-center items-center">
+          <ul className="flex space-x-12 justify-center items-center font-semibold">
             <li>
               <Link
                 href="/about"
