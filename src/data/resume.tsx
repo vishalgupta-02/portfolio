@@ -277,7 +277,13 @@ export const DATA = {
       image:
         'https://pub-83c5db439b40468498f97946200806f7.r2.dev/hackline/hack-western.png',
       mlh: 'https://s3.amazonaws.com/logged-assets/trust-badge/2019/mlh-trust-badge-2019-white.svg',
-      links: [],
+      links: [
+        {
+          href: '',
+          icon: '',
+          title: '',
+        },
+      ],
     },
   ],
 } as const
