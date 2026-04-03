@@ -1,0 +1,310 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 03'
+publishedAt: '2026-04-04'
+updatedAt: '2026-04-04'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# Process & Threads
+
+### Processes
+
+A **process** is an independent program in execution.
+
+- Has its own memory space
+- Runs separately from other processes
+- Example: Opening Chrome creates a new process
+
+### Threads
+
+A **thread** is a smaller unit of execution inside a process.
+
+- Shares memory with other threads in the same process
+- Lightweight and faster to create
+- Example: Multiple tabs running inside one app process
+
+### Key Differences
+
+- Memory
+  - Process → Separate memory
+  - Thread → Shared memory
+- Communication
+  - Process → Slower (IPC needed)
+  - Thread → Faster (shared data)
+- Overhead
+  - Process → Heavy
+  - Thread → Lightweight
+- Crash Impact
+  - Process → Isolated (safer)
+  - Thread → Can crash entire process
+
+### Real-World Analogy
+
+1. Process = Building
+2. Threads = People working inside it
+
+- Different buildings don’t share rooms (process isolation)
+- People inside can easily share resources (threads)
+
+### Why It Matters
+
+- Impacts performance & scalability
+- Crucial for:
+  - Backend systems
+  - Multithreading
+  - Parallel processing
+  - High-performance apps
+
+## <u>Pro Tip</u> :)
+
+- Use processes for isolation & safety, threads for speed & efficiency.
+
+# echo $PATH
+
+**echo** is used to display text or variables in the terminal.
+
+### Basic Usage
+
+```bash
+echo "Hello World"
+```
+
+### Common uses
+
+1. Print variables:
+
+```bash
+echo $HOME
+```
+
+2. Add text to a file:
+
+```bash
+echo "Hello" >> file.txt
+```
+
+3. Debug scripts:
+
+```bash
+echo "Step 1 completed"
+```
+
+## <u>Pro tip</u> :)
+
+- echo is your simplest debugging tool — fast, direct, and always available.
+
+# Bash files - .bash/.bashrc/.bashprofile
+
+Bash or any shell uses config files to set up your shell environment every time it starts.
+
+- Aliases
+- Environment variables
+- PATH updates
+- Custom scripts
+
+### Key Bash files
+
+1. .bashrc
+
+- Runs on every interactive shell
+- Best for:
+  - Aliases (alias ll="ls -l")
+  - Functions
+  - Prompt customization
+- Most commonly used file
+
+2. .bash_profile
+
+- Runs on login shells (when you log in)
+- Best for:
+  - Environment variables
+  - Startup programs
+- Often calls .bashrc inside it
+
+3. .profile
+
+- More generic version (works beyond bash)
+- Used if .bash_profile is missing
+
+## <u>Pro tip</u> :)
+
+Treat your .bashrc like your dev setup script — version it, refine it, own it.
+
+# Aliases
+
+An alias is a shortcut for a longer command. It makes your life easy
+
+- Saves time + reduces typing
+
+### Basic Usage
+
+```bash
+alias ll="ls -l"
+```
+
+- Now instead of typing ls -l, just type:
+
+```bash
+ll
+```
+
+### Common Examples
+
+1. Safer delete:
+
+```bash
+alias rm="rm -i"
+```
+
+2. Human-readable listing:
+
+```bash
+alias lh="ls -lh"
+```
+
+3. Git shortcuts:
+
+```bash
+alias gs="git status"
+alias gc="git commit"
+```
+
+### Make Them Permanent (if you want to)
+
+Add them to:
+
+- .bashrc (Bash)
+- .zshrc (Zsh)
+
+Then reload:
+
+```bash
+source ~/.bashrc
+```
+
+### View & Remove Aliases
+
+1. List all:
+
+```bash
+alias
+```
+
+2. Remove:
+
+```bash
+unalias ll
+```
+
+## <u>Pro tip</u> :)
+
+- Aliases turn your terminal into a personalized toolkit — optimized for how you work.
+
+--
+
+# export command
+
+**export** is used to set environment variables and make them available to child processes.
+
+- Without export, variables stay local to the current shell.
+
+### Basic Usage
+
+```bash
+export NAME="value"
+```
+
+### Why export matters
+
+Used for:
+
+- API keys
+- Config values
+- System paths
+- App settings
+
+Example -
+
+```bash
+export NODE_ENV="production"
+```
+
+### Without vs With Export
+
+- Without export:
+
+```bash
+MY_VAR="hello"
+```
+
+Not visible to child processes
+
+- With export:
+
+```bash
+export MY_VAR="hello"
+```
+
+Accessible everywhere (child processes)
+
+**Main concept**
+
+- export moves a variable from shell scope → environment scope
+
+## <u>Pro tip</u>
+
+- Environment variables are inherited downward (parent → child)
+- Not upward
+
+# pwd (Present working directory)
+
+**pwd** stands for print working directory — it shows your current location in the filesystem.
+
+### Basic Usage
+
+```bash
+pwd
+```
+
+- Outputs the full path of your current directory
+
+Output example -
+
+```bash
+/home/user/projects/my-app
+```
+
+### Why it matters
+
+- Helps you stay oriented in the terminal
+- Essential when navigating deep folder structures
+- Useful in scripts and debugging
+
+## <u>Pro tip</u> :)
+
+- If you're lost in the terminal, pwd is your GPS.
+
+# . -> current & . -> parent
+
+- . -> current directory
+- .. -> parent directory (one level up)
+
+**Examples**
+
+```bash
+cd .
+```
+
+- Stay in the same directory (useful in scripts)
+
+```bash
+cd ..
+```
+
+- Move one level up
+
+## Pro tip
+
+- . keeps you grounded, .. moves you upward — master both to navigate effortlessly.

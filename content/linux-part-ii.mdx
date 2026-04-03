@@ -1,0 +1,179 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 02'
+publishedAt: '2026-04-03'
+updatedAt: '2026-04-03'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# ls command
+
+**ls** stands for “list” and is used to display files and directories in Unix-like systems.
+It’s intentionally short — a design choice from early Unix to make commands fast and efficient to type.
+
+A fundamental tool in Unix-like operating systems (Linux, macOS, BSD) used to list the contents of a directory. It displays the files and folders in your current working directory in alphabetical order
+
+1. **ls -l** (Long Listing): Displays detailed information, including file permissions, owner, group, size in bytes, and last modification date.
+
+2. **ls -a** (All): Includes hidden files (those starting with a dot, like .bashrc) which are normally hidden.
+
+3. **ls -h** (Human-readable): Used with -l to show file sizes in a readable format like KB, MB, or GB instead of raw bytes.
+
+4. **ls -t** (Time): Sorts files by the time they were last modified, showing the newest files first.
+
+5. **ls -r** (Reverse): Reverses the sorting order (e.g., ls -tr shows oldest files last).
+
+6. **ls -R** (Recursive): Lists all files in the current directory and all its subdirectories.
+
+7. **ls -F** (Classify): Appends a character to indicate file type: / for directories, \* for executables, and @ for symbolic links.
+
+### How ls Works Internally
+
+When you run:
+
+```bash
+ls -l
+```
+
+Behind the scenes:
+
+1. Opens the directory
+2. Reads file names
+3. Fetches metadata (if needed)
+4. Sorts results
+5. Prints output
+
+### Why ls is short
+
+Unix commands are designed to be:
+
+- Short (ls, cp, mv)
+- Composable
+- Efficient
+
+This philosophy originated at Bell Labs and is standardized by POSIX
+
+# (Open .) command
+
+**open .** is NOT a standard Linux command.
+It works on macOS, not typical Linux systems
+
+### On macOS
+
+```bash
+open .
+```
+
+- Opens the current directory (.) in Finder (GUI file manager)
+- . means → current working directory
+
+### On Linux (Equivalent Commands)
+
+```bash
+xdg-open .
+```
+
+- Opens current directory in default file manager
+- Works across most Linux distros (Ubuntu, Debian, etc.)
+
+# cd command (Change directory)
+
+**cd** stands for change directory — it lets you navigate between folders in your system.
+
+```bash
+cd folder-name
+```
+
+### Common Shortcuts
+
+- cd .. → Go one level up
+- cd ~ → Go to home directory
+- cd / → Go to root directory
+- cd - → Switch to previous directory
+
+## <u>Pro tip</u> :)
+
+- Mastering cd is like mastering movement in a game — everything becomes faster, smoother, and more efficient.
+
+# touch command
+
+**touch** is used to create empty files or update timestamps of existing files.
+
+### Basic Usage
+
+```bash
+touch file.txt
+```
+
+- Creates a new empty file (if it doesn’t exist)
+
+### Ways you can use touch
+
+1. Create multiple files:
+
+```bash
+touch index.html style.css app.js
+```
+
+2. Update last modified time:
+
+```bash
+touch file.txt
+```
+
+3. Create files with paths:
+
+```bash
+touch src/components/Button.tsx
+```
+
+### Conclusion
+
+touch is the quickest way to turn ideas into files — zero friction, instant setup.
+
+# mkdir command
+
+**mkdir** stands for make directory — it’s used to create new folders in your filesystem.
+
+### Basic Usage
+
+```bash
+mkdir folder-name
+```
+
+### Common Use Cases
+
+1. Create multiple folders:
+
+```bash
+mkdir src components utils
+```
+
+2. Create nested directories:
+
+```bash
+mkdir -p src/components/ui
+```
+
+3. Set permissions while creating:
+
+```bash
+mkdir -m 755 my-folder
+```
+
+### Why this Matters
+
+- Helps you quickly organize projects
+- Essential for clean architecture & structure
+- Widely used in scripts and automation
+
+## <u>Pro tip</u> :)
+
+- A well-structured project starts with mkdir — clean folders, clean code.
+
+---
+
+Well, that's it for today guys. I hope you have learnt something valuable.
+
+See you Tomorrow. Feel free to reach out to me in case if you need any help.

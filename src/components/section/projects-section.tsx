@@ -1,11 +1,15 @@
+'use client'
+
 import BlurFade from '@/components/magicui/blur-fade'
 import { ProjectCard } from '@/components/project-card'
 import { DATA } from '@/data/resume'
 import { Button } from '../ui/button'
+import { useRouter } from 'next/navigation'
 
 const BLUR_FADE_DELAY = 0.04
 
 export default function ProjectsSection() {
+  const navigate = useRouter()
   return (
     <section id='projects'>
       <div className='flex min-h-0 flex-col gap-y-8'>
@@ -51,7 +55,11 @@ export default function ProjectsSection() {
             </BlurFade>
           ))}
         </div>
-        <Button className='cursor-pointer'>See more</Button>
+        <Button
+          className='cursor-pointer'
+          onClick={() => navigate.push('/projects')}>
+          See more
+        </Button>
       </div>
     </section>
   )

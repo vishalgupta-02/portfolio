@@ -1,0 +1,186 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 01'
+publishedAt: '2026-04-02'
+updatedAt: '2026-04-02'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# Terminal Emulators
+
+A software application that simulates a physical, text-based video terminal within a modern graphical interface, allowing users to interact with a computer's command-line shell
+
+Top Terminal Emulators by Platform
+
+1. Linux/Unix: GNOME Terminal, Konsole, Tilix (tiling).
+2. macOS: iTerm2, Ghostty (modern/fast), Terminal.app.
+3. Windows: Windows Terminal (modern), PuTTY.
+4. Cross-platform: WezTerm, Kitty.
+5. Android: Termux (highly popular), Terminal Emulator for Android.
+
+Few Features are -
+
+1. Customization: Themes, fonts, and color schemes.
+2. Multiplexing: Tabs and split panes for multitasking.
+3. Performance: Fast rendering for high-output tools.
+4. Functionality: Support for true color, ligatures, and unicode.
+
+# Shell
+
+The shell is a program that takes commands from the keyboard and gives them to the operating system to perform.
+On most Linux systems a program called bash (which stands for Bourne Again SHell, an enhanced version of the original Unix shell program, sh, written by Steve Bourne) acts as the shell program. Besides bash, there are other shell programs available for Linux systems. These include: ksh, tcsh and zsh.
+
+In other words, a command-line interpreter that acts as a bridge between the user and the kernel.
+
+1. Interprets and validates user commands
+2. Converts commands into system calls
+3. Executes built-in and external programs
+4. Displays output or error messages
+5. Provides scripting capabilities
+
+# An Executable file in Linux
+
+When you type a command like - ls, echo. What happens after the input is entered, how does the system know and why it executes the command or the task correctly, efficiently and with accuracy, if the commands are correct.
+
+The system knows which command to run when given as the input. They do this using something called Executable file. Same as the files you use while installing an app.
+
+A file you can run directly.
+
+1.  Has execute permission (x)
+2.  Usually stored in directories like:
+
+- /bin
+- /usr/bin
+- /usr/local/bin
+
+Few Examples -
+
+1. ls → /bin/ls
+2. cp → /bin/cp
+3. mv → /bin/mv
+4. rm → /bin/rm
+5. cat → /bin/cat
+
+How Linux find commands
+
+1. When you type:
+
+```bash
+ls
+```
+
+2. Linux checks directories in $PATH:
+
+```bash
+echo $PATH
+```
+
+3. Output (example):
+
+```bash
+/usr/local/bin:/usr/bin:/bin
+```
+
+4. It searches in order:
+
+/usr/local/bin
+/usr/bin
+/bin
+
+First match wins.
+
+### Create a basic executable file
+
+1. Create file
+
+```bash
+nano hello.sh
+```
+
+2. Add script
+
+```bash
+#!/bin/bash
+echo "Hello world"
+```
+
+3. Make executable - means giving the permission to execute the file
+
+```bash
+chmod +x hello.sh
+```
+
+4. Run it
+
+```bash
+./hello.sh
+```
+
+### Types of Shell
+
+While bash is the default on most systems, there are several other shells worth knowing about. Each has different strengths, so your choice depends on what you're doing.
+
+1. **Bash** is the most common shell you'll encounter. It's been around for decades, works on almost every Unix-like system, and is stable for production scripts. If you're writing scripts that need to run on servers or multiple machines, bash is a safe choice.
+
+2. **Zsh** is popular among developers who want more features. It has better autocomplete, theme support, and plugins (especially with Oh My Zsh). Many developers use it locally while keeping bash for remote servers.
+
+3. **Fish shell** is designed to be user-friendly out of the box. It has built-in syntax highlighting and smart autosuggestions. If you want a shell that works well without much configuration, Fish is worth trying.
+
+4. **Dash** is a minimal shell that's faster than bash. You'll see it used in system scripts where performance matters, but it's less commonly used directly by developers.
+
+5. **sh** is the POSIX standard shell - the most portable. If you need a script to run anywhere, write it in sh syntax.
+
+The shell you use locally versus on servers might be different. Most developers use zsh or Fish on their machines for a better interactive experience, but deploy bash scripts to servers for compatibility.
+
+# Where command
+
+Linux doesn’t have a single where command like Windows. Instead, it uses a few focused tools depending on what you’re trying to find.
+
+1. Finding Commands & Executables
+
+- whereis → shows binary, source, and manual files
+
+```bash
+whereis ls
+```
+
+- which → shows the actual path of a command
+
+```bash
+which python
+```
+
+- type → tells how a command is interpreted (alias, builtin, or file)
+
+```bash
+type cd
+```
+
+2. Finding Your Current Location
+
+- pwd → prints your current directory
+
+```bash
+pwd
+```
+
+3. Searching Files
+
+- find → powerful, real-time search
+
+```bash
+find /home -name "file.txt"
+```
+
+- locate → super fast (uses database, may be slightly outdated)
+
+```bash
+locate config.php
+```
+
+---
+
+Well, that's it for today guys. I hope you have learnt something valuable. I am following Kunal Kushwaha's videos on Linux, so that's way it is this way but he taught this in a good way.
+
+See you Tomorrow. Feel free to reach out to me in case if you need any help.
