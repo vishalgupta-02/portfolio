@@ -1,0 +1,375 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 05'
+publishedAt: '2026-04-06'
+updatedAt: '2026-04-06'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# sudo (superuser-do) command
+
+**sudo** stands for superuser do — it lets you run commands with admin (root) privileges.
+
+### Usage
+
+```bash
+sudo apt update
+```
+
+- Executes command with elevated permissions
+
+### Usecases
+
+- Install packages
+- Modify system files
+- Manage services
+- have highest power or permissions of the system
+
+### Why
+
+- Protects your system from accidental changes
+- Grants controlled access to powerful operations
+
+### Careful
+
+- Can modify or break your system
+- Always know what you’re running
+
+## <u>Pro tip</u> :)
+
+- sudo is power with responsibility — use it intentionally, not casually.
+- Use sudo only when necessary — it runs commands as root.
+
+# df (disk-free) command
+
+**df** stands for disk free — it shows available and used disk space on your system.
+
+### Usage
+
+```bash
+df
+```
+
+- Displays disk usage for all mounted filesystems
+
+### Usecases
+
+1. Human-readable format:
+
+```bash
+df -hg
+```
+
+2. Check specific path:
+
+```bash
+df -h /home
+```
+
+### Why
+
+- Monitor disk usage
+- Avoid running out of storage
+- Useful in servers & deployments
+
+## <u>Pro tip</u> :)
+
+- Always use -h for readability — raw bytes aren’t practical.
+- Use df to quickly check your system’s storage health.
+
+# du (disk-usage) command
+
+**du** stands for disk usage — it shows how much space files and directories are using.
+
+### Usage
+
+```bash
+du
+```
+
+- Displays size of files/folders in current directory
+
+### Usecases
+
+1. Human-readable:
+
+```bash
+du -h
+```
+
+2. Total size of a folder:
+
+```bash
+du -sh folder/
+```
+
+3. Sort largest files:
+
+```bash
+du -h | sort -hr
+```
+
+### Why
+
+- Find large files/folders
+- Clean up disk space
+- Debug storage issues
+
+## <u>Pro tip</u> :)
+
+- Use du -sh \* to quickly see what’s taking space.
+- Use du to track what’s eating your disk.
+
+### df v/s du
+
+- **df** → Shows disk space available (filesystem level)
+- **du** → Shows space used by files/folders (directory level)
+
+### Lament example or real world
+
+- df = “How full is my disk?”
+- du = “What is filling my disk?”
+
+# vi / vim command
+
+- **vi** → basic text editor
+- **vim** → Vi Improved (more powerful version)
+
+> Used to create and edit files directly in terminal
+
+### Open a file
+
+```bash
+vim file.txt
+```
+
+### Different modes
+
+1. Normal mode → navigate
+2. Insert mode → type text (i)
+3. Command mode → save/quit (:)
+
+### Commands most common ones
+
+- i → start typing
+- Esc → exit insert mode
+- :w → save
+- :q → quit
+- :wq → save & quit
+- :q! → quit without saving
+
+### Why
+
+- Works everywhere (servers, SSH, minimal systems)
+- Fast and keyboard-driven
+- Essential for dev & DevOps workflows
+
+## <u>Pro tip</u> :)
+
+- Vim feels hard at first, but once it clicks — it’s insanely fast.
+- Learn Vim once, use it everywhere.
+
+# head command
+
+**head** is used to display the first few lines of a file (default: 10 lines).
+
+### Usage
+
+```bash
+head file.txt
+```
+
+- shows first 10 lines
+
+### Usecases
+
+1. Show specific number of lines:
+
+```bash
+head -n 5 file.txt
+```
+
+2. Use with pipes:
+
+```bash
+cat file.txt | head
+```
+
+### Why
+
+- Quickly inspect large files
+- Useful for logs & debugging
+
+## <u>Pro tip</u> :)
+
+- Pair head with tail to explore files efficiently.
+- Use head to peek at the beginning of files instantly.
+
+# tail command
+
+**tail** shows the last few lines of a file (default: 10 lines).
+
+### Usage
+
+```bash
+tail file.txt
+```
+
+- Shows last 10 lines
+
+### Usecases
+
+1. Show specific lines:
+
+```bash
+tail -n 5 file.txt
+```
+
+2. Live logs (real-time updates):
+
+```bash
+tail -f app.log
+```
+
+### head & tail together
+
+```bash
+head -n 20 file.txt | tail -n 10
+```
+
+- Gets lines 11–20
+
+### Why the combo
+
+- Quickly slice parts of large files
+- Useful for logs, debugging, data inspection
+
+## <u>Pro tip</u> :)
+
+- head trims from top, tail trims from bottom — together they isolate exactly what you need.
+- Use tail for the end, combine with head for precision.
+
+# diff command
+
+**diff** is used to compare two files and show the differences between them.
+
+### Usage
+
+```bash
+diff file1.txt file2.txt
+```
+
+- Shows what lines were added, removed, or changed
+
+### Common Usecases
+
+1. Side-by-side comparison:
+
+```bash
+diff -y file1.txt file2.txt
+```
+
+2. Ignore whitespace:
+
+```bash
+diff -w file1.txt file2.txt
+```
+
+### Why
+
+- Track changes in files
+- Debug differences
+- Core concept behind version control (like Git)
+
+## <u>Pro tip</u> :)
+
+- diff is the foundation of how tools like Git detect changes.
+- Use diff to instantly spot what changed.
+
+# locate command
+
+**locate** is used to quickly search files by name using a pre-built database.
+
+### Usage
+
+```bash
+locate file.txt
+```
+
+- Finds all paths matching file.txt
+
+### Usecases
+
+1. Case-insensitive search:
+
+```bash
+locate -i file.txt
+```
+
+2. Limit results:
+
+```bash
+locate -n 5 file.txt
+```
+
+> Uses a database (not real-time search)
+> Update it with:
+
+```bash
+sudo updatedb
+```
+
+### Why
+
+- Much faster than find
+- Great for quick lookups
+
+## <u>Pro tip</u> :)
+
+- locate is fast because it searches an index, not the filesystem.
+- Use locate for speed, find for accuracy.
+
+# find command
+
+**find** is used to search files and directories in real-time based on name, type, size, etc.
+
+### Usage
+
+```bash
+find . -name "file.txt"
+```
+
+- Searches current directory (.) for file.txt
+
+### Usecases
+
+1. Case-insensitive search:
+
+```bash
+find . -iname "file.txt"
+```
+
+2. Find by type:
+
+```bash
+find . -type f      # files
+find . -type d      # directories
+```
+
+3. Find and delete:
+
+```bash
+find . -name "*.log" -delete
+```
+
+### Why is important
+
+- Real-time, accurate search
+- Extremely powerful with filters
+- Essential for automation & scripting
+
+## <u>Pro tip</u> :)
+
+- find is slower than locate, but always up-to-date and precise.
+- Use find when accuracy matters.

@@ -1,0 +1,306 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 06'
+publishedAt: '2026-04-07'
+updatedAt: '2026-04-07'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# chmod command
+
+**chmod** stands for change mode — used to set permissions (read, write, execute) on files and directories.
+
+```bash
+chmod 755 file.sh
+```
+
+- Sets permissions using numeric mode
+
+### Permission Basics
+
+- r → read (4)
+- w → write (2)
+- x → execute (1)
+
+> Combined
+>
+> - 7 = rwx
+> - 5 = r-x
+> - 4 = r--
+
+### Examples
+
+1. Make file executable:
+
+```bash
+chmod 755 script.sh
+```
+
+2. Read-only file:
+
+```bash
+chmod 444 file.txt
+```
+
+3. Private file:
+
+```bash
+chmod 600 secret.txt
+```
+
+### Symbolic Mode
+
+1. Add execute:
+
+```bash
+chmod +x script.sh
+```
+
+2. Remove write:
+
+```bash
+chmod -w file.txt
+```
+
+3. Set specific:
+
+```bash
+chmod u+x file.sh
+```
+
+### Why
+
+- Controls who can access or modify files
+- Critical for security and scripts
+
+## <u>Pro tip</u> :)
+
+- chmod +x is the fastest way to make scripts runnable.
+- Permissions define power — use chmod wisely.
+
+# whoami command
+
+**whoami** shows the current logged-in user.
+
+```bash
+whoami
+```
+
+- Outputs your username
+
+### Why
+
+- Verify current user
+- Useful with sudo and permissions
+- Helps in scripts & debugging
+
+## <u>Pro tip</u> :)
+
+- After using sudo, whoami tells you if you're running as root.
+- Always know who you are in the system.
+
+# chown command
+
+**chown** stands for change owner — used to change the owner and group of files or directories.
+
+```bash
+chown user file.txt
+```
+
+- Changes owner of file.txt
+
+### Examples
+
+1. Change owner + group:
+
+```bash
+chown user:group file.txt
+```
+
+2. Change recursively
+
+```bash
+chown -R user:group folder/
+```
+
+3. Using sudo:
+
+```bash
+sudo chown user file.txt
+```
+
+### Why
+
+- Controls who owns and manages files
+- Important for servers, permissions, deployments
+
+## <u>Pro tip</u> :)
+
+- Use chown -R carefully — it affects all files inside a directory.
+- Ownership defines control — chown lets you set it.
+
+# exec command
+
+**exec** is used to replace the current shell process with another command.
+
+- No new process is created — it takes over the current one
+
+```bash
+exec bash
+```
+
+- Replaces current shell with a new bash session
+
+### Examples
+
+1. Run script in same process:
+
+```bash
+exec ./script.sh
+```
+
+2. Redirect output permanently:
+
+```bash
+exec > output.txt
+```
+
+### Why
+
+- Avoids creating extra processes
+- Useful in scripts, containers, process management
+
+## <u>Pro tip</u> :)
+
+- After exec, there’s no going back — the original process is gone.
+- exec doesn’t run a command — it becomes it.
+
+# grep command
+
+**grep** is used to search for patterns (text) inside files or command output.
+
+```bash
+grep "error" file.txt
+```
+
+- Finds lines containing "error"
+
+### Uses
+
+1. Case-insensitive search:
+
+```bash
+grep -i "error" file.txt
+```
+
+2. Search recursively:
+
+```bash
+grep -r "error" .
+```
+
+3. Show line numbers:
+
+```bash
+grep -n "error" file.txt
+```
+
+### Why
+
+- Core tool for logs, debugging, filtering data
+- Works perfectly with pipes
+
+## <u>Pro tip</u> :)
+
+- Combine with pipes for power:
+
+```bash
+ls | grep ".js"
+```
+
+# history command
+
+**history** shows a list of previously executed commands in your terminal.
+
+```bash
+history
+```
+
+- Displays command history with line numbers
+
+### Uses
+
+1. Run a previous command:
+
+```bash
+!123
+```
+
+2. Search history:
+
+```bash
+history | grep "git"
+```
+
+3. Clear history:
+
+```bash
+history -c
+```
+
+### Why
+
+- Saves time (reuse commands)
+- Helps debugging and tracking actions
+
+## <u>Pro tip</u> :)
+
+- Press Ctrl + R for instant reverse search — fastest way to find past commands.
+- Your past commands are assets — use history to leverage them.
+
+# regex
+
+**Regex** (Regular Expression) is used to search, match, and manipulate text patterns.
+
+### Examples
+
+1. Match exact word:
+
+```bash
+grep "error" file.txt
+```
+
+2. Match any digit:
+
+```bash
+grep "[0-9]" file.txt
+```
+
+3. Match words starting with “a”:
+
+```bash
+grep "^a" file.txt
+```
+
+### Most used/common
+
+- . → any character
+- ('\*') → 0 or more
+- ('+') → 1 or more
+- ^ → start of line
+- $ → end of line
+- [] → character set
+
+### Why
+
+- Powerful text filtering
+- Used in:
+  - grep
+  - validation
+  - parsing logs/data
+
+## <u>Pro tip</u> :)
+
+- Regex looks complex, but mastering a few patterns covers most real-world use cases.
+- Regex lets you search smarter, not harder.

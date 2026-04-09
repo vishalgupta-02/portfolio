@@ -10,6 +10,46 @@ import HackathonsSection from '@/components/section/hackathons-section'
 import ProjectsSection from '@/components/section/projects-section'
 import WorkSection from '@/components/section/work-section'
 import { ArrowUpRight } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: `${DATA.name} | Software Engineer & Developer`,
+  description: DATA.description,
+  keywords: [
+    'software engineer',
+    'developer',
+    'full stack developer',
+    'web developer',
+    'React',
+    'Next.js',
+    'TypeScript',
+    'Node.js',
+    'portfolio',
+  ],
+  openGraph: {
+    title: `${DATA.name} | Software Engineer & Developer`,
+    description: DATA.description,
+    type: 'website',
+    url: DATA.url,
+    images: [
+      {
+        url: `${DATA.url}/og-image.jpg`,
+        width: 1200,
+        height: 630,
+        alt: DATA.name,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${DATA.name} | Software Engineer & Developer`,
+    description: DATA.description,
+    images: [`${DATA.url}/og-image.jpg`],
+  },
+  alternates: {
+    canonical: DATA.url,
+  },
+}
 
 const BLUR_FADE_DELAY = 0.04
 

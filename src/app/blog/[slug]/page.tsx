@@ -45,18 +45,32 @@ export async function generateMetadata({
   } = post;
 
   return {
-    title,
+    title: `${title} | 2AM Blog`,
     description,
+    keywords: [
+      'software engineering',
+      'programming',
+      'tutorial',
+      'blog',
+      'web development',
+      ...(title.toLowerCase().includes('linux') ? ['Linux', 'shell', 'terminal'] : []),
+    ],
+    authors: [{ name: DATA.name }],
+    creator: DATA.name,
     openGraph: {
       title,
       description,
       type: "article",
       publishedTime,
       url: `${DATA.url}/blog/${slug}`,
+      authors: [DATA.name],
       ...(image && {
         images: [
           {
-            url: `${DATA.url}${image}`,
+            url: image.startsWith('http') ? image : `${DATA.url}${image}`,
+            width: 1200,
+            height: 630,
+            alt: title,
           },
         ],
       }),
@@ -65,9 +79,13 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
+      creator: "@vishalgupta_02",
       ...(image && {
-        images: [`${DATA.url}${image}`],
+        images: [image.startsWith('http') ? image : `${DATA.url}${image}`],
       }),
+    },
+    alternates: {
+      canonical: `${DATA.url}/blog/${slug}`,
     },
   };
 }

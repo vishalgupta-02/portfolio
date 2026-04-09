@@ -4,18 +4,43 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { paginate, normalizePage } from '@/lib/pagination'
 import { ChevronRight } from 'lucide-react'
+import { DATA } from '@/data/resume'
 
 export const metadata: Metadata = {
-  title: '2AM',
-  description: 'Where thoughts don’t need permission.',
+  title: '2AM | Tech Blog',
+  description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
+  keywords: [
+    'tech blog',
+    'software engineering',
+    'Linux',
+    'web development',
+    'programming',
+    'tutorial',
+    'developer blog',
+    'coding',
+  ],
   openGraph: {
-    title: '2AM',
-    description: 'Where thoughts don’t need permission.',
+    title: '2AM | Tech Blog',
+    description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
+    type: 'website',
+    url: `${DATA.url}/blog`,
+    images: [
+      {
+        url: `${DATA.url}/og-blog.jpg`,
+        width: 1200,
+        height: 630,
+        alt: '2AM Blog',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: '2AM',
-    description: 'Where thoughts don’t need permission.',
+    title: '2AM | Tech Blog',
+    description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
+    images: [`${DATA.url}/og-blog.jpg`],
+  },
+  alternates: {
+    canonical: `${DATA.url}/blog`,
   },
 }
 
@@ -70,7 +95,7 @@ export default async function BlogPage({
                     <Link
                       className='flex items-start gap-x-2 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                       href={`/blog/${slug}`}>
-                      <span className='text-xs font-mono tabular-nums font-medium mt-[5px]'>
+                      <span className='text-xs font-mono tabular-nums font-medium mt-1.25'>
                         {String(indexNumber).padStart(2, '0')}.
                       </span>
                       <div className='flex flex-col gap-y-2 flex-1'>

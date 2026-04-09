@@ -1,0 +1,319 @@
+---
+title: 'Linux: The Thing Every Dev Should Know - Part 04'
+publishedAt: '2026-04-05'
+updatedAt: '2026-04-05'
+author: 'Vishal Gupta'
+summary: 'A practical intro to Linux commands every developer should know.'
+image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop'
+---
+
+# cat command
+
+**cat** stands for concatenate — used to display, combine, or create files.
+
+```bash
+cat file.txt
+```
+
+- Prints file content to terminal
+
+### Common Uses
+
+1. View file:
+
+```bash
+cat file.txt
+```
+
+2. Combine files
+
+```bash
+cat file1.txt file2.txt > total.txt
+```
+
+3. Create file:
+
+```bash
+cat > file.txt
+```
+
+## <u>Pro tip</u> :)
+
+- cat is great for quick reads, but for large files use less.
+
+# echo + > - Write to files instantly
+
+### Basic Usage
+
+```bash
+echo "Hello World" > file.txt
+```
+
+- Creates file.txt and writes Hello World into it
+
+### What happens after running the above command
+
+- echo → prints text
+- ">" → redirects output to a file
+- If file exists → ❌ overwritten
+- If not → ✅ created
+
+### Append Instead of Overwrite
+
+```bash
+echo "Hello again" >> file.txt
+```
+
+- Adds content without deleting existing data
+
+## <u>Pro tip</u> :)
+
+- **> overwrites, >> appends — choose carefully.**
+
+### Key takeway
+
+- Use echo + redirection to create and write files in one line.
+
+# man command
+
+**man** stands for manual — it shows detailed documentation for Linux commands.
+
+```bash
+man ls
+```
+
+- Opens the manual page for ls
+- Press q to quit or exit
+
+### Use
+
+- Scroll → ↑ / ↓ or j / k
+- Search → /keyword
+- Exit → q
+
+### Why use man command
+
+- Learn commands directly from the system
+- No need to Google basics
+- Always accurate and available offline
+
+## <u>Pro tip</u> :)
+
+- Great engineers read man pages — not just tutorials.
+- When in doubt, man it.
+
+# tunnel or pipe (|)
+
+The **pipe** (|) takes the output of one command and feeds it as input to another.
+
+### Basic Usage
+
+```bash
+ls | grep ".js"
+```
+
+- Lists only .js files
+
+1. Count files:
+
+```bash
+ls | wc -l
+```
+
+2. Search inside files
+
+```bash
+cat file.txt | grep "error"
+```
+
+### Benefits
+
+- Combine small commands into powerful workflows
+- Core of Unix philosophy
+- Makes data processing fast and flexible
+
+## <u>Pro tip</u> :)
+
+- Pipes turn simple commands into powerful pipelines.
+- Think in pipelines, not single commands.
+
+# tr command
+
+**tr** stands for translate — it’s used to replace, delete, or transform characters from input.
+
+### Basic
+
+```bash
+echo "hello" | tr 'a-z' 'A-Z'
+```
+
+- Converts lowercase → UPPERCASE
+
+### Use cases
+
+1. Replace characters:
+
+```bash
+echo "hello" | tr 'h' 'y'
+```
+
+2. Delete characters:
+
+```bash
+echo "hello123" | tr -d '0-9'
+```
+
+3. Remove duplicate spaces
+
+```bash
+echo "hello    world" | tr -s ' '
+```
+
+### Why
+
+- Fast text processing in pipelines
+- Useful in scripts & data cleaning
+
+## <u>Pro tip</u> :)
+
+- tr works best with pipes — it’s built for stream processing.
+- Use tr to quickly transform text on the fly.
+
+# line continuation (\)
+
+The **backslash** \ is used to split a long command into multiple lines for better readability.
+
+### Usage
+
+```bash
+echo "Hello" \
+"World"
+```
+
+- Treated as a single command
+
+# cp (copy) command
+
+**cp** stands for copy — used to duplicate files and directories.
+
+### Usage
+
+```bash
+cp file.txt copy.txt
+```
+
+- Copies file.txt → copy.txt
+
+### Most common usecases
+
+1. Copy to another folder:
+
+```bash
+cp file.txt /path/to/folder/
+```
+
+2. Copy directories:
+
+```bash
+cp -r folder/ new-folder/
+```
+
+3. Interactive (confirm overwrite):
+
+```bash
+cp -i file.txt copy.txt
+```
+
+### Why you should use
+
+- Essential for file management
+- Used in scripts, backups, deployments
+
+## <u>Pro tip</u> :)
+
+- Always use -r for folders — without it, directories won’t copy.
+- Duplicate anything in seconds with cp.
+
+# mv command
+
+- mv stands for move — used to move files/folders or rename them.
+
+### Usage
+
+```bash
+mv file.txt new.txt
+```
+
+- Renames file.txt -> new.txt
+
+### Common usecases
+
+1. Move file to another folder:
+
+```bash
+mv file.txt /path/to/folder/
+```
+
+2. Rename directory:
+
+```bash
+mv old-folder new-folder
+```
+
+3. Interactive (confirm overwrite):
+
+```bash
+mv -i file.txt new.txt
+```
+
+### Why
+
+- Combines move + rename in one command
+- Essential for organizing files
+
+## <u>Pro tip</u> :)
+
+- mv doesn’t copy — it relocates instantly (no duplication).
+- Use mv to move smartly or rename instantly.
+
+# rm (remove) command
+
+**rm** stands for remove — used to delete files and directories.
+
+### Usage
+
+```bash
+rm file.txt
+```
+
+- Deletes a file
+
+### Common usecases
+
+1. Delete multiple files:
+
+```bash
+rm file1.txt file2.txt
+```
+
+2. Delete directories:
+
+```bash
+rm -r folder/
+```
+
+3. Force delete (no prompts):
+
+```bash
+rm -f file.txt
+```
+
+### Careful
+
+- No recycle bin
+- Deletion is permanent
+
+## <u>Pro tip</u> :)
+
+- Use rm -i to avoid mistakes (asks before deleting)
+- **With great power (rm) comes great responsibility**.

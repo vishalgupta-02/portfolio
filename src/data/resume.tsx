@@ -167,9 +167,8 @@ export const DATA = {
           icon: <Icons.github className='size-3' />,
         },
       ],
-      image: '',
-      video:
-        'https://pub-83c5db439b40468498f97946200806f7.r2.dev/chat-collect.mp4',
+      image: '/clariv.png',
+      video: '',
     },
     {
       title: 'Careerly',
@@ -199,8 +198,8 @@ export const DATA = {
           icon: <Icons.github className='size-3' />,
         },
       ],
-      image: '',
-      video: 'https://cdn.magicui.design/bento-grid.mp4',
+      image: '/careerly.png',
+      video: '',
     },
     {
       title: 'Applyless',
@@ -232,8 +231,8 @@ export const DATA = {
           icon: <Icons.github className='size-3' />,
         },
       ],
-      image: '',
-      video: 'https://cdn.llm.report/openai-demo.mp4',
+      image: '/applyless.png',
+      video: '',
     },
     {
       title: 'Nex',
@@ -263,8 +262,7 @@ export const DATA = {
         },
       ],
       image: '',
-      video:
-        'https://pub-83c5db439b40468498f97946200806f7.r2.dev/automatic-chat.mp4',
+      video: '',
     },
   ],
   hackathons: [
