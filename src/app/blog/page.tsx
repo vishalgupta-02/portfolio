@@ -1,42 +1,45 @@
-import BlurFade from '@/components/magicui/blur-fade'
-import { allPosts } from 'content-collections'
-import Link from 'next/link'
-import type { Metadata } from 'next'
-import { paginate, normalizePage } from '@/lib/pagination'
-import { ChevronRight } from 'lucide-react'
-import { DATA } from '@/data/resume'
+import BlurFade from "@/components/magicui/blur-fade"
+import { allPosts } from "content-collections"
+import Link from "next/link"
+import type { Metadata } from "next"
+import { paginate, normalizePage } from "@/lib/pagination"
+import { ChevronRight } from "lucide-react"
+import { DATA } from "@/data/resume"
 
 export const metadata: Metadata = {
-  title: '2AM | Tech Blog',
-  description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
+  title: "2AM | Tech Blog",
+  description:
+    "Where thoughts don't need permission. A blog about software engineering, Linux, and web development.",
   keywords: [
-    'tech blog',
-    'software engineering',
-    'Linux',
-    'web development',
-    'programming',
-    'tutorial',
-    'developer blog',
-    'coding',
+    "tech blog",
+    "software engineering",
+    "Linux",
+    "web development",
+    "programming",
+    "tutorial",
+    "developer blog",
+    "coding",
   ],
   openGraph: {
-    title: '2AM | Tech Blog',
-    description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
-    type: 'website',
+    title: "2AM | Tech Blog",
+    description:
+      "Where thoughts don't need permission. A blog about software engineering, Linux, and web development.",
+    type: "website",
     url: `${DATA.url}/blog`,
     images: [
       {
         url: `${DATA.url}/og-blog.jpg`,
         width: 1200,
         height: 630,
-        alt: '2AM Blog',
+        alt: "2AM Blog",
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    title: '2AM | Tech Blog',
-    description: 'Where thoughts don\'t need permission. A blog about software engineering, Linux, and web development.',
+    card: "summary_large_image",
+    title: "2AM | Tech Blog",
+    description:
+      "Where thoughts don't need permission. A blog about software engineering, Linux, and web development.",
     images: [`${DATA.url}/og-blog.jpg`],
   },
   alternates: {
@@ -73,7 +76,7 @@ export default async function BlogPage({
     <section id='blog'>
       <BlurFade delay={BLUR_FADE_DELAY}>
         <h1 className='text-2xl font-semibold tracking-tight mb-2'>
-          2AM{' '}
+          2AM{" "}
           <span className='ml-1 bg-card border border-border rounded-md px-2 py-1 text-muted-foreground text-sm'>
             {sortedPosts.length} posts
           </span>
@@ -88,7 +91,7 @@ export default async function BlogPage({
           <BlurFade delay={BLUR_FADE_DELAY * 2}>
             <div className='flex flex-col gap-5'>
               {paginatedPosts.map((post, id) => {
-                const slug = post._meta.path.replace(/\.mdx$/, '')
+                const slug = post._meta.path.replace(/\.mdx$/, "")
                 const indexNumber = (pagination.page - 1) * PAGE_SIZE + id + 1
                 return (
                   <BlurFade delay={BLUR_FADE_DELAY * 3 + id * 0.05} key={slug}>
@@ -96,7 +99,7 @@ export default async function BlogPage({
                       className='flex items-start gap-x-2 group cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
                       href={`/blog/${slug}`}>
                       <span className='text-xs font-mono tabular-nums font-medium mt-1.25'>
-                        {String(indexNumber).padStart(2, '0')}.
+                        {String(indexNumber).padStart(2, "0")}.
                       </span>
                       <div className='flex flex-col gap-y-2 flex-1'>
                         <p className='tracking-tight text-lg font-medium'>
