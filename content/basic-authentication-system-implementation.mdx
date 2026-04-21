@@ -1,0 +1,139 @@
+---
+title: "Basic Authentication System Using Node and Express"
+publishedAt: "2026-04-21"
+updatedAt: "2026-04-21"
+author: "Vishal Gupta"
+summary: "Building Basic Authentication System using Node and Express"
+image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop"
+category: "Development"
+---
+
+In this article, we will learn how to build an authentication system using Node.js and Express. We will use JSON Web Tokens (JWT) for secure authentication. This system will allow users to register, log in, and access protected routes. We will also use bcrypt to hash passwords for added security. We are using commonjs syntax in this article, but you can easily adapt it to use ES modules if you prefer.
+
+> For simplicity, we will use an in-memory array to store users. In a real-world application, you would typically use a database like MongoDB or PostgreSQL to store user information.
+
+## Setting Up the Project
+
+First, let's create a new Node.js project and install the necessary dependencies.
+
+```bash
+mkdir auth-system
+cd auth-system
+npm init -y
+npm install express jsonwebtoken bcryptjs body-parser
+```
+
+- You can also install `nodemon` as a dev dependency for easier development.
+
+```bash
+npm install --save-dev nodemon
+```
+
+## Creating the Server
+
+Next, we will create a simple Express server.
+
+```javascript
+const express = require("express")
+const cookieParser = require("cookie-parser")
+const app = express()
+
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
+
+app.get("/", (req, res) => {
+  res.send("Welcome to the Authentication System")
+})
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000")
+})
+```
+
+## User Registration
+
+We will create a route for user registration where users can sign up by providing their username and password. We will hash the password using bcrypt before storing it.
+
+```javascript
+const bcrypt = require("bcryptjs")
+const users = []
+
+app.post("/register", async (req, res) => {
+  const { username, password } = req.body
+  const hashedPassword = await bcrypt.hash(password, 10)
+  users.push({ username, password: hashedPassword })
+  res.status(201).send("User registered successfully")
+})
+```
+
+## User Login
+
+Now, let's create a login route where users can authenticate themselves. We will compare the provided password with the hashed password stored in our users array. If the authentication is successful, we will generate a JWT token.
+
+```javascript
+const jwt = require("jsonwebtoken")
+
+app.post("/login", async (req, res) => {
+  const { username, password } = req.body
+  const user = users.find((u) => u.username === username)
+
+  if (!user) {
+    return res.status(400).send("User not found")
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password)
+
+  if (!isPasswordValid) {
+    return res.status(400).send("Invalid password")
+  }
+
+  const token = jwt.sign({ username: user.username }, "secretkey", {
+    expiresIn: "1h",
+  })
+  res.json({ token })
+})
+```
+
+## Protecting Routes
+
+To protect certain routes, we can create a middleware function that verifies the JWT token.
+
+```javascript
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"]
+  const token = authHeader && authHeader.split(" ")[1]
+
+  if (!token) {
+    return res.sendStatus(401)
+  }
+
+  jwt.verify(token, "secretkey", (err, user) => {
+    if (err) {
+      return res.sendStatus(403)
+    }
+    req.user = user
+    next()
+  })
+}
+```
+
+Now we can use this middleware to protect any route we want.
+
+```javascript
+app.get("/protected", authenticateToken, (req, res) => {
+  res.send("This is a protected route")
+})
+```
+
+## Starting the Server
+
+Finally, we will start the server.
+
+```bash
+nodemon index.js
+```
+
+## Conclusion
+
+In this article, we have built a simple authentication system using Node.js and Express. We have implemented user registration, login, and protected routes using JWT for secure authentication. This is a basic implementation, and you can further enhance it by adding features like refresh tokens, password reset functionality, and more robust error handling.

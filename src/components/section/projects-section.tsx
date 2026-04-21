@@ -1,10 +1,10 @@
-'use client'
+"use client"
 
-import BlurFade from '@/components/magicui/blur-fade'
-import { ProjectCard } from '@/components/project-card'
-import { DATA } from '@/data/resume'
-import { Button } from '../ui/button'
-import { useRouter } from 'next/navigation'
+import BlurFade from "@/components/magicui/blur-fade"
+import { ProjectCard } from "@/components/project-card"
+import { DATA } from "@/data/resume"
+import { Button } from "../ui/button"
+import { useRouter } from "next/navigation"
 
 const BLUR_FADE_DELAY = 0.04
 
@@ -36,7 +36,7 @@ export default function ProjectsSection() {
           </div>
         </div>
         <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 max-w-200 mx-auto auto-rows-fr'>
-          {DATA.projects.map((project, id) => (
+          {DATA.projects.slice(0, 4).map((project, id) => (
             <BlurFade
               key={project.title}
               delay={BLUR_FADE_DELAY * 12 + id * 0.05}
@@ -57,7 +57,7 @@ export default function ProjectsSection() {
         </div>
         <Button
           className='cursor-pointer'
-          onClick={() => navigate.push('/projects')}>
+          onClick={() => navigate.push("/projects")}>
           See more
         </Button>
       </div>

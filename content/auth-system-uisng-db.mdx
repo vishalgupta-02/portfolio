@@ -1,0 +1,226 @@
+---
+title: "Authentication System Using Database"
+publishedAt: "2026-04-22"
+updatedAt: "2026-04-22"
+author: "Vishal Gupta"
+summary: "Building Authentication System using Database"
+image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop"
+category: "Development"
+---
+
+In this article, we will build a simple authentication system using a database. We will use Node.js and Express for the backend, and MongoDB as our database. We will also use bcrypt for hashing passwords and JSON Web Tokens (JWT) for authentication with MVC architecture and ES6 syntax.
+
+## Setting Up the Project
+
+First, let's set up our project. Create a new directory for your project and navigate into it:
+
+```bash
+mkdir auth-system
+cd auth-system
+pnpm init
+```
+
+Next, we need to install the necessary dependencies:
+
+```bash
+pnpm add express mongoose bcrypt jsonwebtoken dotenv cookie-parser
+```
+
+Install the development dependencies:
+
+```bash
+pnpm add -D nodemon
+```
+
+## Creating the Server
+
+Create a new file called `server.js` in the root of your project:
+
+```javascript
+import express from "express"
+import mongoose from "mongoose"
+import dotenv from "dotenv"
+import cookieParser from "cookie-parser"
+
+dotenv.config()
+
+const app = express()
+app.use(express.json())
+app.use(cookieParser())
+
+const PORT = process.env.PORT || 5000
+
+mongoose
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => {
+    console.log("Connected to MongoDB")
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`)
+    })
+  })
+  .catch((err) => {
+    console.error("Error connecting to MongoDB:", err)
+  })
+```
+
+create a `.env` file in the root of your project and add your MongoDB connection string:
+
+```
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+```
+
+The `server.js` file sets up an Express server and connects to MongoDB using Mongoose. It also uses dotenv to manage environment variables and cookie-parser to handle cookies.
+
+- Follow the next steps to create the authentication system, including creating user models, routes for registration and login, and implementing JWT for authentication.
+
+before craete the following folder structure in your project:
+
+```
+auth-system/
+├── src/
+│   ├── configs/
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── services/
+│   ├── utils/
+│   └── index.js
+├── .env
+├── .gitignore
+├── package.json
+├── server.js
+```
+
+The `src` directory contains all the source code for our application, organized into different folders for configurations, controllers, models, routes, services, and utilities. The `index.js` file will be the entry point for our application where we will set up our Express server and connect to the database.
+
+## Creating the User Model
+
+Create a new file called `User.js` in the `src/models` directory:
+
+```javascript
+import mongoose from "mongoose"
+import bcrypt from "bcrypt"
+const userSchema = new mongoose.Schema({
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+})
+
+const userModel = mongoose.model("User", userSchema)
+
+export default userModel
+```
+
+The `User.js` file defines a Mongoose schema for the user model, which includes fields for username, email, and password. The password will be hashed before being stored in the database.
+
+## Creating Authentication Routes
+
+Create a new file called `auth.js` in the `src/routes` directory:
+
+```javascript
+import express from "express"
+import { register, login } from "../controllers/authController.js"
+
+const router = express.Router()
+
+router.post("/register", register)
+router.post("/login", login)
+
+export default router
+```
+
+The `auth.js` file defines the routes for user registration and login. It imports the corresponding controller functions that will handle the logic for these routes.
+
+## Creating Authentication Controllers
+
+```javascript
+import userModel from "../models/User.js"
+import bcrypt from "bcrypt"
+import jwt from "jsonwebtoken"
+
+export const register = async (req, res) => {
+  try {
+    const { username, email, password } = req.body
+    const existingUser = await userModel.findOne({ email })
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" })
+    }
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const newUser = new userModel({
+      username,
+      email,
+      password: hashedPassword,
+    })
+    await newUser.save()
+    res.status(201).json({ message: "User registered successfully" })
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
+  }
+}
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body
+    const user = await userModel.findOne({ email })
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" })
+    }
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" })
+    }
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    })
+    res.cookie("token", token, { httpOnly: true })
+    res.json({ message: "Login successful" })
+  } catch (error) {
+    res.status(500).json({ message: "Server error" })
+  }
+}
+```
+
+The `authController.js` file contains the logic for handling user registration and login. The `register` function checks if a user with the provided email already exists, hashes the password, and saves the new user to the database. The `login` function checks if the user exists, compares the provided password with the hashed password in the database, and generates a JWT token if the credentials are valid.
+
+## Integrating Routes into the Server
+
+Finally, we need to integrate our authentication routes into the server. Open the `server.js` file and add the following lines:
+
+```javascript
+import authRoutes from "./src/routes/auth.js"
+
+app.use("/auth", authRoutes)
+```
+
+This line tells our Express server to use the authentication routes we defined in `auth.js` under the `/auth` path.
+It should be added after the middleware setup and before the server starts listening.
+Now, you can start your server using the following command:
+
+```bash
+pnpm run dev
+```
+
+Your authentication system is now set up! You can test the registration and login endpoints using tools like Postman or Insomnia. Make sure to send the appropriate JSON payload for registration and login requests.
+
+## Conclusion
+
+In this article, we built a simple authentication system using Node.js, Express, MongoDB, bcrypt, and JWT. We created a user model, defined routes for registration and login, and implemented the logic for handling these operations in the controllers. This is a basic implementation, and you can further enhance it by adding features like password reset, email verification, and role-based access control.
+
+> the main purpose of writing this article is to provide a basic understanding of how to create an authentication system using a database. You can customize and expand upon this foundation to suit the specific needs of your application.
+
+- Feel free to explore additional features and best practices like **accesstokens** and **refreshtokens**, **session management** and **otp verification** for building **secure authentication systems** and we are going to cover those in the upcoming articles.

@@ -1,35 +1,35 @@
 /* eslint-disable @next/next/no-img-element */
-import BlurFade from '@/components/magicui/blur-fade'
-import BlurFadeText from '@/components/magicui/blur-fade-text'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DATA } from '@/data/resume'
-import Link from 'next/link'
-import Markdown from 'react-markdown'
-import ContactSection from '@/components/section/contact-section'
-import HackathonsSection from '@/components/section/hackathons-section'
-import ProjectsSection from '@/components/section/projects-section'
-import WorkSection from '@/components/section/work-section'
-import { ArrowUpRight } from 'lucide-react'
-import type { Metadata } from 'next'
+import BlurFade from "@/components/magicui/blur-fade"
+import BlurFadeText from "@/components/magicui/blur-fade-text"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DATA } from "@/data/resume"
+import Link from "next/link"
+import Markdown from "react-markdown"
+import ContactSection from "@/components/section/contact-section"
+import HackathonsSection from "@/components/section/hackathons-section"
+import ProjectsSection from "@/components/section/projects-section"
+import WorkSection from "@/components/section/work-section"
+import { ArrowUpRight } from "lucide-react"
+import type { Metadata } from "next"
 
 export const metadata: Metadata = {
   title: `${DATA.name} | Software Engineer & Developer`,
   description: DATA.description,
   keywords: [
-    'software engineer',
-    'developer',
-    'full stack developer',
-    'web developer',
-    'React',
-    'Next.js',
-    'TypeScript',
-    'Node.js',
-    'portfolio',
+    "software engineer",
+    "developer",
+    "full stack developer",
+    "web developer",
+    "React",
+    "Next.js",
+    "TypeScript",
+    "Node.js",
+    "portfolio",
   ],
   openGraph: {
     title: `${DATA.name} | Software Engineer & Developer`,
     description: DATA.description,
-    type: 'website',
+    type: "website",
     url: DATA.url,
     images: [
       {
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: "summary_large_image",
     title: `${DATA.name} | Software Engineer & Developer`,
     description: DATA.description,
     images: [`${DATA.url}/og-image.jpg`],
@@ -64,7 +64,7 @@ export default function Page() {
                 delay={BLUR_FADE_DELAY}
                 className='text-3xl font-semibold tracking-tighter sm:text-4xl lg:text-5xl'
                 yOffset={8}
-                text={`Hi, I'm ${DATA.name.split(' ')[0]}`}
+                text={`Hi, I'm ${DATA.name.split(" ")[0]}`}
               />
               <BlurFadeText
                 className='text-muted-foreground max-w-[600px] md:text-lg lg:text-xl'
