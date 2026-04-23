@@ -236,7 +236,7 @@ export const DATA = {
       video: "",
     },
     {
-      title: "Nex",
+      title: "Linkflow",
       href: "https://automatic.chat",
       dates: "March 2026 - Sept 2026",
       active: true,
@@ -267,11 +267,11 @@ export const DATA = {
     },
     {
       title: "Divvy",
-      href: "https://automatic.chat",
+      href: "https://divvy-eta.vercel.app",
       dates: "March 2026 - Sept 2026",
       active: true,
       description:
-        "Everyone talks about building for scale. I am actually doing it — from scratch, in the open, learning every step of the way.",
+        "A real-time ETA sharing app built on Next.js, PostgreSQL, and Prisma. It allows users to share their live location and ETA with friends and family, making meetups and pickups easier than ever.",
       technologies: [
         "Next.js",
         "Typescript",
@@ -279,16 +279,12 @@ export const DATA = {
         "Prisma",
         "NodeJS",
         "Express",
-        "Redis",
-        "BullMQ",
-        "Stripe",
-        "Better-Auth",
-        "Docker",
+        "Neondb",
       ],
       links: [
         {
           type: "Website",
-          href: "https://automatic.chat",
+          href: "https://divvy-eta.vercel.app",
           icon: <Icons.globe className='size-3' />,
         },
       ],

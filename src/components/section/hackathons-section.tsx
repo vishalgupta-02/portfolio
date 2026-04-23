@@ -1,12 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
-import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { DATA } from '@/data/resume'
+import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { DATA } from "@/data/resume"
 import {
   Timeline,
   TimelineItem,
   TimelineConnectItem,
-} from '@/components/timeline'
+} from "@/components/timeline"
 
 export default function HackathonsSection() {
   return (
@@ -32,7 +32,7 @@ export default function HackathonsSection() {
               I show up to learn more than I show up to win.
             </p>
             <p className='text-sm/relaxed'>
-              Hackathons attended: {DATA.hackathons.length} - and counting
+              Hackathons attended: {DATA.hackathons.length} and counting...
             </p>
           </div>
         </div>
