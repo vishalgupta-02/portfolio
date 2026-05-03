@@ -1,0 +1,294 @@
+---
+title: "Improving problem solving skills day 02"
+publishedAt: "2026-05-04"
+updatedAt: "2026-05-04"
+author: "Vishal Gupta"
+summary: "Solving the leetcode problems to improve the problem solving skills"
+image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop"
+category: "Problem Solving"
+---
+
+---
+
+## Improving problem solving skills
+
+Today is day 2 of improving my problem solving skill through solving Leetcode questions and following the DSA sheet.
+
+The questions which I have solved today are the following -
+
+1. 3Sum
+2. Sort Colors
+3. Container with most water
+4. Trapping rainwater
+
+These questions come under medium-hard level problems and need a good amount of attention.
+
+I was not able to solve them by myself on the first try. I gave the first 30 minutes and got a headache just by staring at the blank screen.
+
+After that, whatever came to my mind, even if it felt wrong, I wrote it down and tried to pass the first test case.
+
+Hope this strategy helps me to find my way.
+
+---
+
+### 3Sum
+
+The problem statement -
+
+**Given an integer array nums, return all the triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0.**
+
+**Notice that the solution set must not contain duplicate triplets.**
+
+- The approach which came to my mind in the first try was to take 2 pointers, but that happened because I did not read the question properly.
+
+I was too focused on the sum part and did not think about the brute force.
+
+The brute force approach was simple - run 3 nested loops.
+
+```cpp
+for(int i = 0; i < n; i++){
+    for(int j = i + 1; j < n; j++){
+        for(int k = j + 1; k < n; k++){
+            if(nums[i] + nums[j] + nums[k] == 0){
+                // store triplet
+            }
+        }
+    }
+}
+```
+
+The time complexity is O(n^3).
+
+To get the optimal solution, I used sorting and two pointers.
+
+- Sort the array
+- Fix one element
+- Use two pointers for the remaining part
+
+```cpp
+vector<vector<int>> threeSum(vector<int>& nums) {
+    vector<vector<int>> result;
+    sort(nums.begin(), nums.end());
+
+    for (int i = 0; i < nums.size(); i++) {
+
+        if (i > 0 && nums[i] == nums[i - 1]) continue;
+
+        int left = i + 1;
+        int right = nums.size() - 1;
+
+        while (left < right) {
+            int sum = nums[i] + nums[left] + nums[right];
+
+            if (sum == 0) {
+                result.push_back({nums[i], nums[left], nums[right]});
+
+                while (left < right && nums[left] == nums[left + 1]) left++;
+                while (left < right && nums[right] == nums[right - 1]) right--;
+
+                left++;
+                right--;
+            }
+            else if (sum < 0) {
+                left++;
+            }
+            else {
+                right--;
+            }
+        }
+    }
+    return result;
+}
+```
+
+---
+
+### Sort Colors
+
+This problem looks simple but requires a specific approach.
+
+Brute force: sort the array using any sorting algorithm → O(n log n)
+
+Better than bruteforce (Counting sort):
+
+- Count number of 0s, 1s, 2s
+- Overwrite array
+
+```cpp
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        int count0 = 0, count1 = 0, count2 = 0;
+
+        for (int num : nums) {
+            if (num == 0) count0++;
+            else if (num == 1) count1++;
+            else count2++;
+        }
+
+        int i = 0;
+
+        while (count0--) nums[i++] = 0;
+        while (count1--) nums[i++] = 1;
+        while (count2--) nums[i++] = 2;
+    }
+};
+```
+
+**Complexity**
+
+- Time: O(n)
+- Space: O(1)
+
+| Approach      | Time       | Space  | Notes            |
+| ------------- | ---------- | ------ | ---------------- |
+| Built-in sort | O(n log n) | varies | easiest          |
+| Counting sort | O(n)       | O(1)   | 2-pass           |
+| Dutch Flag    | O(n)       | O(1)   | 1-pass (optimal) |
+
+Optimal approach uses 3 pointers:
+
+- low → for 0
+- mid → current
+- high → for 2
+
+```cpp
+void sortColors(vector<int>& nums) {
+    int low = 0, mid = 0, high = nums.size() - 1;
+
+    while (mid <= high) {
+        if (nums[mid] == 0) {
+            swap(nums[low], nums[mid]);
+            low++;
+            mid++;
+        }
+        else if (nums[mid] == 1) {
+            mid++;
+        }
+        else {
+            swap(nums[mid], nums[high]);
+            high--;
+        }
+    }
+}
+```
+
+---
+
+### Container with most water
+
+Initially, I thought of checking all pairs.
+
+- Brute force → O(n^2)
+
+```cpp
+for(int i = 0; i < n; i++){
+    for(int j = i+1; j < n; j++){
+        area = min(height[i], height[j]) * (j - i);
+    }
+}
+```
+
+Then comes the optimal solution using two pointers.
+
+- Start with left and right
+- Calculate area
+- Move the pointer with smaller height
+
+```cpp
+int maxArea(vector<int>& height) {
+    int left = 0, right = height.size() - 1;
+    int maxWater = 0;
+
+    while (left < right) {
+        int h = min(height[left], height[right]);
+        int width = right - left;
+        maxWater = max(maxWater, h * width);
+
+        if (height[left] < height[right]) left++;
+        else right--;
+    }
+
+    return maxWater;
+}
+```
+
+**WHY Move Smaller Height?**
+
+Suppose:
+
+- height[left] < height[right]
+
+Now:
+
+- Moving right--:
+
+1. Width ↓
+
+- Height still limited by height[left]
+- Area won’t improve
+
+2. Moving left++:
+
+- Maybe we find a taller height
+- Chance to increase area
+
+> Current height = height[left]
+
+---
+
+### Trapping rainwater
+
+This one was harder to visualize.
+
+- Brute force:
+  - find left max
+  - find right max
+  - then calculate water
+  - Time → O(n^2)
+
+Optimal approach:
+
+- Use two pointers
+- Track leftMax and rightMax
+
+```cpp
+int trap(vector<int>& height) {
+    int left = 0, right = height.size() - 1;
+    int leftMax = 0, rightMax = 0;
+    int water = 0;
+
+    while (left <= right) {
+        if (height[left] <= height[right]) {
+            if (height[left] >= leftMax) leftMax = height[left];
+            else water += leftMax - height[left];
+            left++;
+        }
+        else {
+            if (height[right] >= rightMax) rightMax = height[right];
+            else water += rightMax - height[right];
+            right--;
+        }
+    }
+
+    return water;
+}
+```
+
+> Strategy to solve maximum questions
+>
+> 1. Write brute force
+> 2. Identify what affects answer
+> 3. Find what is "limiting factor"
+> 4. Try to eliminate useless cases
+> 5. Convert to two pointers / greedy
+
+---
+
+### Final thoughts
+
+I am still not able to solve these problems in one go, but I am starting to understand the patterns slowly.
+
+Writing something instead of thinking too much helped today.
+
+Will continue the same approach tomorrow.
