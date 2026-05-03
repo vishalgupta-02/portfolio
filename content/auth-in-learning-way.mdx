@@ -1,0 +1,226 @@
+---
+title: "Things I Learned While Building an Authentication System"
+publishedAt: "2026-05-03"
+updatedAt: "2026-05-03"
+author: "Vishal Gupta"
+summary: "Things I have learned while building an authentication system"
+image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fit=crop"
+category: "Development"
+---
+
+## Authentication — My Way
+
+The word _security_ comes from the Latin word **“securus”**, meaning _free from anxiety_.  
+That’s exactly what good authentication should provide — peace of mind.
+
+In today’s world, where data is everything, protecting user information isn’t optional — it’s critical.
+
+In this blog, I’ll walk through how I implemented authentication using:
+
+- Node + Express (backend)
+- JWT (tokens)
+- Bcrypt (password hashing)
+- Postman (testing)
+
+…and the real lessons I learned along the way.
+
+Don't setup everything at once, read first and also use docs too for the reference.
+
+---
+
+## Email & Password Authentication
+
+I’m assuming you already know how to set up a basic Express app.  
+If not, you can check this:  
+[Click here to visit](https://www.vishalbuild.tech/blog/auth-system-using-db)
+
+Here’s the simplified roadmap:
+
+1. Setup Express app
+2. Create a `User` model (username, email, password)
+3. Create auth routes (register, login)
+4. Add controller logic
+
+> Note: This is just the basic structure. We’ll build the actual authentication logic (tokens, sessions, security) on top of this.
+
+![User Signup Workflow](/register-flow.png)
+
+> maybe slightly different but this is how it works everywhere
+
+---
+
+## Cookies (Where do we store auth data?)
+
+Once the server generates a token, we need to store it safely on the client.
+
+Common options:
+
+- **localStorage** → easy, but less secure (vulnerable to XSS)
+- **cookies** → more secure (can be HTTP-only)
+- **memory (in-app state)** → most secure, but temporary
+
+> In real-world apps, HTTP-only cookies are usually preferred.
+
+---
+
+## Tokens (JWT)
+
+A token is proof of your identity.
+
+With JWT-based authentication:
+
+- The system is **stateless**
+- Every request must include a token
+
+That means:
+
+> The server doesn’t know who you are unless you send the token.
+
+### Problem
+
+If a token gets leaked → attacker gets access.
+
+### Solution: Use Two Tokens
+
+1. **Access Token**
+   - Short-lived (e.g. 15 mins)
+   - Used for API requests and major tasks
+
+2. **Refresh Token**
+   - Long-lived
+   - Used to generate new access tokens
+
+---
+
+### Example JWT
+
+```bash
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+  .eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0
+  .KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+```
+
+- Decoded Header
+
+```json
+{
+  "alg": "HS256",
+  "typ": "JWT"
+}
+```
+
+- Decoded Payload
+
+```json
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "admin": true,
+  "iat": 1516239022
+}
+```
+
+**Token Refresh Flow**
+
+- Access token expires quickly
+- Refresh token generates a new one
+- Refresh token is stored in HTTP-only cookies
+
+**Recommended cookie config:**
+
+- httpOnly
+- secure
+- sameSite
+
+This prevents JavaScript access and reduces XSS (Cross-site scripting) risk.
+
+**Workflow to understand the access token refresh**
+
+![Access token Refresh Workflow](/access-token-refresh-workflow.png)
+
+---
+
+## Sessions (The Missing Piece Most Beginners Ignore)
+
+A session is simply a way for the server to remember you.
+
+Think of it like a temporary ID card.
+
+- You log in → system creates a session
+- You make requests → system recognizes you
+- Session expires → you're logged out
+
+Session vs Token
+
+- Session → stored on server
+- JWT → stored on client
+
+A single session contains the following things -
+
+```json
+{
+    userId: something,
+    refreshTokenHash: some-hashed-value,
+    ip: device-ip,
+    userAgent: device-info,
+    createdAt: date,
+    updatedAt: date,
+    revoke: boolean
+}
+```
+
+This is the workflow of how a session is created -
+
+- User logs in
+- Access + Refresh token created
+- Session stored in DB
+- Access token expires
+- Refresh endpoint called
+- New tokens issued
+- Old session revoked (optional)
+- New session created
+
+  If revoked = true → force logout (all devices if needed)
+
+![Session Workflow](/session-workflow.png)
+
+---
+
+> Note: Code implementation will be covered in next blog.
+
+## Conclusion
+
+Building authentication seems simple at first — just login and logout, right?
+
+But once you actually build it, you realize:
+
+- There are multiple layers of security involved
+- Small mistakes can lead to serious vulnerabilities
+- And every decision (tokens, storage, sessions) has trade-offs
+
+What I learned the most is this:
+
+- **Good authentication** is not about making things work —
+  it's about making them **secure, scalable, and reliable.**
+
+If you're building your own system, don’t rush it.
+Take time to understand why things are done a certain way, not just how.
+
+## What I Didn’t Cover (But You’ll Need)
+
+This blog focused on concepts.
+
+But real authentication gets tricky when you actually implement it.
+
+In Part 2, I’ll break down:
+
+- How to implement login/register in Express
+- How to generate and verify JWT properly
+- How refresh token rotation actually works
+- How to protect routes with middleware
+- How to handle logout and token revocation
+
+If you’ve ever copied auth code without fully understanding it, the next part will make things click.
+It will be quite long but you will love to read it.
+
+Stay tuned.

@@ -20,7 +20,7 @@ export const DATA = {
   description:
     "A software engineer on an intentional, all-in journey — from writing code to truly understanding the systems behind it.",
   summary:
-    "I build things the hard way first. Recently, I built authentication from scratch before ever touching a library — because I believe you should earn your abstractions. Currently building LinkFlow, and learning something I didn't know yesterday, every single day.",
+    "I build things the hard way first. Recently, I built authentication from scratch before ever touching a library — because I believe you should earn your abstractions. Currently building Linkforge, and learning something I didn't know yesterday, every single day.",
   avatarUrl: "/me.jpg",
   skills: [
     { name: "React", icon: ReactLight },
@@ -236,7 +236,7 @@ export const DATA = {
       video: "",
     },
     {
-      title: "Linkflow",
+      title: "Linkforge",
       href: "https://automatic.chat",
       dates: "March 2026 - Sept 2026",
       active: true,
