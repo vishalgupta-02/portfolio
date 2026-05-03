@@ -8,7 +8,7 @@ image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&h=192&fi
 category: "Development"
 ---
 
-## Authentication — My Way
+## Authentication — Learning while building
 
 The word _security_ comes from the Latin word **“securus”**, meaning _free from anxiety_.  
 That’s exactly what good authentication should provide — peace of mind.
@@ -42,10 +42,6 @@ Here’s the simplified roadmap:
 4. Add controller logic
 
 > Note: This is just the basic structure. We’ll build the actual authentication logic (tokens, sessions, security) on top of this.
-
-![User Signup Workflow](/register-flow.png)
-
-> maybe slightly different but this is how it works everywhere
 
 ---
 
@@ -136,8 +132,6 @@ This prevents JavaScript access and reduces XSS (Cross-site scripting) risk.
 
 **Workflow to understand the access token refresh**
 
-![Access token Refresh Workflow](/access-token-refresh-workflow.png)
-
 ---
 
 ## Sessions (The Missing Piece Most Beginners Ignore)
@@ -181,8 +175,6 @@ This is the workflow of how a session is created -
 - New session created
 
   If revoked = true → force logout (all devices if needed)
-
-![Session Workflow](/session-workflow.png)
 
 ---
 
