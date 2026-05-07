@@ -1,0 +1,661 @@
+---
+title: "Networking - The Backbone of the Internet"
+publishedAt: "2026-05-07"
+updatedAt: "2026-05-07"
+author: "Vishal Gupta"
+summary: "Learning networking from scratch"
+image: "/og-images/networking-backbone-of-internet-og-image.png"
+category: "Networking"
+---
+
+## Networking basics for beginners
+
+**Index**
+
+1. Client-Server Architecture
+2. Ports
+3. Network Protocols - TCP, UDP, HTTP, FTP, Packets
+4. IP Address, DNS, DHCP, NAT
+5. Internet Speed
+6. Physical Communication Media
+7. Wireless Communication
+8. Types of Networks
+9. Optical Fibre Technologies
+10. Modem & Router
+11. ISP Tiers
+12. Network Topologies
+
+---
+
+### Client-Server Architecture
+
+A model where:
+
+- Client requests services/resources
+- Server responds with data/services
+
+**Examples**
+
+- Browser → Web Server
+- Mobile App → API Server
+- Frontend → Backend → Database
+
+**Important points**
+
+- Clients initiate communication
+- Servers listen continuously for requests
+- One server can handle multiple clients simultaneously
+- Communication happens over networks using protocols
+
+**Flow**
+
+```
+User → Browser → Internet → Server → Database
+```
+
+**Why it matters**
+
+- Foundation of modern web applications
+- Enables scalability and centralized data management
+
+---
+
+### Ports
+
+- A logical communication endpoint in networking
+- Helps identify which service/application should receive data
+
+**Example**
+
+- IP Address = Building Address
+- Port = Apartment Number
+
+| Port          | Service                     |
+| ------------- | --------------------------- |
+| 80            | HTTP                        |
+| 443           | HTTPS                       |
+| 22            | SSH                         |
+| 21            | FTP                         |
+| 3306          | MySQL                       |
+| 5432          | PostgreSQL                  |
+| 27017         | MongoDB                     |
+| 0 to 1023     | Reserved ports              |
+| 1024 to 49152 | Applications reserved ports |
+| Remaining     | We can use                  |
+
+- Ports have 16 bits
+  - Total = 2^16 ~ 65000
+
+**Important points**
+
+- Ports range from 0–65535
+- One IP can run multiple services using different ports
+- Servers “listen” on specific ports
+
+---
+
+### Network Protocols
+
+- Protocol -> A set of rules for communication between devices
+
+1. TCP - Transmission Control Protocol
+
+- Connection-oriented
+- Reliable
+- Ordered delivery
+- Error checking
+
+**Used In**
+
+- HTTP/HTTPS
+- Email
+- File transfers
+
+**Important**
+
+- Slower but reliable
+
+2. UDP - User Datagram Protocol
+
+- Connectionless
+- Faster
+- No delivery guarantee
+
+**Used In**
+
+- Video streaming
+- Gaming
+- Voice calls
+
+**Important**
+
+- Faster but less reliable
+
+3. HTTP - HyperText Transfer Protocol
+
+- Transfers web pages and API data
+- HTTP usually works on top of TCP
+
+| Method | Purpose     |
+| ------ | ----------- |
+| GET    | Fetch data  |
+| POST   | Send data   |
+| PUT    | Update data |
+| DELETE | Remove data |
+
+**Important**
+
+- Stateless protocol
+
+4. FTP - File Transfer Protocol
+
+- Transfers files between systems
+
+**Important**
+
+- Older protocol, less secure than SFTP/HTTPS
+
+5. Packets - Not a Protocol
+
+- Small chunks of data sent across networks
+
+**Important points**
+
+- Large data is broken into packets
+- Each packet contains:
+  - Source IP
+  - Destination IP
+  - Actual data
+- Routers forward packets toward their destination
+
+**Why it matters**
+
+- Efficient data transfer over the internet
+
+---
+
+### IP Address, DNS, DHCP, NAT
+
+1. IP Address
+
+- Unique identifier for a device on a network
+
+**Types**
+
+- IPv4 → 192.168.1.1
+- IPv6 → Longer modern format
+
+**Important Points**
+
+- Public IP → Internet-facing
+- Private IP → Internal network
+- IP Address of device is same for all applications but ports identifies which app have requested the service
+
+2. DNS - Domain Name System
+
+- Converts domain names into IP addresses
+
+**Example**
+
+```
+google.com → 142.250.x.x
+```
+
+**why it's Important**
+
+Humans already forget why they opened the fridge at night, remembering IP addresses for every website would be impossible.
+
+**Simple flow**
+
+```
+Browser → DNS → IP Address → Server
+```
+
+3. DHCP - Dynamic Host Configuration Protocol
+
+- Automatically assigns IP addresses to devices
+
+IP1, IP2, IP3
+↓
+Local IP Address
+↓
+Assigned using DHCP
+
+**Important Points**
+
+- Saves manual configuration
+- Common in WiFi routers
+
+**Example**
+
+When you connect to WiFi:
+
+- Router gives:
+  - IP Address
+  - Gateway
+  - DNS Server
+
+4. NAT - Network Address Translation
+
+- Allows multiple devices to share one public IP
+- Decides which device has requested
+
+**Important Points**
+
+- Used in home routers
+- Improves IP conservation and security
+
+**Example**
+
+```
+10 devices at home → 1 public IP
+```
+
+> Every website, app, API, and cloud service ultimately depends on these core networking concepts working together behind the scenes.
+
+\*\*These topics will be covered deeply in future blogs too. This was just a glimpse of why networking is important in today's world.
+
+---
+
+## Internet Speed
+
+Internet speed is not always exactly what your ISP advertises.
+For example, a `100 Mbps` connection may give lower real-world speed depending on:
+
+- Number of connected devices
+- Router location and signal strength
+- Network congestion
+- Wi-Fi vs Ethernet connection
+- Device capability
+- Website/server speed
+
+### Speed Units
+
+```txt id="sp1"
+1 Kbps = 10³ bits/s
+1 Mbps = 10⁶ bits/s
+1 Gbps = 10⁹ bits/s
+```
+
+### Important Difference
+
+Internet providers measure speed in **bits**, while file sizes are measured in **Bytes**.
+
+```txt id="sp2"
+1 Byte = 8 bits
+```
+
+So a `100 Mbps` connection gives a maximum practical download speed of around:
+
+```txt id="sp3"
+100 ÷ 8 = 12.5 MB/s
+```
+
+### Latency (Ping)
+
+- **Speed** → How much data transfers per second
+- **Latency** → How fast data travels between devices
+
+Low latency is important for:
+
+- Gaming
+- Video calls
+- Real-time applications
+
+> A fast internet plan alone does not guarantee fast performance — network quality and latency matter too.
+
+---
+
+### Physical Communication Media
+
+1. Optical Fibre Cables
+
+- Uses light signals to transmit data
+- Made of glass/plastic fibers
+
+**Important Points**
+
+- Extremely high speed
+- Long-distance communication
+- Low signal loss
+- Immune to electromagnetic interference
+
+**Used in**
+
+- Internet backbone
+- Data centers
+- Undersea cables
+- Telecom networks
+
+| Type        | Use            |
+| ----------- | -------------- |
+| Single-mode | Long distance  |
+| Multi-mode  | Short distance |
+
+2. Coaxial Cables
+
+- Copper cable with insulation and shielding
+
+**Important Points**
+
+- Better shielding than twisted pair cables
+- Used for TV and broadband internet
+- More durable against signal interference
+
+**Used in**
+
+- Cable TV
+- Broadband connections
+- CCTV systems
+
+---
+
+### Wireless Communication
+
+1. Wi-Fi
+
+- Wireless local area networking technology
+
+**Important Points**
+
+- Uses radio waves
+- Limited range
+- Common for homes/offices
+- Works through routers/access points
+
+**Standards**
+
+- Wi-Fi 4, 5, 6, 6E, 7
+
+2. Bluetooth
+
+- Short-range wireless communication
+
+**Important Points**
+
+- Low power consumption
+- Used for device-to-device communication
+- Ideal for accessories
+
+**Examples**
+
+- Earbuds
+- Smartwatches
+- Wireless keyboards
+
+3. Mobile Network Generations
+
+**2G**
+
+- Introduced digital voice communication
+- SMS support
+- Very slow internet
+
+**3G**
+
+- Mobile internet became practical
+- Video calling support
+- Faster than 2G
+
+**LTE (4G)**
+
+- LTE = Long Term Evolution
+
+Features
+
+- High-speed mobile internet
+- HD streaming
+- Low latency
+- Mostly data-focused network
+
+**VoLTE**
+
+- VoLTE = Voice over LTE
+
+Features
+
+- Voice calls over 4G network
+- Better call quality
+- Faster call connection
+
+**5G**
+
+Features
+
+- Extremely high speed
+- Very low latency
+- Supports IoT and smart devices
+
+Applications
+
+- Self-driving cars
+- Smart cities
+- AR/VR
+- Remote surgery
+
+---
+
+### Types of Networks
+
+1. LAN (Local Area Network)
+
+**Features**
+
+- Small geographic area
+- High speed
+- Privately owned
+
+**Examples**
+
+- Home Wi-Fi
+- Office network
+
+2. MAN (Metropolitan Area Network)
+
+**Features**
+
+- Covers a city or campus
+- Larger than LAN
+
+**Examples**
+
+- City-wide internet network
+- University campuses
+
+3. WAN (Wide Area Network)
+
+**Features**
+
+- Covers very large areas/countries
+- Connects multiple LANs/MANs
+
+**Example**
+
+- The Internet
+
+---
+
+### Optical Fibre Technologies
+
+1. SONET
+
+- SONET = Synchronous Optical Network
+
+**Purpose**
+
+- Standard for high-speed optical communication
+
+**Important Points**
+
+- Uses fiber optics
+- Highly reliable
+- Used by telecom providers
+
+2. Frame Relay
+
+**What it is**
+
+- Older WAN technology for packet switching
+
+**Important Points**
+
+- Faster than traditional leased lines
+- Less expensive historically
+- Mostly replaced by MPLS and modern networks
+
+---
+
+### Modem and Router
+
+1. Modem
+
+**Purpose**
+
+- Converts digital ↔ analog signals
+
+**Important Points**
+
+- Connects home network to ISP
+- “Modulator-Demodulator”
+
+2. Router
+
+**Purpose**
+
+- Routes data between networks
+
+**Important Points**
+
+- Assigns local IP addresses
+- Connects multiple devices
+- Often includes Wi-Fi functionality
+
+| Modem           | Router             |
+| --------------- | ------------------ |
+| Connects to ISP | Connects devices   |
+| Internet access | Traffic management |
+| One network     | Multiple networks  |
+
+---
+
+### ISP Tiers
+
+1. Tier 1 ISP
+
+**Features**
+
+- Owns global internet backbone
+- No need to pay for transit
+
+**Examples**
+
+- Large global telecom companies
+
+**Important Point**
+
+- Highest level internet providers
+
+2. Tier 2 ISP
+
+**Features**
+
+- Buys internet transit from Tier 1
+- Provides regional services
+
+**Important Point**
+
+- Connects businesses and consumers
+
+---
+
+### Network Topologies
+
+1. Bus Topology
+
+**Features**
+
+- Single backbone cable
+- All devices connected to same cable
+
+**Pros**
+
+- Cheap
+- Simple
+
+**Cons**
+
+- Backbone failure affects entire network
+
+2. Ring Topology
+
+**Features**
+
+- Devices connected in circular form
+
+**Important Point**
+
+- Data travels around the ring
+
+**Cons**
+
+- One failure can disrupt network
+
+3. Star Topology
+
+**Features**
+
+- All devices connected to central hub/switch
+
+**Pros**
+
+- Easy management
+- Most common modern topology
+
+**Cons**
+
+- Hub failure affects network
+
+4. Tree Topology
+
+**Features**
+
+- Hierarchical structure
+- Combination of star and bus
+
+**Used in**
+
+- Large organizations
+
+5. Mesh Topology
+
+**Features**
+
+- Devices interconnected directly
+
+**Pros**
+
+- Very reliable
+- Redundant paths
+
+**Cons**
+
+- Expensive
+- Complex setup
+
+**Used in**
+
+- Military
+- Data centers
+- Critical infrastructure
+
+---
+
+> Modern networking combines physical infrastructure, wireless communication, protocols, and intelligent routing to keep the digital world connected 24/7.
+
+## What I Learned
+
+- Every internet communication depends on protocols
+- Ports help services communicate properly
+- DNS makes the internet human-friendly
+- TCP and UDP solve different problems
+- Networking is the foundation of backend and distributed systems
