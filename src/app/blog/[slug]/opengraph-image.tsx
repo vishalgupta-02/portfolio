@@ -5,6 +5,7 @@ import { allPosts } from "content-collections";
 import { DATA } from "@/data/resume";
 
 export const runtime = "edge";
+export const revalidate = 3600; // Cache for 1 hour
 
 export const alt = "Blog Post";
 export const size = {
@@ -16,18 +17,8 @@ export const contentType = "image/png";
 const getFontData = async () => {
     try {
         const [cabinetGrotesk, clashDisplay] = await Promise.all([
-            fetch(
-                new URL(
-                    "../../../../public/fonts/CabinetGrotesk-Medium.ttf",
-                    import.meta.url
-                )
-            ).then((res) => res.arrayBuffer()),
-            fetch(
-                new URL(
-                    "../../../../public/fonts/ClashDisplay-Semibold.ttf",
-                    import.meta.url
-                )
-            ).then((res) => res.arrayBuffer()),
+            fetch(`${DATA.url}/fonts/CabinetGrotesk-Medium.ttf`).then((res) => res.arrayBuffer()),
+            fetch(`${DATA.url}/fonts/ClashDisplay-Semibold.ttf`).then((res) => res.arrayBuffer()),
         ]);
         return { cabinetGrotesk, clashDisplay };
     } catch (error) {
@@ -228,10 +219,22 @@ export default async function Image({
         );
     } catch (error) {
         console.error("Error generating OpenGraph image:", error);
-        return new Response(
-            `Failed to generate image: ${error instanceof Error ? error.message : "Unknown error"}`,
+        // Return fallback image on error instead of 500
+        return new ImageResponse(
+            (
+                <div style={styles.outerWrapper}>
+                    <div style={styles.middleWrapper}>
+                        <div style={styles.wrapper}>
+                            <div style={styles.mainContainer}>
+                                <div style={styles.title}>Blog Post</div>
+                                <div style={styles.description}>vishalbuild.tech</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ),
             {
-                status: 500,
+                ...size,
             }
         );
     }

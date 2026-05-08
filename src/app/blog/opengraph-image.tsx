@@ -3,6 +3,7 @@ import { ImageResponse } from "next/og";
 import { DATA } from "@/data/resume";
 
 export const runtime = "edge";
+export const revalidate = 3600; // Cache for 1 hour
 
 export const alt = "Blog";
 export const size = {
@@ -14,12 +15,8 @@ export const contentType = "image/png";
 const getFontData = async () => {
     try {
         const [cabinetGrotesk, clashDisplay] = await Promise.all([
-            fetch(
-                new URL("../../../public/fonts/CabinetGrotesk-Medium.ttf", import.meta.url)
-            ).then((res) => res.arrayBuffer()),
-            fetch(
-                new URL("../../../public/fonts/ClashDisplay-Semibold.ttf", import.meta.url)
-            ).then((res) => res.arrayBuffer()),
+            fetch(`${DATA.url}/fonts/CabinetGrotesk-Medium.ttf`).then((res) => res.arrayBuffer()),
+            fetch(`${DATA.url}/fonts/ClashDisplay-Semibold.ttf`).then((res) => res.arrayBuffer()),
         ]);
         return { cabinetGrotesk, clashDisplay };
     } catch (error) {
