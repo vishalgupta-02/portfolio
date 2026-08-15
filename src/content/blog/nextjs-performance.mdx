@@ -1,0 +1,88 @@
+---
+title: "How I Improved My Next.js Portfolio Performance"
+description: "Techniques I used to make my Next.js portfolio faster."
+publishedAt: "2026-08-03"
+tags:
+  - Next.js
+  - TypeScript
+  - Performance
+published: true
+---
+
+Performance matters even for relatively small applications.
+
+When I started building my portfolio, I wanted the website to feel fast while
+still having animations and interactive components.
+
+## TypeScript Example
+
+Here is a simple TypeScript function:
+
+```ts
+interface User {
+  id: string
+  name: string
+}
+
+export function greetUser(user: User): string {
+  return `Hello ${user.name}`
+}
+
+const user: User = {
+  id: "123",
+  name: "Codemonkey",
+}
+
+console.log(greetUser(user))
+```
+
+---
+
+## Server Components
+
+Server Components allow us to keep unnecessary JavaScript out of the browser.
+
+### Example
+
+```tsx
+export default function Page() {
+  return <h1>Hello World</h1>
+}
+```
+
+<Callout type='info' title='Performance Tip'>
+  Keep components on the server unless they actually require client-side
+  interactivity.
+</Callout>
+
+Read more in the [Next.js documentation](https://nextjs.org).
+
+You can also see my [projects](/projects).
+
+> Client Components should be an intentional architectural decision.
+
+## Server Components
+
+One of the biggest improvements was keeping most of the website server-rendered.
+
+## Copy Test
+
+```ts
+interface User {
+  id: string
+  name: string
+}
+
+const user: User = {
+  id: "123",
+  name: "Codemonkey",
+}
+```
+
+## Images
+
+Next.js provides the `Image` component for image optimization.
+
+## Conclusion
+
+Avoid shipping JavaScript when you don't actually need JavaScript.

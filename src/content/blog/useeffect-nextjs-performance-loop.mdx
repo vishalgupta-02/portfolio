@@ -1,0 +1,675 @@
+---
+title: "How a useEffect Caused Hundreds of Requests in My Next.js App"
+description: "A seemingly harmless URL synchronization effect created a request loop in my Next.js blog. Here's how I found the problem, understood it, and fixed it."
+publishedAt: "2026-08-04"
+tags:
+  - Next.js
+  - React
+  - TypeScript
+  - Performance
+published: true
+---
+
+While building the blog for my portfolio, I added search and tag filtering.
+
+The feature seemed simple:
+
+- Search articles instantly
+- Filter articles by tags
+- Store the active filters in the URL
+- Preserve filters after refreshing the page
+- Make filtered URLs shareable
+
+For example:
+
+```text
+/blog?q=typescript
+/blog?tag=next-js
+/blog?q=performance&tag=next-js
+```
+
+Everything appeared to work.
+
+But while testing the application, I opened the browser's Network tab and noticed something was very wrong.
+
+The page was continuously making requests.
+
+Even when I wasn't doing anything.
+
+---
+
+## The Problem
+
+My Network tab was filling with requests similar to:
+
+```text
+blog?tag=hello&_rsc=...
+blog?tag=hello&_rsc=...
+blog?tag=hello&_rsc=...
+blog?tag=hello&_rsc=...
+```
+
+After leaving the page open for a while, I had hundreds of requests.
+
+The UI itself didn't immediately reveal the problem.
+
+Search worked.
+
+Tags worked.
+
+The URL changed correctly.
+
+But underneath the UI, the application was repeatedly triggering Next.js navigations.
+
+That caused unnecessary network traffic and made the page feel increasingly laggy.
+
+---
+
+## The Original Implementation
+
+I was synchronizing my React state with the URL using `useEffect`.
+
+The effect looked roughly like this:
+
+```tsx
+useEffect(() => {
+  const timeout = window.setTimeout(() => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    const trimmedQuery = query.trim()
+
+    if (trimmedQuery) {
+      params.set("q", trimmedQuery)
+    } else {
+      params.delete("q")
+    }
+
+    if (selectedTag) {
+      params.set("tag", selectedTag)
+    } else {
+      params.delete("tag")
+    }
+
+    const search = params.toString()
+
+    const url = search ? `${pathname}?${search}` : pathname
+
+    router.replace(url, {
+      scroll: false,
+    })
+  }, 300)
+
+  return () => {
+    window.clearTimeout(timeout)
+  }
+}, [query, selectedTag, pathname, router, searchParams])
+```
+
+At first glance, this looked reasonable.
+
+When the search query or selected tag changed, I waited 300 milliseconds and updated the URL.
+
+The problem was hidden inside the dependency array.
+
+```tsx
+searchParams
+```
+
+---
+
+## Understanding the Feedback Loop
+
+`searchParams` is reactive.
+
+At the same time, the effect was calling:
+
+```tsx
+router.replace(...)
+```
+
+That meant my logic could effectively become:
+
+```text
+useEffect runs
+      ↓
+router.replace()
+      ↓
+Next.js navigation
+      ↓
+searchParams updates
+      ↓
+component reacts
+      ↓
+useEffect runs again
+      ↓
+router.replace()
+      ↓
+repeat
+```
+
+The effect responsible for **writing URL state** was also listening to the value representing **URL state**.
+
+I had accidentally coupled both directions of synchronization.
+
+The interesting part was that nothing looked obviously broken in the UI.
+
+The browser's Network tab exposed the real problem.
+
+---
+
+## The First Important Fix
+
+Before performing a navigation, I needed to answer a simple question:
+
+> Is the URL I'm about to navigate to already the current URL?
+
+If the answer is yes, there is no reason to call `router.replace()`.
+
+I changed the logic to compare the desired search parameters with the current URL:
+
+```tsx
+const nextSearch = params.toString()
+
+const currentSearch = window.location.search.slice(1)
+
+if (nextSearch === currentSearch) {
+  return
+}
+```
+
+This guard is small, but it is important.
+
+Instead of:
+
+```text
+State changes
+    ↓
+Navigate
+    ↓
+Navigate again
+    ↓
+Navigate again
+```
+
+the behavior becomes:
+
+```text
+State changes
+    ↓
+Build desired URL
+    ↓
+Compare with current URL
+    ↓
+Same?
+    ↓
+Do nothing
+```
+
+---
+
+## Separating URL Reading From URL Writing
+
+I also stopped making the URL-writing effect depend directly on `searchParams`.
+
+Instead of treating URL synchronization as one operation, I started thinking about it as two separate data flows.
+
+```text
+React state
+    ↓
+URL
+```
+
+and:
+
+```text
+URL
+    ↓
+React state
+```
+
+Those are related operations, but they have different responsibilities.
+
+The effect responsible for writing the URL should react to application state:
+
+```tsx
+query
+selectedTag
+```
+
+The effect responsible for reading the URL should react to:
+
+```tsx
+searchParams
+```
+
+Keeping those responsibilities separate makes it much easier to reason about the synchronization.
+
+---
+
+## Debouncing Only What Actually Needs Debouncing
+
+There was another issue with my original implementation.
+
+Both search queries and tag selections were delayed by 300 milliseconds.
+
+But those interactions are different.
+
+When someone types:
+
+```text
+r
+re
+red
+redi
+redis
+```
+
+updating the URL for every keystroke would be unnecessary.
+
+Debouncing makes sense here.
+
+But when someone clicks:
+
+```text
+Performance
+```
+
+there is only one intentional action.
+
+There is no reason to delay that interaction.
+
+So I separated the search input from the URL query.
+
+```tsx
+const [query, setQuery] = useState(() => searchParams.get("q") ?? "")
+
+const [debouncedQuery, setDebouncedQuery] = useState(query)
+```
+
+Then I debounce only the query:
+
+```tsx
+useEffect(() => {
+  const timeout = window.setTimeout(() => {
+    setDebouncedQuery(query)
+  }, 300)
+
+  return () => {
+    window.clearTimeout(timeout)
+  }
+}, [query])
+```
+
+Now typing behaves like this:
+
+```text
+User types
+    ↓
+query changes immediately
+    ↓
+articles filter immediately
+    ↓
+wait 300ms
+    ↓
+debouncedQuery changes
+    ↓
+URL updates once
+```
+
+The interface stays responsive while the URL avoids unnecessary updates.
+
+---
+
+## The Improved URL Synchronization
+
+The URL-writing effect became:
+
+```tsx
+useEffect(() => {
+  const params = new URLSearchParams()
+
+  const trimmedQuery = debouncedQuery.trim()
+
+  if (trimmedQuery) {
+    params.set("q", trimmedQuery)
+  }
+
+  if (selectedTag) {
+    params.set("tag", selectedTag)
+  }
+
+  const nextSearch = params.toString()
+
+  const currentSearch = window.location.search.slice(1)
+
+  if (nextSearch === currentSearch) {
+    return
+  }
+
+  const url = nextSearch ? `${pathname}?${nextSearch}` : pathname
+
+  router.replace(url, {
+    scroll: false,
+  })
+}, [debouncedQuery, selectedTag, pathname, router])
+```
+
+There are two important properties here.
+
+First, `searchParams` is no longer a dependency of the effect responsible for writing the URL.
+
+Second, the effect refuses to navigate when the URL already represents the current state.
+
+---
+
+## Synchronizing the URL Back Into React
+
+I still wanted URLs to be shareable.
+
+If someone opens:
+
+```text
+/blog?q=typescript&tag=performance
+```
+
+the UI should initialize with those filters.
+
+Similarly, browser navigation should keep the UI synchronized.
+
+For that direction, I use a separate effect:
+
+```tsx
+useEffect(() => {
+  const urlQuery = searchParams.get("q") ?? ""
+
+  const urlTag = searchParams.get("tag")
+
+  setQuery((currentQuery) =>
+    currentQuery === urlQuery ? currentQuery : urlQuery,
+  )
+
+  setDebouncedQuery((currentQuery) =>
+    currentQuery === urlQuery ? currentQuery : urlQuery,
+  )
+
+  setSelectedTag((currentTag) => (currentTag === urlTag ? currentTag : urlTag))
+}, [searchParams])
+```
+
+Now the architecture is much clearer:
+
+```text
+User interaction
+      ↓
+React state
+      ↓
+URL writer
+      ↓
+URL
+
+
+URL / browser navigation
+      ↓
+searchParams
+      ↓
+URL reader
+      ↓
+React state
+```
+
+The important part is that the URL writer has a guard preventing unnecessary navigation.
+
+---
+
+## Testing the Fix
+
+After changing the implementation, I cleared the Network tab and tested several scenarios.
+
+### Doing Nothing
+
+I left the page untouched.
+
+Expected behavior:
+
+```text
+No repeated blog requests
+```
+
+This was the most important test.
+
+A page sitting idle should not continuously perform navigations.
+
+### Selecting a Tag
+
+I selected:
+
+```text
+Hello
+```
+
+The URL became:
+
+```text
+/blog?tag=hello
+```
+
+The navigation happened once.
+
+After that, the Network tab stayed quiet.
+
+### Searching
+
+I typed:
+
+```text
+redis
+```
+
+The article list filtered immediately while I typed.
+
+The URL update happened only after the debounce period.
+
+Instead of producing URL updates for:
+
+```text
+?q=r
+?q=re
+?q=red
+?q=redi
+?q=redis
+```
+
+the final state was synchronized once:
+
+```text
+?q=redis
+```
+
+### Clearing Filters
+
+Clicking "Clear filters" returned the page to:
+
+```text
+/blog
+```
+
+without starting another request loop.
+
+---
+
+## Why This Bug Was Easy to Miss
+
+This debugging session reminded me that a feature can be functionally correct while still being architecturally wrong.
+
+From the user's perspective, the feature initially appeared to work:
+
+```text
+Search        ✓
+Tags          ✓
+URL state     ✓
+Refresh       ✓
+```
+
+But the Network tab revealed another side of the system:
+
+```text
+Repeated navigation   ✗
+Unnecessary requests  ✗
+Performance           ✗
+```
+
+This is why testing only what is visible on the screen isn't enough.
+
+For frontend applications, I now regularly check:
+
+```text
+Network requests
+React renders
+Console warnings
+Bundle behavior
+Loading states
+URL transitions
+```
+
+especially after introducing effects or navigation logic.
+
+---
+
+## A Useful Mental Model for useEffect
+
+One thing I learned from this bug is to be careful when an effect both **depends on a value** and **causes that value to change indirectly**.
+
+For example:
+
+```text
+Effect depends on A
+      ↓
+Effect performs B
+      ↓
+B causes A to change
+      ↓
+Effect runs again
+```
+
+That doesn't automatically mean the code is wrong.
+
+But it should immediately make me ask:
+
+> What terminates this cycle?
+
+In this case, there wasn't a reliable termination condition.
+
+Adding:
+
+```tsx
+if (nextSearch === currentSearch) {
+  return
+}
+```
+
+gave the synchronization an explicit stopping condition.
+
+---
+
+## Another Lesson: Debounce the Expensive Side Effect, Not the UI
+
+Initially, it was tempting to debounce the entire search behavior.
+
+That would have meant:
+
+```text
+User types
+    ↓
+wait
+    ↓
+results change
+```
+
+But local filtering is cheap.
+
+The expensive operation was navigation.
+
+So the better architecture was:
+
+```text
+                 Search input
+                      │
+             ┌────────┴────────┐
+             │                 │
+             ▼                 ▼
+       Local filtering      URL sync
+             │                 │
+       immediate            debounced
+             │                 │
+             ▼                 ▼
+        Fast UI           Less navigation
+```
+
+That distinction made the search feel much better.
+
+---
+
+## The Final Result
+
+After the fix, the blog search architecture became:
+
+```text
+                    Blog Search
+                         │
+              ┌──────────┴──────────┐
+              │                     │
+           Query                  Tag
+              │                     │
+              ▼                     ▼
+      Immediate filtering    Immediate filtering
+              │                     │
+              └──────────┬──────────┘
+                         │
+                         ▼
+                    React state
+                         │
+                  query debounced
+                         │
+                         ▼
+                   URL comparison
+                         │
+                ┌────────┴────────┐
+                │                 │
+              same             different
+                │                 │
+                ▼                 ▼
+           do nothing       router.replace()
+```
+
+The biggest improvement wasn't a new library or a complicated optimization.
+
+It was simply preventing the application from doing work it didn't need to do.
+
+---
+
+## Conclusion
+
+This bug reinforced a performance principle I want to keep applying:
+
+> Before making something faster, make sure it isn't doing unnecessary work in the first place.
+
+The original implementation wasn't slow because Next.js couldn't handle the search.
+
+It was slow because my synchronization logic kept asking Next.js to perform navigations that weren't necessary.
+
+A small dependency decision inside `useEffect` was enough to create hundreds of network requests.
+
+The fix came from understanding the data flow:
+
+```text
+React state → URL
+URL → React state
+```
+
+and keeping those responsibilities separate.
+
+It also reminded me to look beyond whether a feature "works."
+
+Sometimes the most important bugs are happening underneath the UI.
+
+---

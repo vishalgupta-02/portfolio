@@ -1,207 +1,182 @@
-import { allPosts } from "content-collections";
-import { formatDate } from "@/lib/utils";
-import { DATA } from "@/data/resume";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { MDXContent } from "@content-collections/mdx/react";
-import { mdxComponents } from "@/mdx-components";
-import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import rehypeShiki from "@shikijs/rehype";
 
-function getSortedPosts() {
-  return [...allPosts].sort((a, b) => {
-    if (new Date(a.publishedAt) > new Date(b.publishedAt)) {
-      return -1;
-    }
-    return 1;
-  });
+import {
+  getAllPosts,
+  getArticleNavigation,
+  getPostBySlug,
+  getRelatedArticles,
+} from "@/lib/blog/blog";
+import { mdxComponents } from "@/components/blog/mdx-component";
+import { TableOfContents } from "@/components/blog/table-of-contents";
+import { copyCodeTransformer } from "@/lib/blog/shiki";
+import { BlogTag } from "@/components/blog/blog-tag";
+import { ArticleNavigation } from "@/components/blog/article-navigation";
+import { RelatedArticles } from "@/components/blog/related-articles";
+import { siteConfig } from "@/lib/blog/site";
+import { generateBlogMetadata } from "@/lib/blog/metadata";
+import { generateBlogJsonLd } from "@/lib/blog/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowUpLeftFromCircle } from "lucide-react";
+
+interface BlogPostPageProps {
+  params: Promise<{
+    slug: string;
+  }>;
 }
 
-export async function generateStaticParams() {
-  return allPosts.map((post) => ({
-    slug: post._meta.path.replace(/\.mdx$/, ""),
+export function generateStaticParams() {
+  const posts = getAllPosts();
+
+  return posts.map((post) => ({
+    slug: post.slug,
   }));
 }
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{
-    slug: string;
-  }>;
-}): Promise<Metadata | undefined> {
+}: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = allPosts.find((p) => p._meta.path.replace(/\.mdx$/, "") === slug);
+
+  const post = getPostBySlug(slug);
 
   if (!post) {
-    return undefined;
+    return {};
   }
 
-  let {
-    title,
-    publishedAt: publishedTime,
-    summary: description,
-    image,
-  } = post;
-
-  return {
-    title: `${title} | 2AM Blog`,
-    description,
-    keywords: [
-      'software engineering',
-      'programming',
-      'tutorial',
-      'blog',
-      'web development',
-      ...(title.toLowerCase().includes('linux') ? ['Linux', 'shell', 'terminal'] : []),
-    ],
-    authors: [{ name: DATA.name }],
-    creator: DATA.name,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      publishedTime,
-      url: `${DATA.url}/blog/${slug}`,
-      authors: [DATA.name],
-      images: [
-        {
-          url: `${DATA.url}/blog/${slug}/opengraph-image`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      creator: "@vishalgupta_02",
-      images: [`${DATA.url}/blog/${slug}/opengraph-image`],
-    },
-    alternates: {
-      canonical: `${DATA.url}/blog/${slug}`,
-    },
-  };
+  return generateBlogMetadata(slug, post);
 }
 
-export default async function Blog({
-  params,
-}: {
-  params: Promise<{
-    slug: string;
-  }>;
-}) {
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const sortedPosts = getSortedPosts();
-  const currentIndex = sortedPosts.findIndex(
-    (p) => p._meta.path.replace(/\.mdx$/, "") === slug
-  );
-  const post = sortedPosts[currentIndex];
 
-  if (!post) {
+  const post = getPostBySlug(slug);
+
+  if (!post || !post.metadata.published) {
     notFound();
   }
 
-  const previousPost = currentIndex > 0 ? sortedPosts[currentIndex - 1] : null;
-  const nextPost = currentIndex < sortedPosts.length - 1 ? sortedPosts[currentIndex + 1] : null;
+  // Get previous and next articles first.
+  const navigation = getArticleNavigation(slug);
 
-  const getSlug = (post: (typeof sortedPosts)[0]) =>
-    post._meta.path.replace(/\.mdx$/, "");
+  // Get their slugs so we can exclude them
+  // from the related articles section.
+  const navigationSlugs = [
+    navigation.previous?.slug,
+    navigation.next?.slug,
+  ].filter((slug): slug is string => Boolean(slug));
 
-  const jsonLdContent = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    datePublished: post.publishedAt,
-    dateModified: post.publishedAt,
-    description: post.summary,
-    image: post.image
-      ? `${DATA.url}${post.image}`
-      : `${DATA.url}/blog/${slug}/opengraph-image`,
-    url: `${DATA.url}/blog/${slug}`,
-    author: {
-      "@type": "Person",
-      name: DATA.name,
-    },
-  }).replace(/</g, "\\u003c");
+  // Find related articles, but don't show
+  // previous/next articles again.
+  const relatedArticles = getRelatedArticles(slug, 2, navigationSlugs);
+
+  const jsonLd = generateBlogJsonLd(slug, post);
 
   return (
-    <section id="blog">
-      <script
-        type="application/ld+json"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{
-          __html: jsonLdContent,
-        }}
-      />
-      <div className="flex justify-start gap-4 items-center">
-        <Link href="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors border border-border rounded-lg px-2 py-1 inline-flex items-center gap-1 mb-6 group" aria-label="Back to Blog">
-          <ChevronLeft className="size-3 group-hover:-translate-x-px transition-transform" />
-          Back to Blog
-        </Link>
-      </div>
-      <div className="flex flex-col gap-4">
-        <h1 className="title font-semibold text-3xl md:text-4xl tracking-tighter leading-tight">
-          {post.title}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {formatDate(post.publishedAt)}
-        </p>
-      </div>
-      <div className="my-6 flex w-full items-center">
-        <div
-          className="flex-1 h-px bg-border"
-          style={{
-            maskImage:
-              "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
-            WebkitMaskImage:
-              "linear-gradient(90deg, transparent, black 8%, black 92%, transparent)",
-          }}
-        />
-      </div>
-      <article className="prose max-w-full text-pretty font-sans leading-relaxed text-muted-foreground dark:prose-invert">
-        <MDXContent code={post.mdx} components={mdxComponents} />
-      </article>
+    <>
+      <JsonLd data={jsonLd} />
 
-      <nav className="mt-12 pt-8 max-w-2xl">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
-          {previousPost ? (
-            <Link
-              href={`/blog/${getSlug(previousPost)}`}
-              className="group flex-1 flex flex-col gap-1 p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
-            >
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <ChevronLeft className="size-3" />
-                Previous
-              </span>
-              <span className="text-sm font-medium group-hover:text-foreground transition-colors whitespace-normal wrap-break-word">
-                {previousPost.title}
-              </span>
-            </Link>
-          ) : (
-            <div className="hidden sm:block flex-1" />
-          )}
-
-          {nextPost ? (
-            <Link
-              href={`/blog/${getSlug(nextPost)}`}
-              className="group flex-1 flex flex-col gap-1 p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors text-right"
-            >
-              <span className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
-                Next
-                <ChevronRight className="size-3" />
-              </span>
-              <span className="text-sm font-medium group-hover:text-foreground transition-colors whitespace-normal wrap-break-word">
-                {nextPost.title}
-              </span>
-            </Link>
-          ) : (
-            <div className="hidden sm:block flex-1" />
-          )}
+      <main className="mx-auto max-w-2xl px-4 pt-12 pb-2">
+        <div className="mb-4">
+          <Link
+            href="/blog"
+            className="text-primary flex text-sm items-center hover:underline"
+          >
+            <ArrowUpLeftFromCircle className="mr-1 inline size-3" />
+            Back to blog
+          </Link>
         </div>
-      </nav>
-    </section>
+        {/* <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_240px]"> */}
+        {/* Article */}
+        <article className="min-w-0">
+          <header className="mb-12 max-w-3xl">
+            <h1 className="text-3xl font-bold tracking-tight">
+              {post.metadata.title}
+            </h1>
+
+            <p className="mt-4 text-sm text-muted-foreground max-w-xl">
+              {post.metadata.description}
+            </p>
+
+            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+              <time dateTime={post.metadata.publishedAt}>
+                {new Date(post.metadata.publishedAt).toLocaleDateString(
+                  "en-US",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  },
+                )}
+              </time>
+
+              <span aria-hidden="true">·</span>
+
+              <span>{post.readingTime.minutes} min read</span>
+            </div>
+            {post.metadata.tags.length > 0 && (
+              <div className="mt-5 flex flex-wrap gap-2">
+                {post.metadata.tags.map((tag) => (
+                  <BlogTag key={tag} tag={tag} />
+                ))}
+              </div>
+            )}
+            {post.metadata.image && (
+              <div className="relative mt-8 aspect-video overflow-hidden rounded-xl">
+                <Image
+                  src={post.metadata.image}
+                  alt={post.metadata.title}
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 768px"
+                />
+              </div>
+            )}
+          </header>
+
+          <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
+            <MDXRemote
+              source={post.content}
+              components={mdxComponents}
+              options={{
+                mdxOptions: {
+                  rehypePlugins: [
+                    [
+                      rehypeShiki,
+                      {
+                        themes: {
+                          light: "github-light",
+                          dark: "github-dark",
+                        },
+                        transformers: [copyCodeTransformer],
+                      },
+                    ],
+                  ],
+                },
+              }}
+            />
+          </div>
+
+          <div className="max-w-3xl">
+            {/* <ArticleNavigation navigation={navigation} /> */}
+            <RelatedArticles articles={relatedArticles} />
+          </div>
+        </article>
+
+        {/* Table of Contents */}
+        {/* <aside className="hidden lg:block">
+            <div className="sticky top-24">
+              <TableOfContents items={post.tableOfContents} />
+
+            </div>
+          </aside> */}
+        {/* </div> */}
+      </main>
+    </>
   );
 }

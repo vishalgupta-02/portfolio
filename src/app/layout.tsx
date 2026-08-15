@@ -1,95 +1,109 @@
-import Navbar from "@/components/navbar"
-import { ThemeProvider } from "@/components/theme-provider"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { DATA } from "@/data/resume"
-import { cn } from "@/lib/utils"
-import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
-import "./globals.css"
-import { FlickeringGrid } from "@/components/magicui/flickering-grid"
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import "./globals.css";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
+import { IntroLoader } from "@/components/intro-loader";
+import { siteConfig } from "@/lib/blog/site";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
-const geist = Geist({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
-})
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-mono",
-})
+const spaceGrotesk = localFont({
+  // for the heading
+  src: "../../public/fonts/SpaceGrotesk-Variable.ttf",
+  variable: "--font-space-grotesk",
+  display: "swap",
+  preload: true,
+});
+
+const publicSans = localFont({
+  // for the body
+  src: "../../public/fonts/PublicSans-Variable.ttf",
+  variable: "--font-public-sans",
+  display: "swap",
+  preload: true,
+});
+
+const jetbrainsMono = localFont({
+  // for the code
+  src: "../../public/fonts/JetBrainsMono-Variable.ttf",
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+  preload: true,
+});
+
+// export const metadata: Metadata = {
+//   title: "Portfolio",
+//   description: "Personal portfolio built with Next.js",
+// }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(DATA.url),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: DATA.name,
-    template: `%s | ${DATA.name}`,
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
   },
-  description: DATA.description,
-  openGraph: {
-    title: `${DATA.name}`,
-    description: DATA.description,
-    url: DATA.url,
-    siteName: `${DATA.name}`,
-    locale: "en_US",
-    type: "website",
+  description: siteConfig.description,
+  keywords: [...siteConfig.keywords],
+  authors: [
+    {
+      name: siteConfig.author,
+    },
+  ],
+  alternates: {
+    types: {
+      "application/rss+xml": [
+        {
+          url: "/feed.xml",
+          title: "Vishal Gupta RSS Feed",
+        },
+      ],
+    },
   },
+  creator: siteConfig.author,
+  publisher: siteConfig.author,
   robots: {
     index: true,
     follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
   },
-  twitter: {
-    title: `${DATA.name}`,
-    card: "summary_large_image",
-  },
-  verification: {
-    google: "",
-    yandex: "",
-  },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang='en' suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-screen bg-background font-sans antialiased relative",
-          geist.variable,
-          geistMono.variable,
-        )}>
-        <ThemeProvider attribute='class' defaultTheme='light'>
-          <TooltipProvider delayDuration={0}>
-            <div className='absolute inset-0 top-0 left-0 right-0 h-[100px] overflow-hidden z-0'>
-              <FlickeringGrid
-                className='h-full w-full'
-                squareSize={2}
-                gridGap={2}
-                style={{
-                  maskImage: "linear-gradient(to bottom, black, transparent)",
-                  WebkitMaskImage:
-                    "linear-gradient(to bottom, black, transparent)",
-                }}
-              />
-            </div>
-            <div className='relative z-10 max-w-2xl mx-auto py-12 pb-24 sm:py-24 px-6'>
-              {children}
-            </div>
-            <Navbar />
-          </TooltipProvider>
+    <html
+      data-scroll-behavior="smooth"
+      lang="en"
+      className={cn(
+        "h-full",
+        "antialiased",
+        spaceGrotesk.variable,
+        publicSans.variable,
+        jetbrainsMono.variable,
+        "font-sans",
+        geist.variable,
+      )}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <IntroLoader />
+          <Navbar />
+          <main>{children}</main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

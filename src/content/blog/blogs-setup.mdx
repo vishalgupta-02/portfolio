@@ -1,0 +1,2014 @@
+---
+title: "Blog setup in my portfolio using ChatGpt"
+description: "How I set up blog writing & displaying using Nextjs, MDX and many more. Dont forget the ChatGpt"
+publishedAt: "2026-08-04"
+tags:
+  - Next.js
+  - TypeScript
+  - Personal
+  - AI
+published: true
+---
+
+<BlogImage
+  src='/blog/blogs-setup/blogs-frontmatter.avif'
+  alt='Blogs Setup'
+  width={1400}
+  height={800}
+  priority
+/>
+
+---
+
+Yes. Here is the **final picture of the blog system we built for your Next.js portfolio**, from content creation to production. Think of this as your revision/reference document.
+
+# Portfolio Blog — Complete Setup
+
+Your blog is essentially a **local MDX-based static blog**.
+
+The important architectural decision was:
+
+> Blog content lives inside the repository as MDX files instead of coming from a database or CMS.
+
+That gives you a fast, simple setup with very little runtime infrastructure.
+
+```text
+You write .mdx
+      │
+      ▼
+Frontmatter + MDX content
+      │
+      ▼
+Blog loader
+      │
+      ├── Zod validation
+      ├── Reading time
+      ├── Tags
+      ├── TOC
+      └── Metadata
+      │
+      ▼
+Next.js Server Components
+      │
+      ├── /blog
+      ├── /blog/[slug]
+      ├── pagination
+      ├── tags
+      ├── RSS
+      └── sitemap
+      │
+      ▼
+Mostly static HTML
+```
+
+That is the core architecture.
+
+---
+
+<BlogImage
+  src='/blog/blogs-setup/blogs-frontmatter.avif'
+  alt='Blogs Setup'
+  width={1400}
+  height={800}
+/>
+
+---
+
+# 1. Technologies We Used
+
+Your blog uses your existing portfolio stack plus a few blog-specific tools.
+
+```text
+Next.js App Router
+TypeScript
+Tailwind CSS
+MDX
+gray-matter
+Zod
+reading-time
+next-mdx-remote
+rehype-shiki
+Motion for React
+```
+
+Each has a specific responsibility.
+
+| Technology      | Purpose                                    |
+| --------------- | ------------------------------------------ |
+| Next.js         | Routing, rendering, SEO, static generation |
+| TypeScript      | Type safety                                |
+| Tailwind        | Styling                                    |
+| MDX             | Writing articles                           |
+| gray-matter     | Reading frontmatter                        |
+| Zod             | Validating frontmatter                     |
+| reading-time    | Calculating reading time                   |
+| next-mdx-remote | Rendering MDX                              |
+| Shiki           | Server-side code highlighting              |
+| Motion          | Small search-result animations             |
+
+The important thing is that we **didn't build the blog around a large client-side library**.
+
+---
+
+# 2. Content directory
+
+Your articles live somewhere similar to:
+
+```text
+content/
+└── blog/
+    ├── nextjs-performance.mdx
+    ├── redis-caching.mdx
+    └── useeffect-nextjs-request-loop.mdx
+```
+
+Each file represents one article.
+
+The filename becomes the slug.
+
+For example:
+
+```text
+useeffect-nextjs-request-loop.mdx
+```
+
+becomes:
+
+```text
+/blog/useeffect-nextjs-request-loop
+```
+
+Keep filenames clean:
+
+```text
+good:
+
+redis-caching.mdx
+nextjs-server-components.mdx
+mongodb-indexing.mdx
+```
+
+Avoid:
+
+```text
+My Blog.mdx
+Redis!!!.mdx
+article-final-NEW.mdx
+```
+
+Use lowercase words separated by hyphens.
+
+---
+
+# 3. MDX article structure
+
+Every article contains two major parts.
+
+```text
+Frontmatter
++
+Article content
+```
+
+Example:
+
+````md
+---
+title: "How a useEffect Caused Hundreds of Requests in My Next.js App"
+description: "How I found and fixed a request loop in my Next.js blog."
+publishedAt: "2026-08-04"
+tags:
+  - Next.js
+  - React
+  - TypeScript
+  - Performance
+published: true
+---
+
+While building my portfolio...
+
+## The Problem
+
+My Network tab started showing repeated requests.
+
+```tsx
+useEffect(() => {
+  // ...
+}, [])
+```
+````
+
+## Conclusion
+
+The problem was caused by...
+
+````
+
+The frontmatter is machine-readable information.
+
+The content underneath is what readers see.
+
+---
+
+# 4. Blog metadata
+
+We created a metadata type/schema containing information similar to:
+
+```ts
+{
+  title
+  description
+  publishedAt
+  updatedAt?
+  image?
+  tags
+  published
+}
+````
+
+The required information is roughly:
+
+```text
+title
+description
+publishedAt
+tags
+published
+```
+
+Optional:
+
+```text
+updatedAt
+image
+```
+
+This lets you write:
+
+```yaml
+updatedAt: "..."
+```
+
+only when an article was actually updated.
+
+---
+
+# 5. Zod validation
+
+We don't blindly trust MDX frontmatter.
+
+It goes through:
+
+```text
+MDX
+ ↓
+gray-matter
+ ↓
+unknown metadata
+ ↓
+Zod
+ ↓
+validated metadata
+```
+
+Conceptually:
+
+```ts
+const result =
+  blogPostMetadataSchema.safeParse(data)
+
+if (!result.success) {
+  throw new BlogContentError(...)
+}
+
+const metadata = result.data
+```
+
+This is important because this:
+
+```ts
+result
+```
+
+is the Zod result object.
+
+This:
+
+```ts
+result.data
+```
+
+is the actual validated metadata.
+
+That was the TypeScript issue we fixed earlier.
+
+---
+
+# 6. Invalid articles should fail loudly
+
+If you accidentally write:
+
+```yaml
+title: ""
+```
+
+or an invalid date/tag structure, the build should tell you.
+
+We don't want:
+
+```text
+Bad article
+   ↓
+silently disappear
+```
+
+We want:
+
+```text
+Bad article
+   ↓
+Zod
+   ↓
+clear error
+   ↓
+pnpm build fails
+   ↓
+you fix article
+```
+
+That's useful production behavior for repository-controlled content.
+
+---
+
+# 7. Draft system
+
+We added:
+
+```yaml
+published: true
+```
+
+or:
+
+```yaml
+published: false
+```
+
+So you can work on an article without publishing it.
+
+```text
+published: true
+      ↓
+Public blog
+
+
+published: false
+      ↓
+Draft
+```
+
+Drafts should not appear in:
+
+```text
+/blog
+search
+tags
+RSS
+sitemap
+public article routes
+```
+
+---
+
+# 8. Blog types
+
+We have types representing the different kinds of blog data.
+
+For example:
+
+```text
+BlogPostMetadata
+BlogPost
+SearchableBlogPost
+BlogTag
+TableOfContentsItem
+ReadingTime
+```
+
+A full `BlogPost` contains more information.
+
+Conceptually:
+
+```ts
+BlogPost {
+  slug
+  metadata
+  content
+  readingTime
+  tableOfContents
+}
+```
+
+But search doesn't need all that.
+
+So we created a smaller:
+
+```ts
+SearchableBlogPost
+```
+
+containing roughly:
+
+```ts
+{
+  slug
+  title
+  description
+  publishedAt
+  tags
+  readingTime
+}
+```
+
+This is important because we don't want to send full MDX articles to the browser just to perform search.
+
+---
+
+# 9. Blog loader
+
+Your blog utility layer is responsible for reading the content.
+
+Something similar to:
+
+```text
+lib/
+└── blog/
+    ├── blog.ts
+    ├── types.ts
+    ├── schema.ts
+    └── errors.ts
+```
+
+Exact filenames aren't as important as the responsibilities.
+
+The loader does:
+
+```text
+Find MDX files
+     ↓
+Read file
+     ↓
+Parse frontmatter
+     ↓
+Validate with Zod
+     ↓
+Create slug
+     ↓
+Calculate reading time
+     ↓
+Generate TOC
+     ↓
+Return BlogPost
+```
+
+---
+
+# 10. Keep filesystem code server-only
+
+The loader uses things such as:
+
+```ts
+import fs from "node:fs"
+import path from "node:path"
+```
+
+That code must never enter the browser.
+
+We added:
+
+```ts
+import "server-only"
+```
+
+to the server-side blog loader.
+
+So:
+
+```text
+filesystem
+MDX reading
+Zod parsing
+content processing
+```
+
+remain on the server/build side.
+
+---
+
+# 11. `getAllPosts()`
+
+One of the main utilities is conceptually:
+
+```ts
+getAllPosts()
+```
+
+It gives us all public posts.
+
+Its responsibilities include:
+
+```text
+load posts
+validate
+remove drafts
+sort by date
+return posts
+```
+
+Usually newest first:
+
+```text
+Newest
+ ↓
+Older
+ ↓
+Oldest
+```
+
+This becomes the common source used by other blog features.
+
+---
+
+# 12. `getPostBySlug()`
+
+For an individual article:
+
+```text
+/blog/redis-caching
+```
+
+we use:
+
+```ts
+getPostBySlug("redis-caching")
+```
+
+which returns the appropriate article.
+
+If there isn't one:
+
+```ts
+notFound()
+```
+
+So:
+
+```text
+/blog/does-not-exist
+```
+
+properly becomes a `404`.
+
+---
+
+# 13. Reading time
+
+We calculate reading time automatically from the article content.
+
+So you don't manually write:
+
+```yaml
+readingTime: 7
+```
+
+Instead:
+
+```text
+MDX content
+    ↓
+reading-time
+    ↓
+7 min read
+```
+
+Then the UI can display:
+
+```text
+Aug 4, 2026 · 7 min read
+```
+
+---
+
+# 14. Table of contents
+
+Article headings are extracted to generate a TOC.
+
+For example:
+
+```md
+## The Problem
+
+## Understanding the Feedback Loop
+
+### Why useEffect Repeated
+
+## The Solution
+```
+
+becomes something like:
+
+```text
+On this page
+
+The Problem
+Understanding the Feedback Loop
+    Why useEffect Repeated
+The Solution
+```
+
+The TOC can be sticky on larger screens.
+
+If an article has no useful headings:
+
+```ts
+items.length === 0
+```
+
+we simply don't render an empty TOC.
+
+---
+
+# 15. MDX rendering
+
+Individual article pages use MDX rendering.
+
+Conceptually:
+
+```tsx
+<MDXRemote source={post.content} components={mdxComponents} />
+```
+
+This means normal Markdown works:
+
+```md
+## Heading
+
+Paragraph.
+
+- Item
+- Item
+```
+
+while MDX also allows custom components when needed.
+
+---
+
+# 16. Custom MDX components
+
+We created/configured an MDX component mapping.
+
+That allows you to control how things such as:
+
+```text
+links
+images
+code
+custom callouts
+```
+
+render.
+
+This gives your articles the same visual language as the rest of your portfolio.
+
+But don't turn every paragraph into a custom React component.
+
+Keep normal writing as Markdown whenever possible.
+
+---
+
+# 17. Syntax highlighting
+
+Technical articles need code blocks.
+
+We used Shiki through your rehype setup.
+
+For example:
+
+````md
+```ts
+interface User {
+  id: string
+  name: string
+}
+```
+````
+
+gets highlighted automatically.
+
+You configured approximately:
+
+```ts
+themes: {
+  light: "github-light",
+  dark: "github-dark",
+}
+```
+
+So code works with both themes.
+
+Most importantly:
+
+> Shiki stays server-side.
+
+We don't ship a big syntax-highlighting engine to the browser just to color static code.
+
+---
+
+# 18. Tailwind Typography
+
+Article content uses your prose styling:
+
+```tsx
+className="
+  prose
+  prose-neutral
+  max-w-none
+  dark:prose-invert
+  prose-pre:bg-transparent
+  prose-pre:p-0
+"
+```
+
+This gives Markdown sensible typography for:
+
+```text
+headings
+paragraphs
+lists
+links
+blockquote
+code
+tables
+```
+
+without individually styling every MDX element.
+
+---
+
+# 19. Main `/blog` page
+
+Your main page is:
+
+```text
+/blog
+```
+
+It contains approximately:
+
+```text
+Blog
+
+Things I learn while building software.
+
+[ Search articles... ]
+
+[ All ] [ Next.js ] [ Performance ] [ TypeScript ]
+
+Article
+Description
+Date · Reading time
+Tags
+
+Article
+Description
+Date · Reading time
+Tags
+
+...
+```
+
+The main page remains mostly server-rendered.
+
+---
+
+# 20. Blog cards
+
+Normal articles use:
+
+```tsx
+<BlogCard />
+```
+
+which displays:
+
+```text
+Title
+Description
+Date
+Reading time
+Tags
+```
+
+We also fixed the visual inconsistency between normal posts and searched posts.
+
+The important rule is:
+
+> Search results and normal results should visually use the same card design.
+
+So title size, description size, metadata, tags and spacing remain consistent.
+
+---
+
+# 21. Tags
+
+Articles have tags such as:
+
+```yaml
+tags:
+  - Next.js
+  - TypeScript
+  - Performance
+```
+
+We derive tag information automatically.
+
+Your tag type is:
+
+```ts
+export interface BlogTag {
+  name: string
+  slug: string
+  count: number
+}
+```
+
+So:
+
+```text
+Next.js (5)
+TypeScript (8)
+Performance (3)
+```
+
+can be generated from actual articles.
+
+You don't manually maintain tag counts.
+
+---
+
+# 22. The `[object Object]` key bug
+
+At one point we had:
+
+```tsx
+key = { tag }
+```
+
+but `tag` had become:
+
+```ts
+BlogTag
+```
+
+rather than a string.
+
+React converted the object into:
+
+```text
+[object Object]
+```
+
+which caused duplicate keys.
+
+The correct solution became:
+
+```tsx
+key={tag.slug}
+```
+
+and:
+
+```tsx
+{
+  tag.name
+}
+```
+
+This is why the structured tag model matters.
+
+---
+
+# 23. Tag filtering
+
+Clicking:
+
+```text
+Performance
+```
+
+filters posts containing that tag.
+
+We use the tag's slug for URL/state:
+
+```text
+performance
+```
+
+while showing its readable name:
+
+```text
+Performance
+```
+
+This separation is useful:
+
+```text
+name → UI
+slug → URL / identity
+count → article count
+```
+
+---
+
+# 24. Search
+
+Search runs against lightweight post information:
+
+```text
+title
+description
+tags
+```
+
+Conceptually:
+
+```ts
+const searchableText = [post.title, post.description, ...post.tags]
+  .join(" ")
+  .toLowerCase()
+```
+
+Then:
+
+```ts
+searchableText.includes(normalizedQuery)
+```
+
+For a portfolio with dozens of posts, this is perfectly reasonable.
+
+We intentionally did **not** add:
+
+```text
+Algolia
+Elasticsearch
+Fuse.js
+database search
+```
+
+because you don't need them yet.
+
+---
+
+# 25. Search stays client-side
+
+This is one of the few genuinely interactive parts.
+
+So:
+
+```text
+Blog page
+    ↓
+Server Component
+
+BlogSearch
+    ↓
+Client Component
+```
+
+`BlogSearch` uses:
+
+```ts
+"use client"
+```
+
+because it needs:
+
+```text
+useState
+useEffect
+useMemo
+useSearchParams
+useRouter
+Motion
+```
+
+But the rest of the blog stays server-oriented.
+
+---
+
+# 26. URL-synchronized search
+
+We made search/filter state shareable.
+
+For example:
+
+```text
+/blog?q=redis
+```
+
+and:
+
+```text
+/blog?tag=performance
+```
+
+and potentially:
+
+```text
+/blog?q=redis&tag=performance
+```
+
+This means refreshes and shared URLs can preserve useful filter state.
+
+---
+
+# 27. The URL synchronization bug we fixed
+
+This was an important production bug.
+
+Originally the URL-writing effect depended on:
+
+```ts
+searchParams
+```
+
+while also calling:
+
+```ts
+router.replace(...)
+```
+
+That created repeated RSC requests.
+
+The Network tab showed:
+
+```text
+/blog?tag=hello&_rsc=...
+/blog?tag=hello&_rsc=...
+/blog?tag=hello&_rsc=...
+...
+```
+
+The mental model was:
+
+```text
+effect
+ ↓
+router.replace()
+ ↓
+navigation
+ ↓
+searchParams
+ ↓
+effect
+ ↓
+router.replace()
+ ↓
+...
+```
+
+We fixed this by separating:
+
+```text
+React state → URL
+```
+
+from:
+
+```text
+URL → React state
+```
+
+and, critically, checking whether navigation is actually necessary:
+
+```ts
+const nextSearch = params.toString()
+
+const currentSearch = window.location.search.slice(1)
+
+if (nextSearch === currentSearch) {
+  return
+}
+```
+
+So the application doesn't navigate to the URL it's already on.
+
+---
+
+# 28. Search debounce
+
+We also improved search behavior.
+
+The UI filters immediately:
+
+```text
+User types "redis"
+      ↓
+results change immediately
+```
+
+but URL synchronization waits roughly:
+
+```text
+300ms
+```
+
+So we don't navigate on every keystroke.
+
+Conceptually:
+
+```text
+query
+ │
+ ├──────────────→ local search
+ │                   immediate
+ │
+ └→ debounce
+       │
+       300ms
+       │
+       ▼
+   URL update
+```
+
+Tags don't really need typing-style debounce because clicking a tag is a single action.
+
+---
+
+# 29. Clear filters
+
+When filters are active, we show:
+
+```text
+Clear filters
+```
+
+which resets:
+
+```ts
+setQuery("")
+setSelectedTag(null)
+```
+
+and ultimately returns the URL to:
+
+```text
+/blog
+```
+
+---
+
+# 30. Empty state
+
+If search finds nothing:
+
+```text
+No articles found
+
+Try a different search term or tag.
+
+Clear filters
+```
+
+We don't show an empty blank area.
+
+This is a small but important UX improvement.
+
+---
+
+# 31. Search accessibility
+
+We improved accessibility with things such as:
+
+```text
+search label
+role="group"
+aria-label
+aria-pressed
+aria-live
+role="status"
+focus-visible
+```
+
+For example, tag buttons can expose whether they're selected:
+
+```tsx
+aria-pressed={isSelected}
+```
+
+and result counts can be announced:
+
+```tsx
+<p role='status' aria-live='polite'>
+  3 articles found
+</p>
+```
+
+---
+
+# 32. Keyboard navigation
+
+The blog should work without a mouse.
+
+A user should be able to:
+
+```text
+Tab
+ ↓
+Search
+ ↓
+All
+ ↓
+Next.js
+ ↓
+TypeScript
+ ↓
+Article links
+ ↓
+Pagination
+```
+
+with a visible focus state.
+
+This is why we don't blindly remove:
+
+```css
+outline
+```
+
+without providing a replacement focus indicator.
+
+---
+
+# 33. Motion
+
+We intentionally use Motion sparingly.
+
+Search/filter results can have a small transition:
+
+```text
+opacity
++
+a few pixels of vertical movement
+```
+
+We do **not** animate:
+
+```text
+every article paragraph
+code blocks
+normal server-rendered cards
+TOC
+everything on scroll
+```
+
+That would work against the original performance goal.
+
+---
+
+# 34. Reduced motion
+
+Interactive animations should respect:
+
+```text
+prefers-reduced-motion
+```
+
+using:
+
+```ts
+useReducedMotion()
+```
+
+So:
+
+```text
+Normal preference
+→ subtle transition
+
+Reduced motion
+→ no unnecessary movement
+```
+
+Animation remains enhancement rather than functionality.
+
+---
+
+# 35. Pagination
+
+We chose:
+
+```ts
+POSTS_PER_PAGE = 10
+```
+
+which is a good number for this portfolio.
+
+Routes look like:
+
+```text
+/blog
+/blog/page/2
+/blog/page/3
+```
+
+We intentionally did **not** implement infinite scrolling.
+
+Traditional pagination is:
+
+```text
+simpler
+faster
+shareable
+crawlable
+accessible
+```
+
+and better suited to this blog.
+
+---
+
+# 36. Pagination edge cases
+
+We handle bad pages correctly.
+
+```text
+/blog/page/banana
+→ 404
+
+/blog/page/-1
+→ 404
+
+/blog/page/999
+→ 404
+```
+
+And:
+
+```text
+/blog/page/1
+```
+
+should redirect to:
+
+```text
+/blog
+```
+
+so there aren't two URLs representing the same first page.
+
+---
+
+# 37. Static generation
+
+Because your content lives locally, Next.js can know your articles ahead of time.
+
+For article routes we use:
+
+```ts
+generateStaticParams()
+```
+
+Conceptually:
+
+```ts
+return posts.map((post) => ({
+  slug: post.slug,
+}))
+```
+
+We similarly generate known pagination/tag paths where appropriate.
+
+This fits the blog extremely well because your content changes when you deploy new code/content.
+
+---
+
+# 38. SEO metadata
+
+Each article can generate metadata from its frontmatter.
+
+Conceptually:
+
+```text
+title
+description
+canonical URL
+OpenGraph
+Twitter metadata
+```
+
+So:
+
+```yaml
+title: "How a useEffect Caused Hundreds of Requests..."
+description: "..."
+```
+
+feeds both the page and SEO metadata.
+
+You don't manually maintain duplicate SEO information somewhere else.
+
+---
+
+# 39. Canonical URLs
+
+Each article should have one canonical URL:
+
+```text
+/blog/useeffect-nextjs-request-loop
+```
+
+This helps search engines understand the preferred URL for the content.
+
+Likewise, redirecting `/blog/page/1` back to `/blog` avoids unnecessary duplication.
+
+---
+
+# 40. Open Graph
+
+Article metadata can produce useful previews when shared.
+
+For example:
+
+```text
+Title
+Description
+Article image
+URL
+```
+
+for platforms that understand Open Graph metadata.
+
+If an article provides an optional:
+
+```yaml
+image:
+```
+
+use it.
+
+Otherwise your portfolio can use its normal fallback sharing image.
+
+---
+
+# 41. Structured data
+
+We also covered article structured data / JSON-LD.
+
+Conceptually:
+
+```json
+{
+  "@type": "BlogPosting",
+  "headline": "...",
+  "datePublished": "...",
+  "dateModified": "..."
+}
+```
+
+This gives search engines more explicit information about the article.
+
+It should represent the same article data you already have rather than introducing another manually maintained source.
+
+---
+
+# 42. Sitemap
+
+Your sitemap includes public article URLs.
+
+Conceptually:
+
+```text
+sitemap
+  │
+  ├── /
+  ├── /blog
+  ├── /blog/article-1
+  ├── /blog/article-2
+  └── ...
+```
+
+Drafts should not appear.
+
+The sitemap should reuse your public-post loader rather than independently discovering content.
+
+---
+
+# 43. Robots
+
+Your portfolio has the appropriate robots setup so crawlers can discover the site and sitemap.
+
+Again, this is server/static infrastructure.
+
+There is no reason for client JavaScript to interact with it.
+
+---
+
+# 44. RSS
+
+We built:
+
+```text
+/rss.xml
+```
+
+RSS lets readers/feed applications subscribe to your writing.
+
+It contains information such as:
+
+```text
+Blog title
+Description
+Site URL
+Last build date
+
+Article
+  title
+  description
+  URL
+  publication date
+```
+
+`lastBuildDate` belongs to the RSS channel/feed metadata.
+
+The RSS feed should contain **published articles only**.
+
+---
+
+# 45. `lastBuildDate`
+
+You specifically asked about this earlier.
+
+Conceptually:
+
+```xml
+<channel>
+  <title>...</title>
+
+  <lastBuildDate>
+    ...
+  </lastBuildDate>
+
+  <item>
+    ...
+  </item>
+</channel>
+```
+
+It describes when the feed was last updated/generated.
+
+---
+
+# 46. Related articles
+
+Individual articles can show related posts.
+
+The relationship is based on useful article information such as tags.
+
+For example:
+
+```text
+Current article:
+
+Next.js
+Performance
+TypeScript
+
+        ↓
+
+Related articles sharing relevant tags
+```
+
+If there are no related articles:
+
+```text
+render nothing
+```
+
+instead of showing an empty section.
+
+---
+
+# 47. Previous/next article navigation
+
+Article pages can also expose navigation between posts.
+
+Conceptually:
+
+```text
+← Previous article          Next article →
+```
+
+The first/last article naturally has only one side.
+
+We don't create fake:
+
+```text
+href="#"
+```
+
+links for missing destinations.
+
+---
+
+# 48. Images
+
+When blog content/cards use images, prefer:
+
+```tsx
+import Image from "next/image"
+```
+
+rather than plain `<img>` where Next's image optimization is appropriate.
+
+Images should have known dimensions or aspect ratios to avoid:
+
+```text
+page loads
+ ↓
+image loads
+ ↓
+content suddenly jumps
+```
+
+Also don't mark every image as priority.
+
+Only genuinely critical above-the-fold images should be considered for eager/preloaded behavior.
+
+---
+
+# 49. Fonts
+
+Your blog should reuse the portfolio's existing optimized fonts.
+
+Don't load:
+
+```text
+five additional font families
+```
+
+just because it's a blog.
+
+Something like:
+
+```text
+normal portfolio font
++
+code font
+```
+
+is enough.
+
+---
+
+# 50. Performance strategy
+
+The main philosophy was:
+
+> Do expensive work on the server/build side and ship as little JavaScript as possible.
+
+So:
+
+```text
+SERVER / BUILD
+
+filesystem
+gray-matter
+Zod
+MDX
+Shiki
+reading time
+TOC
+metadata
+pagination
+RSS
+sitemap
+```
+
+while the browser mainly gets:
+
+```text
+rendered HTML
++
+small BlogSearch client component
++
+small Motion behavior
+```
+
+---
+
+# 51. Server memoization
+
+We also looked at avoiding unnecessary repeated blog-loader work with React server memoization where appropriate:
+
+```ts
+cache(...)
+```
+
+especially for functions such as:
+
+```text
+getAllPosts()
+getPostBySlug()
+```
+
+because multiple server operations may ask for the same post information during one rendering workflow.
+
+We did **not** add Redis or another external caching system for local MDX.
+
+That would be unnecessary.
+
+---
+
+# 52. Things we intentionally did NOT build
+
+This is just as important as what we built.
+
+We avoided:
+
+```text
+❌ Database for blog content
+❌ CMS
+❌ Redis blog cache
+❌ Elasticsearch
+❌ Algolia
+❌ Infinite scroll
+❌ Client-side MDX
+❌ Client-side Shiki
+❌ Heavy fuzzy-search library
+❌ Loading spinners for local search
+❌ Scroll animations everywhere
+❌ useMemo/useCallback everywhere
+❌ Complex runtime APIs
+```
+
+For a developer portfolio, these would mostly add complexity without solving a real problem.
+
+---
+
+# 53. Your final directory structure
+
+The exact filenames may vary slightly in your project, but conceptually you now have:
+
+```text
+portfolio/
+│
+├── content/
+│   └── blog/
+│       ├── article-one.mdx
+│       ├── article-two.mdx
+│       └── useeffect-nextjs-request-loop.mdx
+│
+├── src/
+│   │
+│   ├── app/
+│   │   ├── blog/
+│   │   │   ├── page.tsx
+│   │   │   │
+│   │   │   ├── [slug]/
+│   │   │   │   └── page.tsx
+│   │   │   │
+│   │   │   └── page/
+│   │   │       └── [page]/
+│   │   │           └── page.tsx
+│   │   │
+│   │   └── ...
+│   │
+│   ├── components/
+│   │   └── blog/
+│   │       ├── blog-card.tsx
+│   │       ├── blog-search.tsx
+│   │       ├── blog-search-card.tsx
+│   │       ├── blog-tag.tsx
+│   │       ├── blog-pagination.tsx
+│   │       ├── table-of-contents.tsx
+│   │       └── ...
+│   │
+│   └── lib/
+│       └── blog/
+│           ├── blog.ts
+│           ├── types.ts
+│           ├── schema.ts
+│           ├── errors.ts
+│           └── ...
+│
+└── ...
+```
+
+Plus your:
+
+```text
+RSS
+sitemap
+robots
+metadata
+```
+
+routes/configuration in their appropriate Next.js locations.
+
+---
+
+# 54. The complete request flow
+
+This is the most useful diagram to remember.
+
+### Blog archive
+
+```text
+Browser requests /blog
+        │
+        ▼
+Next.js Server Component
+        │
+        ▼
+getAllPosts()
+        │
+        ▼
+Read MDX
+        │
+        ├── gray-matter
+        ├── Zod
+        ├── reading time
+        └── metadata
+        │
+        ▼
+Published posts
+        │
+        ├───────────────┐
+        ▼               ▼
+10 BlogCards       SearchableBlogPost[]
+        │               │
+        │               ▼
+        │           BlogSearch
+        │               │
+        └───────┬───────┘
+                ▼
+             Browser
+```
+
+### Individual article
+
+```text
+/blog/my-article
+       │
+       ▼
+[slug]
+       │
+       ▼
+getPostBySlug()
+       │
+       ▼
+MDX article
+       │
+       ├── metadata
+       ├── reading time
+       ├── TOC
+       └── content
+              │
+              ▼
+          MDXRemote
+              │
+              ▼
+            Shiki
+              │
+              ▼
+         Server HTML
+              │
+              ▼
+           Browser
+```
+
+---
+
+# 55. What happens when you publish a new blog now?
+
+This is the best part.
+
+You no longer need to build infrastructure.
+
+You create:
+
+```text
+content/blog/my-new-post.mdx
+```
+
+Add:
+
+```md
+---
+title: "..."
+description: "..."
+publishedAt: "..."
+tags:
+  - Next.js
+  - Performance
+published: true
+---
+
+# Your content...
+```
+
+Then your existing system handles the rest:
+
+```text
+New MDX
+   ↓
+validation
+   ↓
+slug
+   ↓
+reading time
+   ↓
+blog listing
+   ↓
+search
+   ↓
+tags/counts
+   ↓
+pagination
+   ↓
+article page
+   ↓
+TOC
+   ↓
+syntax highlighting
+   ↓
+SEO metadata
+   ↓
+sitemap
+   ↓
+RSS
+```
+
+That's the point where a blog system is truly useful: **publishing an article becomes a content task rather than a programming task.**
+
+---
+
+# Final architecture
+
+Your portfolio now effectively has:
+
+```text
+                    PORTFOLIO BLOG
+                          │
+         ┌────────────────┼────────────────┐
+         │                │                │
+      CONTENT          SERVER            CLIENT
+         │                │                │
+         ▼                ▼                ▼
+        MDX          Filesystem        BlogSearch
+         │                │                │
+    Frontmatter         Zod             Search
+    Markdown         gray-matter        Filters
+    Code               MDX              URL sync
+    Images             Shiki            Motion
+         │          Reading time           │
+         │             TOC                 │
+         └──────────────┬──────────────────┘
+                        │
+                        ▼
+                       UI
+                        │
+          ┌─────────────┼─────────────┐
+          ▼             ▼             ▼
+        /blog       /blog/[slug]   Pagination
+          │             │
+          ▼             ▼
+       Search          Article
+       Tags            TOC
+       Cards           Code
+          │            Related
+          │            Prev/Next
+          │
+          └─────────────┬─────────────┐
+                        ▼             ▼
+                       SEO           RSS
+                        │
+                    Metadata
+                    OpenGraph
+                    JSON-LD
+                    Sitemap
+                    Robots
+```
+
+---
+
+## Where I would stop
+
+At this point, **the blog infrastructure is done**.
+
+You do not need another 10 features. The highest-value work now is writing good technical articles based on things you genuinely build and debug—like the `useEffect`/RSC request-loop article we just created.
+
+Before deployment, just run your final checks: `pnpm build`, test `/blog` and several article routes, test search/tag URLs while watching the Network tab, verify pagination/404s, open the RSS and sitemap, test keyboard/mobile layouts, and run Lighthouse against the production build.
+
+After that, treat the blog system as **finished unless a real requirement appears**.
