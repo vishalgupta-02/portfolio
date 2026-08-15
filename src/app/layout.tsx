@@ -8,6 +8,7 @@ import { IntroLoader } from "@/components/intro-loader";
 import { siteConfig } from "@/lib/blog/site";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import { Analytics } from "@vercel/analytics/next";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -103,6 +104,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
