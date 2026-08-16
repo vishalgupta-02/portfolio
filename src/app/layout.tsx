@@ -8,6 +8,7 @@ import { IntroLoader } from "@/components/intro-loader"
 import { siteConfig } from "@/lib/blog/site"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer/footer"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -95,6 +96,7 @@ export default function RootLayout({
           <main>{children}</main>
           <Footer />
         </ThemeProvider>
+        <SpeedInsights />
       </body>
     </html>
   )
