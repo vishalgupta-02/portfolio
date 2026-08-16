@@ -10,6 +10,8 @@ import { BlogSearch } from "@/components/blog/blog-search"
 import type { Metadata } from "next"
 import { siteConfig } from "@/lib/blog/site"
 import { Suspense } from "react"
+import MainLayout from "@/components/main-layout"
+import { ProgressiveBlur } from "@/components/ui/progressive-blur"
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -47,40 +49,44 @@ export default async function BlogPage() {
   const searchablePosts = getSearchablePosts()
 
   return (
-    <main className='mx-auto max-w-2xl py-10 px-4'>
-      <header className='mb-8'>
-        <h1 className='text-3xl font-bold tracking-tight'>2 AM thoughts</h1>
+    <MainLayout>
+      <main className='mx-auto max-w-2xl py-4 px-4 overflow-auto h-full'>
+        <header className='mb-8'>
+          <h1 className='text-3xl font-bold tracking-tight'>2 AM thoughts</h1>
 
-        <p className='mt-2 text-sm text-custom-gray'>
-          When & where thoughts don&apos;t need permissions
-        </p>
-      </header>
+          <p className='mt-2 text-sm text-custom-gray'>
+            When & where thoughts don&apos;t need permissions
+          </p>
+        </header>
 
-      <Suspense
-        fallback={
-          <div className='space-y-8'>
-            {posts.map((post) => (
-              <BlogCard key={post.slug} post={post} />
-            ))}
-          </div>
-        }>
-        <BlogSearch posts={searchablePosts} tags={tags}>
-          <>
+        <Suspense
+          fallback={
             <div className='space-y-8'>
               {posts.map((post) => (
                 <BlogCard key={post.slug} post={post} />
               ))}
             </div>
+          }>
+          <BlogSearch posts={searchablePosts} tags={tags}>
+            <>
+              <div className='space-y-8'>
+                {posts.map((post) => (
+                  <BlogCard key={post.slug} post={post} />
+                ))}
+              </div>
 
-            <BlogPagination
-              currentPage={pagination.currentPage}
-              totalPages={pagination.totalPages}
-              hasPreviousPage={pagination.hasPreviousPage}
-              hasNextPage={pagination.hasNextPage}
-            />
-          </>
-        </BlogSearch>
-      </Suspense>
-    </main>
+              <BlogPagination
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                hasPreviousPage={pagination.hasPreviousPage}
+                hasNextPage={pagination.hasNextPage}
+              />
+            </>
+          </BlogSearch>
+        </Suspense>
+      </main>
+
+      <ProgressiveBlur height='4rem' position='bottom' />
+    </MainLayout>
   )
 }
