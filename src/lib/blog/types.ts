@@ -25,6 +25,9 @@ export interface BlogPost {
   content: string
   readingTime: ReadingTime
   tableOfContents: TableOfContentsItem[]
+  hasDeveloperView: boolean
+  developerContent: string | null
+  developerReadingTime: ReadingTime | null
 }
 
 export interface ArticleNavigationItem {

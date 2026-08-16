@@ -1,16 +1,15 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
-import "./globals.css";
-import { ThemeProvider } from "@/components/ui/theme-provider";
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
-import { IntroLoader } from "@/components/intro-loader";
-import { siteConfig } from "@/lib/blog/site";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
-import { Analytics } from "@vercel/analytics/next";
+import type { Metadata } from "next"
+import localFont from "next/font/local"
+import "./globals.css"
+import { ThemeProvider } from "@/components/ui/theme-provider"
+import { Geist } from "next/font/google"
+import { cn } from "@/lib/utils"
+import { IntroLoader } from "@/components/intro-loader"
+import { siteConfig } from "@/lib/blog/site"
+import Navbar from "@/components/navbar"
+import Footer from "@/components/footer/footer"
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 const spaceGrotesk = localFont({
   // for the heading
@@ -18,7 +17,7 @@ const spaceGrotesk = localFont({
   variable: "--font-space-grotesk",
   display: "swap",
   preload: true,
-});
+})
 
 const publicSans = localFont({
   // for the body
@@ -26,7 +25,7 @@ const publicSans = localFont({
   variable: "--font-public-sans",
   display: "swap",
   preload: true,
-});
+})
 
 const jetbrainsMono = localFont({
   // for the code
@@ -34,12 +33,7 @@ const jetbrainsMono = localFont({
   variable: "--font-jetbrains-mono",
   display: "swap",
   preload: true,
-});
-
-// export const metadata: Metadata = {
-//   title: "Portfolio",
-//   description: "Personal portfolio built with Next.js",
-// }
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -70,17 +64,17 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-};
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html
-      data-scroll-behavior="smooth"
-      lang="en"
+      data-scroll-behavior='smooth'
+      lang='en'
       className={cn(
         "h-full",
         "antialiased",
@@ -90,22 +84,18 @@ export default function RootLayout({
         "font-sans",
         geist.variable,
       )}
-      suppressHydrationWarning
-    >
-      <body className="min-h-full flex flex-col">
+      suppressHydrationWarning>
+      <body className='min-h-full flex flex-col'>
         <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
+          attribute='class'
+          defaultTheme='dark'
           enableSystem
-          disableTransitionOnChange
-        >
-          <IntroLoader />
+          disableTransitionOnChange>
           <Navbar />
           <main>{children}</main>
           <Footer />
         </ThemeProvider>
-        <Analytics />
       </body>
     </html>
-  );
+  )
 }

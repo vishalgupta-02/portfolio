@@ -115,6 +115,17 @@ function CodeBlock({
 //   )
 // }
 
+function Table({
+  className = "",
+  ...props
+}: ComponentPropsWithoutRef<"table">) {
+  return (
+    <div className="my-6 w-full overflow-x-auto">
+      <table className={`w-full ${className}`} {...props} />
+    </div>
+  )
+}
+
 export const mdxComponents = {
   h2: H2,
   h3: H3,
@@ -123,5 +134,6 @@ export const mdxComponents = {
   Callout,
   BlogImage,
   pre: CodeBlock,
+  table: Table,
   // img: MdxImage,
 }

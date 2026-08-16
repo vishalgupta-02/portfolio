@@ -1,0 +1,971 @@
+---
+title: "What Happens When You Click Buy Twice?"
+description: "A journey from a simple e-commerce retry to idempotency, Kafka, transactional outbox, and Saga-based distributed systems."
+publishedAt: "2026-08-16"
+tags:
+  - Distributed Systems
+  - Idempotency
+  - Kafka
+  - System Design
+  - Transactions
+published: true
+dualView: true
+---
+
+# What Happens When You Click Buy Twice?
+
+You click **Buy Now**.
+
+The button spins for a second.
+
+Nothing happens.
+
+So you click it again.
+
+Then you see:
+
+> **Payment successful.**
+
+But was it one payment or two?
+
+That tiny moment is where distributed systems start getting interesting.
+
+A production system has to deal with slow networks, crashed servers, duplicated messages, retries, database failures, and services that disagree about what actually happened.
+
+Let's follow one simple e-commerce purchase and see how the problem evolves.
+
+---
+
+## The journey
+
+Here's where we're going:
+
+```text
+Idempotency
+    ↓
+Retries
+    ↓
+At-most-once vs At-least-once
+    ↓
+Exactly-once processing
+    ↓
+Duplicate messages
+    ↓
+Consumer deduplication
+    ↓
+Transactional Outbox
+    ↓
+Dual-write problem
+    ↓
+Kafka delivery semantics
+    ↓
+Distributed transactions
+    ↓
+Sagas / compensating transactions
+```
+
+It looks like a lot.
+
+But every step comes from the same question:
+
+> **"What happens when something goes wrong?"**
+
+---
+
+# 1. It starts with one innocent button
+
+Imagine we're building an online store.
+
+A customer wants to buy a ₹2,000 pair of headphones.
+
+The workflow looks simple:
+
+```text
+Customer
+   ↓
+Click "Buy Now"
+   ↓
+Create Order
+   ↓
+Take Payment
+   ↓
+Confirm Order
+```
+
+So our frontend sends:
+
+```http
+POST /orders
+```
+
+Easy.
+
+Until the network decides not to cooperate.
+
+---
+
+# 2. The response disappears
+
+The server receives the request.
+
+It creates the order.
+
+The payment succeeds.
+
+Everything is actually fine.
+
+But then...
+
+**the response gets lost.**
+
+```text
+Browser                         Server
+   │                               │
+   │── POST /orders ──────────────>│
+   │                               │
+   │                          Create Order
+   │                               │
+   │                          Charge ₹2,000
+   │                               │
+   │<────── Success ────────────────│
+   X
+Network failure
+```
+
+The server knows:
+
+> "Payment succeeded."
+
+The browser thinks:
+
+> "Did it?"
+
+From the user's perspective, the purchase is stuck.
+
+So they click **Buy Now** again.
+
+And this is where our first real distributed-systems problem appears.
+
+---
+
+# 3. Idempotency
+
+We don't want this:
+
+```text
+First request
+    ↓
+Charge ₹2,000
+    ↓
+Success
+
+Retry
+    ↓
+Charge ₹2,000
+    ↓
+Success
+```
+
+The customer just paid:
+
+```text
+₹4,000
+```
+
+for a ₹2,000 product.
+
+Instead, we give the operation an **idempotency key**.
+
+For example:
+
+```http
+POST /orders
+Idempotency-Key: order_abc123
+```
+
+The server remembers that key.
+
+### First request
+
+```text
+order_abc123
+      ↓
+Not seen before
+      ↓
+Create Order #1001
+      ↓
+Charge ₹2,000
+      ↓
+Save result
+```
+
+We store something like:
+
+```text
+order_abc123 → Order #1001 → SUCCESS
+```
+
+Now the user retries.
+
+### Second request
+
+```text
+order_abc123
+      ↓
+Already processed
+      ↓
+Return previous result
+```
+
+No second order.
+
+No second payment.
+
+The user gets:
+
+```json
+{
+  "orderId": "1001",
+  "status": "confirmed"
+}
+```
+
+This is **idempotency**.
+
+> Same operation + same idempotency key = same logical result.
+
+---
+
+# 4. But retries don't stop here
+
+HTTP requests aren't the only things that get retried.
+
+Our system might look like this:
+
+```text
+Order Service
+      ↓
+Message Broker
+      ↓
+Payment Service
+      ↓
+Inventory Service
+      ↓
+Shipping Service
+```
+
+Now imagine the Order Service publishes:
+
+```text
+OrderCreated
+```
+
+What happens if the Payment Service never receives it?
+
+We need retries.
+
+And now we have another trade-off.
+
+---
+
+# 5. At-most-once vs At-least-once
+
+There are two simple ways to deliver a message.
+
+## At-most-once
+
+We send the message and move on.
+
+```text
+Producer
+   ↓
+Message
+   ↓
+Consumer
+```
+
+If something goes wrong:
+
+```text
+Producer
+   ↓
+Message
+   X
+Consumer
+```
+
+The message may disappear.
+
+So:
+
+```text
+At-most-once
+
+0 or 1 delivery
+```
+
+No duplicates.
+
+But messages can be lost.
+
+---
+
+## At-least-once
+
+Instead, we can keep retrying until the consumer acknowledges the message.
+
+```text
+Producer
+   ↓
+Message
+   ↓
+Consumer
+   ↓
+"I failed"
+   ↓
+Retry
+   ↓
+Consumer
+```
+
+Now messages are much harder to lose.
+
+But we've introduced a new problem:
+
+```text
+At-least-once
+
+1 or more deliveries
+```
+
+That means:
+
+**duplicates are possible.**
+
+And that's usually the safer trade-off.
+
+Losing a payment event is bad.
+
+Processing a payment event twice is also bad.
+
+So now we need another mechanism.
+
+---
+
+# 6. The duplicate message problem
+
+Imagine Kafka delivers:
+
+```json
+{
+  "eventId": "evt_123",
+  "type": "OrderCreated",
+  "orderId": "1001"
+}
+```
+
+The Payment Service processes it successfully.
+
+Then the service crashes **before acknowledging the message**.
+
+Kafka doesn't know that processing succeeded.
+
+So it sends the event again.
+
+```text
+evt_123
+   ↓
+Payment Service
+   ↓
+Charge customer
+   ↓
+SUCCESS
+   ↓
+💥 Crash
+```
+
+Then:
+
+```text
+evt_123
+   ↓
+Payment Service
+   ↓
+Charge customer AGAIN
+```
+
+Oops.
+
+We are back to the same problem.
+
+Only this time, it isn't the user clicking the button twice.
+
+**The infrastructure duplicated the operation.**
+
+---
+
+# 7. Consumer deduplication
+
+The consumer can keep track of events it has already processed.
+
+For example:
+
+```text
+processed_events
+
+event_id
+---------
+evt_123
+evt_124
+evt_125
+```
+
+When a message arrives:
+
+```text
+Receive evt_123
+       ↓
+Have I processed evt_123?
+       │
+    ┌──┴──┐
+    │     │
+   YES    NO
+    │     │
+    ↓     ↓
+ Ignore  Process
+          ↓
+     Store evt_123
+```
+
+The first time:
+
+```text
+evt_123
+   ↓
+Process
+   ↓
+Store evt_123
+```
+
+The second time:
+
+```text
+evt_123
+   ↓
+Already exists
+   ↓
+Ignore
+```
+
+Now duplicates are harmless.
+
+This is why **idempotent consumers** are so important in event-driven systems.
+
+---
+
+# 8. Then another problem appears
+
+Our Order Service needs to do two things:
+
+```text
+1. Save the order
+2. Publish OrderCreated
+```
+
+Maybe we write:
+
+```text
+Save to PostgreSQL
+       ↓
+Publish to Kafka
+```
+
+Looks reasonable.
+
+But distributed systems love finding the gap between two operations.
+
+Imagine:
+
+```text
+PostgreSQL
+    ↓
+Create Order #1001
+    ✓
+    ↓
+Kafka
+    ↓
+    💥 FAILURE
+```
+
+Now PostgreSQL says:
+
+> "Order #1001 exists."
+
+Kafka says:
+
+> "I've never heard of it."
+
+The order exists, but Inventory, Email, Analytics, and Shipping may never know about it.
+
+What if we reverse the order?
+
+```text
+Kafka
+   ↓
+Publish OrderCreated ✓
+   ↓
+PostgreSQL
+   ↓
+Create Order
+   💥 FAILURE
+```
+
+Now Kafka says:
+
+> "Order #1001 was created."
+
+But the database says:
+
+> "What order?"
+
+We have reached the **dual-write problem**.
+
+---
+
+# 9. The dual-write problem
+
+We are trying to atomically update two different systems:
+
+```text
+        One business operation
+               │
+        ┌──────┴──────┐
+        ↓             ↓
+   PostgreSQL       Kafka
+```
+
+But these systems don't share the same transaction.
+
+So this is possible:
+
+```text
+Database ✓
+Kafka    ✗
+```
+
+or:
+
+```text
+Database ✗
+Kafka    ✓
+```
+
+We need a bridge.
+
+That bridge is the **Transactional Outbox**.
+
+---
+
+# 10. Transactional Outbox
+
+Instead of immediately publishing to Kafka, we store the event in our database.
+
+Now our transaction becomes:
+
+```text
+BEGIN TRANSACTION
+
+    Create Order
+         +
+    Create Outbox Event
+
+COMMIT
+```
+
+For example:
+
+```text
+orders
+
+order_id
+--------
+1001
+```
+
+And:
+
+```text
+outbox_events
+
+event_id    type           payload
+-----------------------------------------
+evt_123     OrderCreated   {...}
+```
+
+Both are committed together.
+
+So we now have:
+
+```text
+PostgreSQL
+    │
+    ├── orders
+    │
+    └── outbox_events
+             │
+             ▼
+        Outbox Worker
+             │
+             ▼
+           Kafka
+```
+
+If Kafka is down:
+
+```text
+Outbox
+   ↓
+Kafka ✗
+   ↓
+Wait
+   ↓
+Retry
+   ↓
+Kafka ✓
+```
+
+The event wasn't lost.
+
+It was safely stored in the database until it could be published.
+
+---
+
+# 11. Kafka enters the picture
+
+Now let's talk about Kafka itself.
+
+Kafka gives us different delivery behaviors depending on how producers and consumers are configured.
+
+At a simplified level:
+
+```text
+At-most-once
+    ↓
+Message may be lost
+```
+
+```text
+At-least-once
+    ↓
+Message may be duplicated
+```
+
+And Kafka also provides **exactly-once semantics** for certain Kafka transactional workflows.
+
+But there's an important distinction.
+
+Exactly-once inside a Kafka processing pipeline does not magically make this:
+
+```text
+Kafka
+  ↓
+Consumer
+  ↓
+PostgreSQL
+```
+
+an exactly-once distributed transaction.
+
+Once an external database becomes involved, we still need to think about idempotency, transactions, offsets, and failure recovery.
+
+---
+
+# 12. Now imagine four services
+
+Our purchase flow has grown.
+
+```text
+                 Order
+                   │
+                   ▼
+               Payment
+                   │
+                   ▼
+              Inventory
+                   │
+                   ▼
+               Shipping
+```
+
+Each service owns its own data.
+
+Now imagine we want this entire workflow to behave like one giant transaction:
+
+```text
+BEGIN
+
+Create Order
+Charge Payment
+Reserve Inventory
+Create Shipment
+
+COMMIT
+```
+
+That sounds great.
+
+But these operations might live in completely different services and databases.
+
+```text
+Order DB
+Payment DB
+Inventory DB
+Shipping DB
+```
+
+How do we roll everything back if one service fails?
+
+We have reached the world of **distributed transactions**.
+
+---
+
+# 13. Distributed transactions
+
+One traditional solution is **Two-Phase Commit (2PC)**.
+
+A coordinator asks every participant:
+
+```text
+"Are you ready to commit?"
+```
+
+For example:
+
+```text
+Coordinator
+    │
+    ├── Order      → YES
+    ├── Payment    → YES
+    ├── Inventory  → YES
+    └── Shipping   → YES
+```
+
+Then:
+
+```text
+Coordinator
+    │
+    ├── Order      → COMMIT
+    ├── Payment    → COMMIT
+    ├── Inventory  → COMMIT
+    └── Shipping   → COMMIT
+```
+
+This can work.
+
+But it introduces coordination overhead, latency, failure complexity, and operational concerns.
+
+For many microservice architectures, there's another approach.
+
+---
+
+# 14. Sagas
+
+Instead of trying to make everything one giant transaction, we let each service perform its own local transaction.
+
+Our workflow becomes:
+
+```text
+Create Order
+     ↓
+Charge Payment
+     ↓
+Reserve Inventory
+     ↓
+Create Shipment
+```
+
+Each step commits independently.
+
+But now imagine:
+
+```text
+Create Order       ✓
+Charge Payment     ✓
+Reserve Inventory  ✗
+```
+
+We can't simply run:
+
+```text
+ROLLBACK
+```
+
+across every service.
+
+The previous services have already committed.
+
+So we perform **compensating actions**.
+
+---
+
+# 15. Compensating transactions
+
+The failed workflow:
+
+```text
+Create Order
+     ✓
+     ↓
+Charge Payment
+     ✓
+     ↓
+Reserve Inventory
+     ✗
+```
+
+We compensate:
+
+```text
+Reserve Inventory
+     ✗
+     ↓
+Refund Payment
+     ✓
+     ↓
+Cancel Order
+     ✓
+```
+
+So the final business state becomes:
+
+```text
+Order       → CANCELLED
+Payment     → REFUNDED
+Inventory   → NOT RESERVED
+```
+
+Nothing was magically rolled back.
+
+Instead, we **performed new operations that compensated for the previous ones**.
+
+That's the core idea behind a Saga.
+
+---
+
+# The entire story in one picture
+
+What started as:
+
+```text
+"Why did the customer get charged twice?"
+```
+
+eventually became:
+
+```text
+User clicks Buy
+        │
+        ▼
+   Idempotency
+        │
+        ▼
+      Retry
+        │
+        ▼
+At-least-once delivery
+        │
+        ▼
+Duplicate message
+        │
+        ▼
+Consumer deduplication
+        │
+        ▼
+  Dual-write problem
+        │
+        ▼
+Transactional Outbox
+        │
+        ▼
+ Kafka delivery semantics
+        │
+        ▼
+Distributed transactions
+        │
+        ▼
+      Sagas
+        │
+        ▼
+Compensating transactions
+```
+
+And that is one of my favorite things about distributed systems:
+
+> **The difficult problems rarely appear all at once.**
+
+They usually appear one failure at a time.
+
+You solve retries.
+
+Then duplicates appear.
+
+You solve duplicates.
+
+Then database and message broker consistency becomes a problem.
+
+You solve that.
+
+Then multiple services need to coordinate.
+
+And suddenly, a simple **"Buy Now"** button has taken you all the way to distributed transactions and Sagas.
+
+---
+
+# The mental model
+
+When designing a distributed workflow, I now ask:
+
+```text
+Can this operation be retried?
+        ↓
+Can it happen twice?
+        ↓
+Can messages be duplicated?
+        ↓
+How will I deduplicate them?
+        ↓
+Can my DB write and event publish disagree?
+        ↓
+Do I need an Outbox?
+        ↓
+What delivery guarantee does my broker provide?
+        ↓
+Do multiple services need coordinated state?
+        ↓
+Can I use local transactions + events?
+        ↓
+Do I need a Saga and compensating actions?
+```
+
+The important progression is:
+
+```text
+Retry
+  ↓
+Idempotency
+  ↓
+Duplicate handling
+  ↓
+Reliable event publishing
+  ↓
+Reliable event consumption
+  ↓
+Distributed workflow
+```
+
+Once you understand this progression, concepts like **Kafka delivery semantics, transactional outbox, distributed transactions, and Sagas** stop feeling like isolated interview topics.
+
+They're all answers to the same fundamental problem:
+
+> **"How do we keep a distributed system correct when things inevitably fail?"**

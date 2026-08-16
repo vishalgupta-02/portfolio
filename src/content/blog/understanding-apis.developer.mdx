@@ -1,0 +1,379 @@
+APIs — Application Programming Interfaces — are the backbone of modern distributed systems. This is the engineering perspective: protocols, patterns, and practical implementation details.
+
+---
+
+## REST Architecture
+
+Most web APIs follow **REST** (Representational State Transfer), an architectural style defined by Roy Fielding in 2000.
+
+REST APIs are built around **resources** — nouns, not verbs. Each resource is identified by a URL (its endpoint), and operations on that resource map to standard HTTP methods.
+
+Key REST constraints:
+
+- **Stateless**: Each request contains all the information the server needs. No session state stored on the server between requests.
+- **Client-Server**: The client and server are independent. Either can be replaced without affecting the other.
+- **Uniform Interface**: Resources are manipulated through standard representations (typically JSON).
+- **Cacheable**: Responses must define themselves as cacheable or not.
+
+---
+
+## HTTP Methods
+
+REST APIs use HTTP methods to define the action on a resource:
+
+| Method | Purpose | Idempotent | Safe |
+|--------|---------|------------|------|
+| `GET` | Read a resource | Yes | Yes |
+| `POST` | Create a resource | No | No |
+| `PUT` | Replace a resource entirely | Yes | No |
+| `PATCH` | Partially update a resource | No | No |
+| `DELETE` | Remove a resource | Yes | No |
+
+**Idempotent** means calling the operation multiple times produces the same result as calling it once. This matters for retry logic and fault tolerance.
+
+---
+
+## Endpoints and URL Design
+
+Endpoints should represent resources, not actions:
+
+```text
+# Good — resource-oriented
+GET    /api/v1/users
+GET    /api/v1/users/42
+POST   /api/v1/users
+PUT    /api/v1/users/42
+DELETE /api/v1/users/42
+
+# Bad — action-oriented
+GET    /api/v1/getUser?id=42
+POST   /api/v1/createUser
+POST   /api/v1/deleteUser
+```
+
+Use plural nouns for collections. Nest resources to represent relationships:
+
+```text
+GET /api/v1/users/42/orders        # Orders belonging to user 42
+GET /api/v1/users/42/orders/7      # Specific order for user 42
+```
+
+---
+
+## Request and Response Structure
+
+A typical API request and response using `fetch`:
+
+```ts
+// GET request — fetching a user
+const response = await fetch("https://api.example.com/v1/users/42", {
+  method: "GET",
+  headers: {
+    "Accept": "application/json",
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs...",
+  },
+});
+
+const user = await response.json();
+
+// Response body
+// {
+//   "id": 42,
+//   "name": "Vishal Gupta",
+//   "email": "vishal@example.com",
+//   "createdAt": "2026-01-15T10:30:00Z"
+// }
+```
+
+```ts
+// POST request — creating a resource
+const response = await fetch("https://api.example.com/v1/users", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer eyJhbGciOiJIUzI1NiIs...",
+  },
+  body: JSON.stringify({
+    name: "New User",
+    email: "newuser@example.com",
+  }),
+});
+
+// Returns 201 Created with the new resource
+const newUser = await response.json();
+```
+
+---
+
+## HTTP Headers
+
+Headers carry metadata about the request or response:
+
+| Header | Purpose | Example |
+|--------|---------|---------|
+| `Content-Type` | Format of the request body | `application/json` |
+| `Accept` | Expected response format | `application/json` |
+| `Authorization` | Authentication credentials | `Bearer <token>` |
+| `Cache-Control` | Caching directives | `max-age=3600` |
+| `X-Request-ID` | Request tracing identifier | `req_abc123` |
+| `Rate-Limit-Remaining` | Remaining quota | `98` |
+
+---
+
+## Status Codes
+
+HTTP status codes communicate the outcome of a request:
+
+### 2xx — Success
+
+| Code | Meaning | When to Use |
+|------|---------|-------------|
+| `200` | OK | Successful GET, PUT, PATCH |
+| `201` | Created | Successful POST that created a resource |
+| `204` | No Content | Successful DELETE (nothing to return) |
+
+### 4xx — Client Errors
+
+| Code | Meaning | When to Use |
+|------|---------|-------------|
+| `400` | Bad Request | Malformed request body or parameters |
+| `401` | Unauthorized | Missing or invalid authentication |
+| `403` | Forbidden | Authenticated but insufficient permissions |
+| `404` | Not Found | Resource doesn't exist |
+| `409` | Conflict | Resource state conflict (e.g., duplicate) |
+| `422` | Unprocessable Entity | Valid JSON but failed validation |
+| `429` | Too Many Requests | Rate limit exceeded |
+
+### 5xx — Server Errors
+
+| Code | Meaning | When to Use |
+|------|---------|-------------|
+| `500` | Internal Server Error | Unhandled server-side failure |
+| `502` | Bad Gateway | Upstream service failure |
+| `503` | Service Unavailable | Server overloaded or in maintenance |
+
+---
+
+## Authentication and Authorization
+
+Common API authentication patterns:
+
+### API Keys
+
+Simple but limited. Typically passed as a header or query parameter:
+
+```ts
+// Header-based (preferred)
+headers: { "X-API-Key": "sk_live_abc123..." }
+
+// Query parameter (avoid — keys appear in logs)
+GET /api/data?api_key=sk_live_abc123...
+```
+
+### JWT (JSON Web Tokens)
+
+Stateless tokens containing encoded claims:
+
+```ts
+// Token structure: header.payload.signature
+const token = "eyJhbGciOiJIUzI1NiIs.eyJzdWIiOiIxMjM0NTY3ODkw.SflKxwRJSMeKKF2QT4fw"
+
+headers: { "Authorization": `Bearer ${token}` }
+```
+
+JWTs are self-contained — the server can verify them without a database lookup. Trade-off: they can't be individually revoked without additional infrastructure (blocklist, short expiry + refresh tokens).
+
+### OAuth 2.0
+
+Delegated authorization. The user grants your application limited access to their data on another service, without sharing their password.
+
+Common flow: Authorization Code Grant with PKCE (for SPAs and mobile apps).
+
+---
+
+## Error Handling
+
+A well-designed API returns structured error responses:
+
+```ts
+// Consistent error response format
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": [
+      {
+        "field": "email",
+        "message": "Must be a valid email address"
+      },
+      {
+        "field": "name",
+        "message": "Must be between 2 and 100 characters"
+      }
+    ]
+  }
+}
+```
+
+Client-side error handling should account for:
+
+```ts
+async function fetchUser(id: string) {
+  const response = await fetch(`/api/v1/users/${id}`);
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null; // User not found
+    }
+
+    if (response.status === 429) {
+      // Rate limited — implement exponential backoff
+      throw new RateLimitError(
+        response.headers.get("Retry-After")
+      );
+    }
+
+    throw new ApiError(
+      `Request failed: ${response.status}`,
+      response.status
+    );
+  }
+
+  return response.json();
+}
+```
+
+---
+
+## API Versioning
+
+APIs evolve. Breaking changes need to be managed:
+
+### URL Path Versioning (most common)
+
+```text
+/api/v1/users
+/api/v2/users
+```
+
+### Header Versioning
+
+```text
+Accept: application/vnd.myapi.v2+json
+```
+
+### Query Parameter Versioning
+
+```text
+/api/users?version=2
+```
+
+**URL path versioning** is the most widely used because it's explicit and easy to route. The trade-off is URL pollution, but the clarity is worth it for most APIs.
+
+---
+
+## Rate Limiting
+
+APIs protect themselves from abuse with rate limiting:
+
+```text
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1692000000
+Retry-After: 30
+```
+
+Common strategies:
+
+- **Fixed window**: 100 requests per minute
+- **Sliding window**: 100 requests in any 60-second period
+- **Token bucket**: Burst-friendly with sustained rate limits
+
+Client-side handling:
+
+```ts
+async function fetchWithRetry(
+  url: string,
+  maxRetries = 3
+): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    const response = await fetch(url);
+
+    if (response.status !== 429) {
+      return response;
+    }
+
+    const retryAfter = Number(
+      response.headers.get("Retry-After") ?? "1"
+    );
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, retryAfter * 1000)
+    );
+  }
+
+  throw new Error("Max retries exceeded");
+}
+```
+
+---
+
+## Pagination
+
+Large collections should be paginated:
+
+### Offset-based
+
+```text
+GET /api/v1/users?page=2&limit=20
+```
+
+Simple but has consistency issues with concurrent writes.
+
+### Cursor-based
+
+```text
+GET /api/v1/users?cursor=eyJpZCI6NDJ9&limit=20
+```
+
+More reliable for real-time data. The cursor is an opaque token pointing to a position in the dataset.
+
+Response includes navigation metadata:
+
+```ts
+{
+  "data": [...],
+  "pagination": {
+    "nextCursor": "eyJpZCI6NjJ9",
+    "hasMore": true,
+    "total": 1847
+  }
+}
+```
+
+---
+
+## Practical Considerations
+
+### Use HTTPS everywhere
+Never transmit API keys or tokens over unencrypted connections.
+
+### Validate inputs on the server
+Client-side validation is for UX. Server-side validation is for security.
+
+### Return consistent response shapes
+Don't return an array for one endpoint and an object for another. Wrap collections.
+
+### Use appropriate HTTP methods
+Don't use `GET` for operations that modify data. `GET` requests can be cached, prefetched, and retried by browsers and proxies.
+
+### Log and trace requests
+Include a request ID in every response. This makes debugging distributed systems significantly easier.
+
+### Design for failure
+Network requests fail. Services go down. Timeouts happen. Design your API clients with retry logic, circuit breakers, and graceful degradation.
+
+---
+
+*Switch to **User View** for a high-level, jargon-free explanation of the same topic.*

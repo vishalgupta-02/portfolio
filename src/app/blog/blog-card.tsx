@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { BlogPost } from "@/lib/blog/types";
 
 import { BlogTag } from "@/components/blog/blog-tag";
+import { Layers } from "lucide-react";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -33,6 +34,16 @@ export function BlogCard({ post }: BlogCardProps) {
         <span aria-hidden="true">·</span>
 
         <span>{post.readingTime.minutes} min read</span>
+
+        {post.hasDeveloperView && (
+          <>
+            <span aria-hidden="true">·</span>
+            <span className="inline-flex items-center gap-1 text-foreground/40">
+              <Layers className="size-3" aria-hidden="true" />
+              Dual View
+            </span>
+          </>
+        )}
       </div>
 
       {post.metadata.tags.length > 0 && (
@@ -45,3 +56,4 @@ export function BlogCard({ post }: BlogCardProps) {
     </article>
   );
 }
+

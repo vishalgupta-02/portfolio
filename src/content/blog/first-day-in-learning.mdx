@@ -1,0 +1,36 @@
+---
+title: "Idempotency - fundamental concept in distributed systems"
+description: "Fundamental concept to begin with distributed systems and system design - Idempotency"
+publishedAt: "2026-08-16"
+tags:
+  - System Design
+  - Performance
+  - Backend
+  - Distributed Systems
+  - Idempotency
+published: false
+---
+
+**Idempotency** - a concept that often gets ignored by the developers in the beginning but quite important and need to handle in the initial phases.
+
+Idempotency means the multiple actions don't have any effect after the first application. The results are determined from the first hit and after that all the actions have same effect or no contribution at all.
+
+> In simple terms, taking an action many times should have the same effect as doing it once.
+
+A simple example you can take from the real-life is the workflow of purchasing a product from the e-commerce.
+
+1. When you click on the **add-to-cart** button and then click on the **checkout** button or directly on the **buy-now** button, it redirects you to the next page like add address page,etc.
+
+2. Add the other info and then we move to the **payment** page.
+
+3. When you click on the pay button and You clicked on the button twice, thrice and so on. Still nothing happens, then suddenly you saw the successful message and that's it - the order placed successfully.
+
+4. Correct order is placed or multiple orders with default settings or user preferences ?
+
+This happens when the network plays a prank with you.
+
+Maybe I am not able to explain everything in simple terms but I am also learning about these things and blog writings too.
+
+Now the journey begins - we will see how a simple retry is converted into engineering like - idempotency, kafka, distributed systems, transactions.
+
+---

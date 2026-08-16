@@ -6,6 +6,7 @@ import type { BlogTag, SearchableBlogPost } from "@/lib/blog/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { BlogSearchCard } from "./blog-search-card";
+import { BlogTagsFilter } from "./blog-tags-filter";
 
 interface BlogSearchProps {
   posts: SearchableBlogPost[];
@@ -115,7 +116,7 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-5">
         <div>
           <label htmlFor="blog-search" className="sr-only">
             Search articles
@@ -131,55 +132,17 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
           />
         </div>
 
-        {/* Tags will go here */}
-        <div className="flex justify-between gap-3 items-center">
-          <div className="flex flex-wrap gap-2 w-[90%]">
-            <button
-              type="button"
-              onClick={() => setSelectedTag(null)}
-              className={
-                selectedTag === null
-                  ? "rounded-full bg-foreground px-3 py-1 text-xs text-custom-white dark:text-custom-black cursor-pointer"
-                  : "rounded-full border px-3 py-1 text-xs text-custom-black dark:text-custom-white transition-colors hover:text-foreground cursor-pointer"
-              }
-            >
-              All
-            </button>
-
-            {tags.map((tag) => {
-              const isSelected = selectedTag === tag.slug;
-
-              return (
-                <button
-                  key={tag.slug}
-                  type="button"
-                  onClick={() => setSelectedTag(isSelected ? null : tag.slug)}
-                  className={
-                    isSelected
-                      ? "rounded-full bg-foreground px-3 py-1 text-xs text-custom-white dark:text-custom-black cursor-pointer"
-                      : "rounded-full border px-3 py-1 text-xs text-custom-black dark:text-custom-white transition-colors hover:text-foreground cursor-pointer"
-                  }
-                >
-                  {tag.name}
-                  <span className="ml-2 text-xs opacity-70">({tag.count})</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {hasFilters && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                setSelectedTag(null);
-              }}
-              className="flex-1 text-xs text-custom-gray underline-offset-4 transition-colors hover:text-foreground hover:underline cursor-pointer"
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
+        {/* Organized & Interactive Tags Filter */}
+        <BlogTagsFilter
+          tags={tags}
+          selectedTag={selectedTag}
+          onSelectTag={(slug) => setSelectedTag(slug)}
+          onClearAll={() => {
+            setQuery("");
+            setSelectedTag(null);
+          }}
+          hasFilters={hasFilters}
+        />
 
         {/* Results will go here */}
         {hasFilters ? (

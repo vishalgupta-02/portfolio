@@ -13,6 +13,7 @@ export const blogPostMetadataSchema = z
     image: z.string().trim().startsWith("/").optional(),
     tags: z.array(z.string().trim().min(1)).default([]),
     published: z.boolean().default(false),
+    dualView: z.boolean().default(false),
   })
   .refine(
     (data) => {

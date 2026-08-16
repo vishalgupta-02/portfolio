@@ -31,11 +31,11 @@ function parsePostMetadata(data: unknown, slug: string): BlogPostMetadata {
   const result = blogPostMetadataSchema.safeParse(data);
 
   if (!result.success) {
-    // console.error(`Invalid blog metadata: ${slug}.mdx`, result.error.flatten())
+    const errorDetails = JSON.stringify(result.error.flatten().fieldErrors);
+    console.error(`Invalid blog metadata in ${slug}.mdx:`, errorDetails);
 
-    // throw new Error(`Invalid metadata in blog post: ${slug}.mdx`)
     throw new BlogContentError(
-      `Invalid metadata in blog post: ${slug}.mdx`,
+      `Invalid metadata in blog post: ${slug}.mdx (${errorDetails})`,
       `${slug}.mdx`,
     );
   }
@@ -47,7 +47,7 @@ function parsePostMetadata(data: unknown, slug: string): BlogPostMetadata {
 export function getPostSlugs(): string[] {
   return fs
     .readdirSync(BLOG_DIRECTORY)
-    .filter((file) => file.endsWith(".mdx"))
+    .filter((file) => file.endsWith(".mdx") && !file.endsWith(".developer.mdx"))
     .map((file) => file.replace(/\.mdx$/, ""));
 }
 
@@ -64,14 +64,38 @@ export const getPostBySlug = cache((slug: string): BlogPost | null => {
 
   const metadata = parsePostMetadata(data, slug);
 
+  // Check for companion developer view file
+  const developerContent = getDeveloperViewContent(slug);
+  const hasDeveloperView = metadata.dualView && developerContent !== null;
+
   return {
     slug,
     metadata,
     content,
     readingTime: calculateReadingTime(content),
     tableOfContents: extractTableOfContents(content),
+    hasDeveloperView,
+    developerContent: hasDeveloperView ? developerContent : null,
+    developerReadingTime: hasDeveloperView && developerContent
+      ? calculateReadingTime(developerContent)
+      : null,
   };
 });
+
+function getDeveloperViewContent(slug: string): string | null {
+  const filePath = path.join(BLOG_DIRECTORY, `${slug}.developer.mdx`);
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const source = fs.readFileSync(filePath, "utf8");
+
+  // Developer view files may optionally have frontmatter (ignored)
+  const { content } = matter(source);
+
+  return content;
+}
 
 export function getAllTags(): BlogTag[] {
   const posts = getAllPosts();

@@ -68,52 +68,49 @@
 
 // ------------------------------ Experiment area --------------------------------
 
-import Link from "next/link";
+import Link from "next/link"
 
-import type { RelatedArticle } from "@/lib/blog/types";
+import type { RelatedArticle } from "@/lib/blog/types"
 
-import { BlogTag } from "./blog-tag";
-import { ArrowRight } from "lucide-react";
+import { BlogTag } from "./blog-tag"
+import { ArrowRight } from "lucide-react"
 
 interface RelatedArticlesProps {
-  articles: RelatedArticle[];
+  articles: RelatedArticle[]
 }
 
 export function RelatedArticles({ articles }: RelatedArticlesProps) {
   if (articles.length === 0) {
-    return null;
+    return null
   }
 
   return (
     <section
-      aria-labelledby="related-articles-heading"
-      className="mt-16 border-t pt-8"
-    >
+      aria-labelledby='related-articles-heading'
+      className='mt-8 border-t pt-8'>
       <h2
-        id="related-articles-heading"
-        className="text-2xl font-semibold tracking-tight"
-      >
+        id='related-articles-heading'
+        className='text-2xl font-semibold tracking-tight'>
         Related articles
       </h2>
 
-      <div className="w-full mt-4">
+      <div className='w-full mt-4 flex gap-4 flex-col'>
         {articles.map((article) => (
           <article
             key={article.slug}
-            className="flex justify-between items-center group"
-          >
-            <div className="space-y-2">
+            className='flex justify-between items-center group'>
+            <div className='space-y-2'>
               <Link href={`/blog/${article.slug}`}>
-                <h3 className="font-semibold group-hover:underline">
+                <h3 className='font-semibold group-hover:underline'>
                   {article.title}
                 </h3>
 
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className='mt-0.5 text-sm text-muted-foreground truncate max-w-lg'>
                   {article.description}
                 </p>
               </Link>
 
-              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+              <div className='mt-1 flex items-center gap-2 text-xs text-muted-foreground'>
                 <time dateTime={article.publishedAt}>
                   {new Date(article.publishedAt).toLocaleDateString("en-US", {
                     month: "short",
@@ -122,15 +119,15 @@ export function RelatedArticles({ articles }: RelatedArticlesProps) {
                   })}
                 </time>
 
-                <span aria-hidden="true">·</span>
+                <span aria-hidden='true'>·</span>
 
                 <span>{article.readingTime.minutes} min read</span>
               </div>
             </div>
-            <ArrowRight className="opacity-0 group-hover:opacity-100" />
+            <ArrowRight className='opacity-0 group-hover:opacity-100 size-5' />
           </article>
         ))}
       </div>
     </section>
-  );
+  )
 }

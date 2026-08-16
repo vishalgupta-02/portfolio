@@ -1,0 +1,132 @@
+---
+title: "Understanding APIs"
+description: "What APIs are, why they matter, and how applications communicate with each other — explained for everyone."
+publishedAt: "2026-08-16"
+tags:
+  - APIs
+  - Web Development
+  - Backend
+  - System Design
+published: true
+dualView: true
+---
+
+If you've ever used an app on your phone, searched for something online, or checked the weather, you've used an API — you just didn't know it.
+
+APIs are one of the most fundamental ideas in modern software, and understanding them doesn't require a computer science degree.
+
+---
+
+## What Is an API?
+
+**API** stands for **Application Programming Interface**.
+
+That sounds technical, but the concept is surprisingly simple.
+
+An API is a way for two pieces of software to talk to each other.
+
+Think of it like this: when you go to a restaurant, you don't walk into the kitchen and cook your own food. Instead, you tell the waiter what you want, the waiter communicates your order to the kitchen, and the kitchen sends back your meal through the waiter.
+
+In this analogy:
+
+- **You** are the application (or user) making a request
+- **The waiter** is the API
+- **The kitchen** is the server or service that does the actual work
+
+The API is the messenger. It takes your request, delivers it to the right place, and brings back the response.
+
+---
+
+## Why Do APIs Exist?
+
+Without APIs, every application would need to build everything from scratch.
+
+Want to show a map in your app? Without APIs, you'd need to build your own mapping system — satellites, data, rendering, everything.
+
+Instead, your app can ask Google Maps (through its API): "Show me a map of this location" — and get back exactly what it needs.
+
+APIs let applications:
+
+- **Share functionality** without sharing their entire codebase
+- **Connect different services** that were built by different teams or companies
+- **Stay focused** on what they do best, and delegate the rest
+
+Almost every modern application is built using dozens of APIs working together behind the scenes.
+
+---
+
+## How Applications Communicate
+
+When your phone's weather app shows you today's forecast, here's what actually happens:
+
+1. **Your app sends a request**: "What's the weather in Delhi?"
+2. **The weather API receives the request** and looks up the data
+3. **The API sends back a response**: "32°C, partly cloudy"
+4. **Your app displays the result** in a nice format
+
+This happens in milliseconds. You never see the communication — you just see the result.
+
+The important thing to understand is that your weather app doesn't *know* the weather. It *asks* for it. The API is how it asks.
+
+---
+
+## A Simple Example
+
+Imagine you type a city name into a weather app.
+
+Behind the scenes, the app sends something like:
+
+> "Give me the weather for **Delhi**"
+
+The weather service receives this, checks its data, and responds:
+
+> "**Delhi**: 32°C, Humidity 65%, Partly Cloudy"
+
+Your app then takes that response and shows it to you in a readable format.
+
+That entire exchange — the question, the answer, and the format they use — is defined by the API.
+
+---
+
+## APIs You Use Every Day
+
+You interact with APIs constantly without realizing it:
+
+- **Logging in with Google or GitHub** on another website? That's an authentication API.
+- **Seeing a YouTube video embedded** in someone's blog? That's YouTube's embed API.
+- **Getting ride estimates** in a taxi app? That's a pricing API talking to a maps API.
+- **Receiving a payment confirmation** after buying something? That's a payment gateway API.
+- **Searching for a product** on an e-commerce site? The search results come from a search API.
+
+Every time two pieces of software communicate, there's an API involved.
+
+---
+
+## Why Should You Care?
+
+Even if you're not a developer, understanding APIs helps you:
+
+- **Understand how digital products work** at a fundamental level
+- **Have better conversations** with technical teams
+- **Evaluate tools and services** — many products differentiate themselves by the quality of their APIs
+- **Appreciate the complexity** behind seemingly simple features
+
+When someone says "we need to integrate with their API," you now understand what that means: connecting two systems so they can exchange information through a defined interface.
+
+---
+
+## Key Takeaway
+
+An API is a contract between two pieces of software.
+
+One side says: "If you ask me in this specific way, I'll give you this specific answer."
+
+The other side says: "I'll ask in exactly that way, and I'll know how to read your answer."
+
+That's it. That's an API.
+
+The magic is in the simplicity — a clear, agreed-upon way for software to communicate.
+
+---
+
+*Switch to **Developer View** for the technical deep dive: HTTP methods, status codes, authentication, error handling, and implementation patterns.*

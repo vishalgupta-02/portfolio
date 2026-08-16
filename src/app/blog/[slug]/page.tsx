@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import rehypeShiki from "@shikijs/rehype";
+import remarkGfm from "remark-gfm";
+import { Suspense } from "react";
 
 import {
   getAllPosts,
@@ -10,18 +12,18 @@ import {
   getRelatedArticles,
 } from "@/lib/blog/blog";
 import { mdxComponents } from "@/components/blog/mdx-component";
-import { TableOfContents } from "@/components/blog/table-of-contents";
 import { copyCodeTransformer } from "@/lib/blog/shiki";
 import { BlogTag } from "@/components/blog/blog-tag";
-import { ArticleNavigation } from "@/components/blog/article-navigation";
 import { RelatedArticles } from "@/components/blog/related-articles";
-import { siteConfig } from "@/lib/blog/site";
 import { generateBlogMetadata } from "@/lib/blog/metadata";
 import { generateBlogJsonLd } from "@/lib/blog/json-ld";
 import { JsonLd } from "@/components/seo/json-ld";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpLeftFromCircle } from "lucide-react";
+import { ViewModeSelector } from "@/components/blog/view-mode-selector";
+import { ArticleContent } from "@/components/blog/article-content";
+import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -51,6 +53,30 @@ export async function generateMetadata({
   return generateBlogMetadata(slug, post);
 }
 
+// Shared MDX options — extracted to avoid duplication
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mdxOptions: {
+  mdxOptions: { remarkPlugins: any[]; rehypePlugins: any[] };
+} = {
+  mdxOptions: {
+    remarkPlugins: [remarkGfm],
+    rehypePlugins: [
+      [
+        rehypeShiki,
+        {
+          themes: {
+            light: "github-light",
+            dark: "github-dark",
+          },
+          transformers: [copyCodeTransformer],
+        },
+      ],
+    ],
+  },
+};
+
+const CONTENT_PANEL_ID = "article-content-panel";
+
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
 
@@ -75,6 +101,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const relatedArticles = getRelatedArticles(slug, 2, navigationSlugs);
 
   const jsonLd = generateBlogJsonLd(slug, post);
+
+  const hasDualView = post.hasDeveloperView && post.developerContent !== null;
 
   return (
     <>
@@ -116,7 +144,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               <span aria-hidden="true">·</span>
 
-              <span>{post.readingTime.minutes} min read</span>
+              {hasDualView && post.developerReadingTime ? (
+                <Suspense
+                  fallback={<span>{post.readingTime.minutes} min read</span>}
+                >
+                  <DualViewReadingTime
+                    userReadingTime={post.readingTime}
+                    developerReadingTime={post.developerReadingTime}
+                  />
+                </Suspense>
+              ) : (
+                <span>{post.readingTime.minutes} min read</span>
+              )}
             </div>
             {post.metadata.tags.length > 0 && (
               <div className="mt-5 flex flex-wrap gap-2">
@@ -137,30 +176,53 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 />
               </div>
             )}
+
+            {hasDualView && (
+              <Suspense fallback={null}>
+                <ViewModeSelector contentPanelId={CONTENT_PANEL_ID} />
+              </Suspense>
+            )}
           </header>
 
-          <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
-            <MDXRemote
-              source={post.content}
-              components={mdxComponents}
-              options={{
-                mdxOptions: {
-                  rehypePlugins: [
-                    [
-                      rehypeShiki,
-                      {
-                        themes: {
-                          light: "github-light",
-                          dark: "github-dark",
-                        },
-                        transformers: [copyCodeTransformer],
-                      },
-                    ],
-                  ],
-                },
-              }}
-            />
-          </div>
+          {hasDualView && post.developerContent ? (
+            <Suspense
+              fallback={
+                <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
+                  <MDXRemote
+                    source={post.content}
+                    components={mdxComponents}
+                    options={mdxOptions}
+                  />
+                </div>
+              }
+            >
+              <ArticleContent
+                panelId={CONTENT_PANEL_ID}
+                userContent={
+                  <MDXRemote
+                    source={post.content}
+                    components={mdxComponents}
+                    options={mdxOptions}
+                  />
+                }
+                developerContent={
+                  <MDXRemote
+                    source={post.developerContent}
+                    components={mdxComponents}
+                    options={mdxOptions}
+                  />
+                }
+              />
+            </Suspense>
+          ) : (
+            <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
+              <MDXRemote
+                source={post.content}
+                components={mdxComponents}
+                options={mdxOptions}
+              />
+            </div>
+          )}
 
           <div className="max-w-3xl">
             {/* <ArticleNavigation navigation={navigation} /> */}
