@@ -36,6 +36,14 @@ const jetbrainsMono = localFont({
   preload: true,
 })
 
+const idGrotesk = localFont({
+  // for the code
+  src: "../../public/fonts/IDGroteskRegular-BcJmFnYE.woff2",
+  variable: "--font-id-grotesk",
+  display: "swap",
+  preload: true,
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
@@ -82,6 +90,7 @@ export default function RootLayout({
         spaceGrotesk.variable,
         publicSans.variable,
         jetbrainsMono.variable,
+        idGrotesk.variable,
         "font-sans",
         geist.variable,
       )}

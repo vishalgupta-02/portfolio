@@ -9,6 +9,7 @@
   --font-sans: var(--font-space-grotesk);
   --font-display: var(--font-public-sans);
   --font-mono: var(--font-jetbrains-mono);
+  --font-grotesk: var(--font-id-grotesk);
   --custom-black: #111110;
   --custom-white: #f7f6f3;
   --custom-gray: #6b6b68;
@@ -84,6 +85,7 @@
   --font-sans: var(--font-space-grotesk);
   --font-display: var(--font-public-sans);
   --font-mono: var(--font-jetbrains-mono);
+  --font-grotesk: var(--font-id-grotesk);
   --font-heading: var(--font-sans);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
