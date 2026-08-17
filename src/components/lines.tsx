@@ -14,7 +14,12 @@ export function Line({
   className = "",
 }: LineProps) {
   if (type === "horizontal") {
-    return <div style={{ width }} className={`h-px bg-zinc-700 ${className}`} />
+    return (
+      <div
+        style={{ width, maxWidth: "100%" }}
+        className={`h-px bg-zinc-700 max-w-full ${className}`}
+      />
+    )
   }
 
   if (type === "vertical") {
@@ -28,8 +33,8 @@ export function Line({
   if (type === "elbow-right") {
     return (
       <div
-        style={{ width, height }}
-        className={`rounded-bl-lg border-b border-l border-zinc-700 ${className}`}
+        style={{ width, height, maxWidth: "100%" }}
+        className={`rounded-bl-lg border-b border-l border-zinc-700 max-w-full ${className}`}
       />
     )
   }
@@ -39,8 +44,8 @@ export function Line({
   if (type === "elbow-left") {
     return (
       <div
-        style={{ width, height }}
-        className={`rounded-br-lg border-b border-r border-zinc-700 ${className}`}
+        style={{ width, height, maxWidth: "100%" }}
+        className={`rounded-br-lg border-b border-r border-zinc-700 max-w-full ${className}`}
       />
     )
   }

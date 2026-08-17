@@ -201,8 +201,11 @@ export function IconCloud({
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect || !canvasRef.current) return;
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+
+    const x = (e.clientX - rect.left) * scaleX;
+    const y = (e.clientY - rect.top) * scaleY;
 
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) return;
@@ -259,9 +262,11 @@ export function IconCloud({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect) {
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+    if (rect && canvasRef.current) {
+      const scaleX = canvasRef.current.width / rect.width;
+      const scaleY = canvasRef.current.height / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
       setMousePos({ x, y });
     }
 
@@ -279,6 +284,87 @@ export function IconCloud({
   };
 
   const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect || !canvasRef.current) return;
+
+      const scaleX = canvasRef.current.width / rect.width;
+      const scaleY = canvasRef.current.height / rect.height;
+      const x = (touch.clientX - rect.left) * scaleX;
+      const y = (touch.clientY - rect.top) * scaleY;
+
+      iconPositions.forEach((icon) => {
+        const cosX = Math.cos(rotationRef.current.x);
+        const sinX = Math.sin(rotationRef.current.x);
+        const cosY = Math.cos(rotationRef.current.y);
+        const sinY = Math.sin(rotationRef.current.y);
+
+        const rotatedX = icon.x * cosY - icon.z * sinY;
+        const rotatedZ = icon.x * sinY + icon.z * cosY;
+        const rotatedY = icon.y * cosX + rotatedZ * sinX;
+
+        const screenX = canvasRef.current!.width / 2 + rotatedX;
+        const screenY = canvasRef.current!.height / 2 + rotatedY;
+
+        const scale = (rotatedZ + 200) / 300;
+        const radius = 20 * scale;
+        const dx = x - screenX;
+        const dy = y - screenY;
+
+        if (dx * dx + dy * dy < radius * radius) {
+          const targetX = -Math.atan2(
+            icon.y,
+            Math.sqrt(icon.x * icon.x + icon.z * icon.z),
+          );
+          const targetY = Math.atan2(icon.x, icon.z);
+
+          const currentX = rotationRef.current.x;
+          const currentY = rotationRef.current.y;
+          const distance = Math.sqrt(
+            Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2),
+          );
+
+          const duration = Math.min(2000, Math.max(800, distance * 1000));
+
+          setTargetRotation({
+            x: targetX,
+            y: targetY,
+            startX: currentX,
+            startY: currentY,
+            distance,
+            startTime: performance.now(),
+            duration,
+          });
+          return;
+        }
+      });
+
+      setIsDragging(true);
+      setLastMousePos({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (isDragging && e.touches.length === 1) {
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - lastMousePos.x;
+      const deltaY = touch.clientY - lastMousePos.y;
+
+      rotationRef.current = {
+        x: rotationRef.current.x + deltaY * 0.003,
+        y: rotationRef.current.y + deltaX * 0.003,
+      };
+
+      setLastMousePos({ x: touch.clientX, y: touch.clientY });
+    }
+  };
+
+  const handleTouchEnd = () => {
     setIsDragging(false);
   };
 
@@ -400,7 +486,7 @@ export function IconCloud({
   ]);
 
   return (
-    <div className="relative inline-block">
+    <div className="relative flex items-center justify-center w-full mx-auto">
       <canvas
         ref={canvasRef}
         width={400}
@@ -409,7 +495,10 @@ export function IconCloud({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        className="rounded-lg"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="rounded-lg max-w-full h-auto aspect-square mx-auto cursor-grab active:cursor-grabbing touch-none"
         aria-label="Interactive 3D Icon Cloud"
         role="img"
       />

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { BlogCard } from "../../blog-card";
 import { BlogPagination } from "@/components/blog/blog-pagination";
+import { MoveToTop } from "@/components/blog/move-to-top";
 
 import {
   getAllPosts,
@@ -94,6 +95,8 @@ export default async function BlogPaginationPage({
         hasPreviousPage={pagination.hasPreviousPage}
         hasNextPage={pagination.hasNextPage}
       />
+
+      <MoveToTop />
     </main>
   );
 }

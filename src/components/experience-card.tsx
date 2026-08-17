@@ -71,8 +71,8 @@ export default function ExperienceCard({
   const isHomePage = pathname === "/"
 
   const content = (
-    <div className='w-full flex justify-between items-center gap-1'>
-      <h3 className='text-[16px] font-semibold tracking-wide font-sans dark:text-custom-white text-custom-black flex items-center gap-1'>
+    <div className='w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-0.5 sm:gap-1'>
+      <h3 className='text-[15px] sm:text-[16px] font-semibold tracking-wide font-sans dark:text-custom-white text-custom-black flex items-center gap-1'>
         {companyName}
 
         {isHomePage && (
@@ -82,17 +82,19 @@ export default function ExperienceCard({
         )}
       </h3>
 
-      <p className='text-[13px] font-display text-custom-gray italic'>
+      <p className='text-[12px] sm:text-[13px] font-display text-custom-gray italic'>
         {timeline}
       </p>
     </div>
   )
 
   const details = (
-    <div className='w-full flex justify-between items-center gap-1'>
-      <p className='text-[13px] font-display text-custom-gray italic'>{role}</p>
+    <div className='w-full flex flex-col sm:flex-row justify-between items-start sm:items-center gap-0.5 sm:gap-1'>
+      <p className='text-[12px] sm:text-[13px] font-display text-custom-gray italic'>
+        {role}
+      </p>
 
-      <p className='text-[13px] font-display text-custom-gray italic'>
+      <p className='text-[12px] sm:text-[13px] font-display text-custom-gray italic'>
         {locations}
       </p>
     </div>

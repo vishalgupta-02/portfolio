@@ -55,7 +55,7 @@ export default function Work() {
               <p className='text-sm dark:text-custom-white text-custom-black font-bold mb-1 mt-3'>
                 Tools & Technologies
               </p>
-              <div className='flex items-center gap-4'>
+              <div className='flex items-center gap-4 flex-wrap'>
                 <JavaScript className='size-5' />
                 <NextJS className='size-5' />
                 <Python className='size-5' />
@@ -100,7 +100,7 @@ export default function Work() {
               <p className='text-sm dark:text-custom-white text-custom-black font-bold mb-1 mt-3'>
                 Tools & Technologies
               </p>
-              <div className='flex items-center gap-4'>
+              <div className='flex items-center gap-4 flex-wrap'>
                 <TypeScript className='size-5' />
                 <NextJS className='size-5' />
                 <NodeJS className='size-5' />

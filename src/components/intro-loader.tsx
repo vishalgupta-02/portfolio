@@ -193,7 +193,7 @@ export function IntroLoader() {
             duration: 1.15,
             ease: [0.76, 0, 0.24, 1],
           }}
-          className='fixed inset-x-0 top-0 z-9999 h-dvh bg-background text-foreground'>
+          className='fixed inset-x-0 top-0 z-9999 h-dvh overflow-hidden bg-background text-foreground'>
           <div className='flex h-full items-center justify-center'>
             <AnimatePresence mode='wait'>
               <motion.p

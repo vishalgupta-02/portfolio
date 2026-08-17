@@ -13,16 +13,16 @@ export function BlogCard({ post }: BlogCardProps) {
   return (
     <article>
       <Link href={`/blog/${post.slug}`}>
-        <h2 className="text-lg font-semibold hover:underline">
+        <h2 className="text-base sm:text-lg font-semibold hover:underline leading-snug">
           {post.metadata.title}
         </h2>
       </Link>
 
-      <p className="mt-2 text-sm text-foreground/50 max-w-xl truncate">
+      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-xl line-clamp-2 sm:truncate">
         {post.metadata.description}
       </p>
 
-      <div className="mt-2 flex items-center gap-2 text-[11px] text-custom-gray">
+      <div className="mt-2 flex items-center gap-2 text-[11px] text-muted-foreground">
         <time dateTime={post.metadata.publishedAt}>
           {new Date(post.metadata.publishedAt).toLocaleDateString("en-US", {
             year: "numeric",
@@ -38,7 +38,7 @@ export function BlogCard({ post }: BlogCardProps) {
         {post.hasDeveloperView && (
           <>
             <span aria-hidden="true">·</span>
-            <span className="inline-flex items-center gap-1 text-foreground/40">
+            <span className="inline-flex items-center gap-1 text-muted-foreground">
               <Layers className="size-3" aria-hidden="true" />
               Dual View
             </span>

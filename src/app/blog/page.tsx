@@ -6,6 +6,7 @@ import {
 } from "@/lib/blog/blog"
 import { BlogPagination } from "@/components/blog/blog-pagination"
 import { BlogSearch } from "@/components/blog/blog-search"
+import { MoveToTop } from "@/components/blog/move-to-top"
 
 import type { Metadata } from "next"
 import { siteConfig } from "@/lib/blog/site"
@@ -50,11 +51,11 @@ export default async function BlogPage() {
 
   return (
     <MainLayout>
-      <main className='mx-auto max-w-2xl py-4 px-4 overflow-auto h-full'>
+      <main className='mx-auto max-w-2xl py-4 px-4 pb-8'>
         <header className='mb-8'>
           <h1 className='text-3xl font-bold tracking-tight'>2 AM thoughts</h1>
 
-          <p className='mt-2 text-sm text-custom-gray'>
+          <p className='mt-2 text-sm text-muted-foreground'>
             When & where thoughts don&apos;t need permissions
           </p>
         </header>
@@ -84,6 +85,8 @@ export default async function BlogPage() {
             </>
           </BlogSearch>
         </Suspense>
+
+        <MoveToTop />
       </main>
 
       <ProgressiveBlur height='4rem' position='bottom' />

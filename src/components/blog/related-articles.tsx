@@ -98,14 +98,14 @@ export function RelatedArticles({ articles }: RelatedArticlesProps) {
         {articles.map((article) => (
           <article
             key={article.slug}
-            className='flex justify-between items-center group'>
-            <div className='space-y-2'>
+            className='flex justify-between items-center gap-3 group'>
+            <div className='space-y-1.5 min-w-0 flex-1'>
               <Link href={`/blog/${article.slug}`}>
-                <h3 className='font-semibold group-hover:underline'>
+                <h3 className='font-semibold group-hover:underline text-sm sm:text-base truncate sm:overflow-visible'>
                   {article.title}
                 </h3>
 
-                <p className='mt-0.5 text-sm text-muted-foreground truncate max-w-lg'>
+                <p className='mt-0.5 text-xs sm:text-sm text-muted-foreground truncate max-w-lg'>
                   {article.description}
                 </p>
               </Link>
@@ -124,7 +124,7 @@ export function RelatedArticles({ articles }: RelatedArticlesProps) {
                 <span>{article.readingTime.minutes} min read</span>
               </div>
             </div>
-            <ArrowRight className='opacity-0 group-hover:opacity-100 size-5' />
+            <ArrowRight className='opacity-0 group-hover:opacity-100 size-4 sm:size-5 shrink-0 transition-opacity' />
           </article>
         ))}
       </div>

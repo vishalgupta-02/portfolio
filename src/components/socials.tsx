@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const Socials = () => {
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center flex-wrap gap-3 sm:gap-4">
       <Link href="https://github.com/vishalgupta-02" target="_blank">
         <Github />
       </Link>

@@ -62,14 +62,14 @@ export function BlogSearchCard({ post }: BlogSearchCardProps) {
   return (
     <article>
       <Link href={`/blog/${post.slug}`}>
-        <h2 className="text-xl font-semibold hover:underline">{post.title}</h2>
+        <h2 className="text-base sm:text-xl font-semibold hover:underline leading-snug">{post.title}</h2>
       </Link>
 
-      <p className="mt-2 text-sm text-foreground/50 max-w-xl truncate">
+      <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-xl line-clamp-2 sm:truncate">
         {post.description}
       </p>
 
-      <div className="mt-3 flex items-center gap-2 text-[11px] text-custom-gray">
+      <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
         <time dateTime={post.publishedAt}>
           {new Date(post.publishedAt).toLocaleDateString("en-US", {
             year: "numeric",

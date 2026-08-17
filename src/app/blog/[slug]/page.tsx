@@ -24,6 +24,7 @@ import { ArrowUpLeftFromCircle } from "lucide-react";
 import { ViewModeSelector } from "@/components/blog/view-mode-selector";
 import { ArticleContent } from "@/components/blog/article-content";
 import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
+import { MoveToTop } from "@/components/blog/move-to-top";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -228,6 +229,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {/* <ArticleNavigation navigation={navigation} /> */}
             <RelatedArticles articles={relatedArticles} />
           </div>
+
+          <MoveToTop />
         </article>
 
         {/* Table of Contents */}

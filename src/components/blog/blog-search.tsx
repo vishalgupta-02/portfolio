@@ -128,7 +128,7 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search articles..."
-            className="w-full rounded-lg border bg-background px-3 py-2 text-xs outline-none transition-colors dark:placeholder:text-custom-white placeholder:text-custom-black focus:border-foreground/40"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-foreground/40"
           />
         </div>
 
@@ -149,7 +149,7 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
           <div className="w-full space-y-8">
             <div
               aria-live="polite"
-              className="text-sm text-custom-black dark:text-custom-white"
+              className="text-sm text-muted-foreground"
             >
               {filteredPosts.length}{" "}
               {filteredPosts.length === 1 ? "article" : "articles"} found
@@ -162,10 +162,10 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
                 ))}
               </div>
             ) : (
-              <div className="rounded-lg border border-dashed py-12 text-center">
-                <p className="font-medium">No articles found</p>
+              <div className="rounded-lg border border-dashed border-border py-12 text-center">
+                <p className="font-medium text-foreground">No articles found</p>
 
-                <p className="mt-2 text-xs text-foreground">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Try a different search term or tag.
                 </p>
               </div>

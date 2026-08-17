@@ -101,8 +101,8 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
                 "transition-colors duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
                 isActive
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground/80",
+                  ? "text-foreground font-semibold"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Icon className="size-4" aria-hidden="true" />
@@ -112,8 +112,7 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
                   layoutId="view-mode-indicator"
                   className={cn(
                     "absolute inset-0 rounded-md",
-                    "bg-muted/50 dark:bg-muted/20",
-                    "border",
+                    "bg-muted border border-border/80 shadow-xs",
                   )}
                   transition={{
                     type: "spring",

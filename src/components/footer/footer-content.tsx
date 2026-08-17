@@ -33,10 +33,10 @@ export default function FooterContent({ quote }: Props) {
         </div>
       )}
 
-      <div className='flex justify-between my-8'>
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 my-8'>
         <p className='text-xl font-sans'>Connect With Me</p>
 
-        <div className='flex gap-2 justify-end items-center'>
+        <div className='flex gap-2 justify-start sm:justify-end items-center flex-wrap'>
           <Socials />
         </div>
       </div>
