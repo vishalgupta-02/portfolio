@@ -1,5 +1,5 @@
 ---
-title: "How a useEffect Caused Hundreds of Requests in My Next.js App"
+title: "How a useEffect caused Hundreds of Requests in My Next.js App"
 description: "A seemingly harmless URL synchronization effect created a request loop in my Next.js blog. Here's how I found the problem, understood it, and fixed it."
 publishedAt: "2026-08-04"
 tags:
@@ -74,35 +74,35 @@ The effect looked roughly like this:
 ```tsx
 useEffect(() => {
   const timeout = window.setTimeout(() => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParams.toString());
 
-    const trimmedQuery = query.trim()
+    const trimmedQuery = query.trim();
 
     if (trimmedQuery) {
-      params.set("q", trimmedQuery)
+      params.set("q", trimmedQuery);
     } else {
-      params.delete("q")
+      params.delete("q");
     }
 
     if (selectedTag) {
-      params.set("tag", selectedTag)
+      params.set("tag", selectedTag);
     } else {
-      params.delete("tag")
+      params.delete("tag");
     }
 
-    const search = params.toString()
+    const search = params.toString();
 
-    const url = search ? `${pathname}?${search}` : pathname
+    const url = search ? `${pathname}?${search}` : pathname;
 
     router.replace(url, {
       scroll: false,
-    })
-  }, 300)
+    });
+  }, 300);
 
   return () => {
-    window.clearTimeout(timeout)
-  }
-}, [query, selectedTag, pathname, router, searchParams])
+    window.clearTimeout(timeout);
+  };
+}, [query, selectedTag, pathname, router, searchParams]);
 ```
 
 At first glance, this looked reasonable.
@@ -112,7 +112,7 @@ When the search query or selected tag changed, I waited 300 milliseconds and upd
 The problem was hidden inside the dependency array.
 
 ```tsx
-searchParams
+searchParams;
 ```
 
 ---
@@ -168,12 +168,12 @@ If the answer is yes, there is no reason to call `router.replace()`.
 I changed the logic to compare the desired search parameters with the current URL:
 
 ```tsx
-const nextSearch = params.toString()
+const nextSearch = params.toString();
 
-const currentSearch = window.location.search.slice(1)
+const currentSearch = window.location.search.slice(1);
 
 if (nextSearch === currentSearch) {
-  return
+  return;
 }
 ```
 
@@ -232,14 +232,14 @@ Those are related operations, but they have different responsibilities.
 The effect responsible for writing the URL should react to application state:
 
 ```tsx
-query
-selectedTag
+query;
+selectedTag;
 ```
 
 The effect responsible for reading the URL should react to:
 
 ```tsx
-searchParams
+searchParams;
 ```
 
 Keeping those responsibilities separate makes it much easier to reason about the synchronization.
@@ -281,9 +281,9 @@ There is no reason to delay that interaction.
 So I separated the search input from the URL query.
 
 ```tsx
-const [query, setQuery] = useState(() => searchParams.get("q") ?? "")
+const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
 
-const [debouncedQuery, setDebouncedQuery] = useState(query)
+const [debouncedQuery, setDebouncedQuery] = useState(query);
 ```
 
 Then I debounce only the query:
@@ -291,13 +291,13 @@ Then I debounce only the query:
 ```tsx
 useEffect(() => {
   const timeout = window.setTimeout(() => {
-    setDebouncedQuery(query)
-  }, 300)
+    setDebouncedQuery(query);
+  }, 300);
 
   return () => {
-    window.clearTimeout(timeout)
-  }
-}, [query])
+    window.clearTimeout(timeout);
+  };
+}, [query]);
 ```
 
 Now typing behaves like this:
@@ -326,32 +326,32 @@ The URL-writing effect became:
 
 ```tsx
 useEffect(() => {
-  const params = new URLSearchParams()
+  const params = new URLSearchParams();
 
-  const trimmedQuery = debouncedQuery.trim()
+  const trimmedQuery = debouncedQuery.trim();
 
   if (trimmedQuery) {
-    params.set("q", trimmedQuery)
+    params.set("q", trimmedQuery);
   }
 
   if (selectedTag) {
-    params.set("tag", selectedTag)
+    params.set("tag", selectedTag);
   }
 
-  const nextSearch = params.toString()
+  const nextSearch = params.toString();
 
-  const currentSearch = window.location.search.slice(1)
+  const currentSearch = window.location.search.slice(1);
 
   if (nextSearch === currentSearch) {
-    return
+    return;
   }
 
-  const url = nextSearch ? `${pathname}?${nextSearch}` : pathname
+  const url = nextSearch ? `${pathname}?${nextSearch}` : pathname;
 
   router.replace(url, {
     scroll: false,
-  })
-}, [debouncedQuery, selectedTag, pathname, router])
+  });
+}, [debouncedQuery, selectedTag, pathname, router]);
 ```
 
 There are two important properties here.
@@ -380,20 +380,20 @@ For that direction, I use a separate effect:
 
 ```tsx
 useEffect(() => {
-  const urlQuery = searchParams.get("q") ?? ""
+  const urlQuery = searchParams.get("q") ?? "";
 
-  const urlTag = searchParams.get("tag")
+  const urlTag = searchParams.get("tag");
 
   setQuery((currentQuery) =>
     currentQuery === urlQuery ? currentQuery : urlQuery,
-  )
+  );
 
   setDebouncedQuery((currentQuery) =>
     currentQuery === urlQuery ? currentQuery : urlQuery,
-  )
+  );
 
-  setSelectedTag((currentTag) => (currentTag === urlTag ? currentTag : urlTag))
-}, [searchParams])
+  setSelectedTag((currentTag) => (currentTag === urlTag ? currentTag : urlTag));
+}, [searchParams]);
 ```
 
 Now the architecture is much clearer:
@@ -563,7 +563,7 @@ Adding:
 
 ```tsx
 if (nextSearch === currentSearch) {
-  return
+  return;
 }
 ```
 
