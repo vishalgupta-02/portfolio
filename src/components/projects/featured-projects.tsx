@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence, useReducedMotion } from "motion/react"
-import MainLayout from "@/components/main-layout"
-import ProjectCard from "./project-card"
-import { cn } from "@/lib/utils"
-import { getFeaturedProjects, type Project } from "@/lib/projects"
+import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import MainLayout from "@/components/main-layout";
+import ProjectCard from "./project-card";
+import { cn } from "@/lib/utils";
+import { getFeaturedProjects, type Project } from "@/lib/projects";
 
 export interface FeaturedProjectsProps {
-  projects?: Project[]
-  title?: string
+  projects?: Project[];
+  title?: string;
 }
 
 export default function FeaturedProjects({
   projects,
   title = "Projects",
 }: FeaturedProjectsProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const shouldReduceMotion = useReducedMotion()
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const shouldReduceMotion = useReducedMotion();
   const projectsList =
-    projects && projects.length > 0 ? projects : getFeaturedProjects()
-  const activeProject = projectsList[currentIndex] || projectsList[0]
+    projects && projects.length > 0 ? projects : getFeaturedProjects();
+  const activeProject = projectsList[currentIndex] || projectsList[0];
 
   if (!activeProject || projectsList.length === 0) {
-    return null
+    return null;
   }
 
   return (
@@ -41,7 +41,7 @@ export default function FeaturedProjects({
         </div>
 
         {/* Hero Card Container */}
-        <div className="relative w-full rounded-2xl border border-border/30 bg-card/60 dark:bg-custom-black/60 backdrop-blur-sm p-4 sm:p-7 shadow-sm transition-all duration-300">
+        <div className="relative w-full rounded-lg border border-border/30 bg-card/60 dark:bg-custom-black/60 backdrop-blur-sm p-4 sm:p-7 shadow-sm transition-all duration-300">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeProject.id}
@@ -77,7 +77,7 @@ export default function FeaturedProjects({
               className="flex items-center gap-4 sm:gap-6"
             >
               {projectsList.map((project, index) => {
-                const isActive = currentIndex === index
+                const isActive = currentIndex === index;
                 return (
                   <button
                     key={project.id}
@@ -91,7 +91,7 @@ export default function FeaturedProjects({
                       "group relative flex flex-col items-center py-1 px-2 text-xs sm:text-sm font-mono tracking-wider transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm cursor-pointer",
                       isActive
                         ? "text-foreground font-semibold"
-                        : "text-foreground/40 hover:text-foreground/80"
+                        : "text-foreground/40 hover:text-foreground/80",
                     )}
                   >
                     <span>{project.number}</span>
@@ -112,12 +112,12 @@ export default function FeaturedProjects({
                       />
                     )}
                   </button>
-                )
+                );
               })}
             </div>
           </div>
         </div>
       </section>
     </MainLayout>
-  )
+  );
 }

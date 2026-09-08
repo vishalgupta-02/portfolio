@@ -15,7 +15,7 @@ import TimeDisplay from "./time-stamp";
 export default function About() {
   return (
     <MainLayout>
-      <section className="grid grid-cols-1 sm:grid-cols-2 w-full gap-2.5 sm:gap-2 py-2 text-sm px-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 w-full gap-2.5 sm:gap-2 py-2 text-sm px-4 font-display tracking-wide">
         <div className="col-span-1 sm:col-span-2 flex gap-2 items-center">
           <div className="border border-white p-0.5 rounded-sm shrink-0">
             <CodeIcon />

@@ -1,22 +1,22 @@
-import Link from "next/link"
-import { ArrowLeft, ArrowUpRight, Terminal } from "lucide-react"
-import { Github } from "@/components/socials"
-import type { Project } from "@/lib/projects/types"
+import Link from "next/link";
+import { ArrowLeft, ArrowUpRight, Terminal } from "lucide-react";
+import { Github } from "@/components/socials";
+import type { Project } from "@/lib/projects/types";
 
 interface CaseStudyHeroProps {
-  project: Project
+  project: Project;
 }
 
 export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
-  const caseStudy = project.caseStudy
+  const caseStudy = project.caseStudy;
   if (!caseStudy) {
-    return null
+    return null;
   }
 
-  const role = caseStudy.role || project.role
-  const status = caseStudy.status || project.status
-  const timeline = caseStudy.timeline || project.timeline
-  const architectureLabel = caseStudy.architectureLabel || "Monorepo"
+  const role = caseStudy.role || project.role;
+  const status = caseStudy.status || project.status;
+  const timeline = caseStudy.timeline || project.timeline;
+  const architectureLabel = caseStudy.architectureLabel || "Monorepo";
 
   return (
     <>
@@ -110,8 +110,12 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
               <p className="font-medium text-foreground">{architectureLabel}</p>
             </div>
           )}
+          <p className="col-span-2 text-xs">
+            This is just for a demonstration purposes.{" "}
+            <span className="text-red-700 text-lg">*</span>
+          </p>
         </div>
       </header>
     </>
-  )
+  );
 }

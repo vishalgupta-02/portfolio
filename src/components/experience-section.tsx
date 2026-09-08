@@ -4,7 +4,7 @@ import ExperienceCard from "./experience-card";
 export default function ExperienceSection() {
   return (
     <MainLayout>
-      <section className="w-full max-w-2xl mx-auto py-4 px-4">
+      <section className="w-full max-w-2xl mx-auto py-8 px-4 border-y border-foreground/20">
         <div>
           <h2 className="text-[24px] font-semibold mb-4">Experience</h2>
         </div>

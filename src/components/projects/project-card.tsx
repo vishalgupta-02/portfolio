@@ -1,33 +1,33 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { motion, useReducedMotion } from "motion/react"
-import { ArrowUpRight, Sparkles } from "lucide-react"
-import { Github } from "@/components/socials"
-import type { Project } from "@/lib/projects/types"
+import Image from "next/image";
+import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowUpRight, Sparkles } from "lucide-react";
+import { Github } from "@/components/socials";
+import type { Project } from "@/lib/projects/types";
 
 interface ProjectCardProps {
-  project: Project
-  priorityImage?: boolean
+  project: Project;
+  priorityImage?: boolean;
 }
 
 export default function ProjectCard({
   project,
   priorityImage = false,
 }: ProjectCardProps) {
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion();
 
-  const projectPageUrl = `/projects/${project.slug}`
+  const projectPageUrl = `/projects/${project.slug}`;
   const caseStudyUrl = project.hasCaseStudy
     ? `/projects/${project.slug}/case-study`
-    : undefined
-  const liveOrRepoUrl = project.liveUrl || project.githubUrl
+    : undefined;
+  const liveOrRepoUrl = project.liveUrl || project.githubUrl;
   const primaryCtaUrl =
     project.hasCaseStudy || project.highlights?.length
       ? projectPageUrl
-      : liveOrRepoUrl
-  const isInternalCta = primaryCtaUrl.startsWith("/")
+      : liveOrRepoUrl;
+  const isInternalCta = primaryCtaUrl.startsWith("/");
 
   return (
     <div className="flex flex-col items-center text-center space-y-5">
@@ -40,8 +40,8 @@ export default function ProjectCard({
         />
 
         {/* Main Screenshot Wrapper */}
-        <div className="relative rounded-xl border border-border/40 bg-background overflow-hidden shadow-lg shadow-black/5 dark:shadow-black/40">
-          <div className="relative aspect-16/10 w-full overflow-hidden bg-muted/20">
+        <div className="relative rounded-sm border border-border/40 bg-background overflow-hidden shadow-lg shadow-black/5 dark:shadow-black/40">
+          <div className="relative aspect-video w-full overflow-hidden bg-muted/20">
             <Image
               src={project.image}
               alt={project.imageAlt}
@@ -151,5 +151,5 @@ export default function ProjectCard({
         )}
       </div>
     </div>
-  )
+  );
 }

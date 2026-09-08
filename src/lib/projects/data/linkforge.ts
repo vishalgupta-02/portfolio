@@ -1,4 +1,4 @@
-import type { Project } from "../types"
+import type { Project } from "../types";
 
 export const linkforgeProject: Project = {
   id: "linkforge",
@@ -25,7 +25,7 @@ export const linkforgeProject: Project = {
     { text: "Multi-Tenant Isolation", position: "top-left" },
     { text: "Real-time Analytics", position: "bottom-right" },
   ],
-  liveUrl: "https://github.com/vishalgupta-02/linkforge.git",
+  liveUrl: "https://linkforge-web-iota.vercel.app",
   githubUrl: "https://github.com/vishalgupta-02/linkforge.git",
   hasCaseStudy: true,
   ctaText: "View Overview",
@@ -74,20 +74,38 @@ export const linkforgeProject: Project = {
       category: "Backend & API",
       items: [
         { name: "Node.js & Express", description: "Decoupled API service" },
-        { name: "TypeScript", description: "Type-safe controllers & middleware" },
+        {
+          name: "TypeScript",
+          description: "Type-safe controllers & middleware",
+        },
         { name: "Zod", description: "Runtime schema validation & config" },
-        { name: "bcrypt & JWT", description: "Password hashing & HttpOnly tokens" },
-        { name: "Better Auth", description: "Multi-session OAuth orchestration" },
+        {
+          name: "bcrypt & JWT",
+          description: "Password hashing & HttpOnly tokens",
+        },
+        {
+          name: "Better Auth",
+          description: "Multi-session OAuth orchestration",
+        },
       ],
     },
     {
       category: "Database & Infrastructure",
       items: [
-        { name: "PostgreSQL", description: "Relational data with foreign keys" },
-        { name: "Prisma ORM", description: "Type-safe migrations & transactions" },
+        {
+          name: "PostgreSQL",
+          description: "Relational data with foreign keys",
+        },
+        {
+          name: "Prisma ORM",
+          description: "Type-safe migrations & transactions",
+        },
         { name: "Redis", description: "Fast event buffering & rate limits" },
         { name: "Docker", description: "Containerized reproducible services" },
-        { name: "pnpm Workspaces", description: "Client-server monorepo isolation" },
+        {
+          name: "pnpm Workspaces",
+          description: "Client-server monorepo isolation",
+        },
       ],
     },
   ],
@@ -212,8 +230,7 @@ export const linkforgeProject: Project = {
         title: "Multi-Tenant Data Isolation & Query Partitioning",
         problemStatement:
           "In a SaaS platform where multiple users configure links, custom domains, and view private analytics, a single un-scoped SQL query could inadvertently leak tenant data.",
-        risk:
-          "Cross-tenant data contamination, unauthorized analytics inspection, and privacy violations.",
+        risk: "Cross-tenant data contamination, unauthorized analytics inspection, and privacy violations.",
         approach:
           "Engineered an authentication middleware that extracts verified tenant and user identity from signed HttpOnly session cookies. Every database repository function strictly requires `tenantId` / `userId` in its WHERE clause, preventing cross-tenant access at the repository contract level.",
         result:
@@ -249,8 +266,7 @@ export const linkforgeProject: Project = {
         title: "Handling Username & Vanity Slug Race Conditions",
         problemStatement:
           "When a user attempts to update their profile username or link vanity slug (`/u/:username`), two concurrent requests submitting the same new slug could pass an initial `findUnique()` check before either writes, resulting in collision.",
-        risk:
-          "Broken link routing, duplicate vanity handles, and routing ambiguity.",
+        risk: "Broken link routing, duplicate vanity handles, and routing ambiguity.",
         approach:
           "Utilized PostgreSQL strict unique constraints backed by Prisma interactive transactions (`$transaction`). The mutation performs an atomic reservation lock: if a concurrent process claims the slug within the transaction window, the database rejects the secondary commit with a deterministic conflict error.",
         result:
@@ -286,8 +302,7 @@ export const linkforgeProject: Project = {
         title: "Fail-Fast Environment Diagnostics at Startup",
         problemStatement:
           "In early iterations, reading `process.env.DATABASE_URL` directly meant the server booted successfully and only crashed when the first database call executed minutes later.",
-        risk:
-          "Silent deployment of broken environments, masked CI/CD errors, and production runtime crashes.",
+        risk: "Silent deployment of broken environments, masked CI/CD errors, and production runtime crashes.",
         approach:
           "Implemented a Zod schema validation module at the application entrypoint. Before initializing Express or connecting to PostgreSQL, the configuration module parses `process.env`. If any variable is missing, mistyped, or fails regex checks, the process exits immediately with a structured diagnostic error.",
         result:
@@ -322,8 +337,7 @@ export const env = parsed.data`,
         title: "Decoupled Asynchronous Analytics Ingestion",
         problemStatement:
           "Logging visitor telemetry (IP geolocation, device header, referrer, timestamp) synchronously inside the redirect handler added 80-150ms of latency to each link click.",
-        risk:
-          "Slow redirect times, database connection pool exhaustion during traffic spikes, and degraded user experience.",
+        risk: "Slow redirect times, database connection pool exhaustion during traffic spikes, and degraded user experience.",
         approach:
           "Decoupled redirect execution from analytics recording. The redirect handler issues an immediate HTTP 302/307 redirect while pushing the event payload to an asynchronous ingestion queue. A background worker processes and aggregates click metrics into hourly and daily summary tables.",
         result:
@@ -411,4 +425,4 @@ export const env = parsed.data`,
       ],
     },
   },
-}
+};
