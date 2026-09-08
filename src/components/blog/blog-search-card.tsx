@@ -60,7 +60,7 @@ interface BlogSearchCardProps {
 
 export function BlogSearchCard({ post }: BlogSearchCardProps) {
   return (
-    <article>
+    <article className="py-6 first:pt-0 last:pb-0">
       <Link href={`/blog/${post.slug}`}>
         <h2 className="text-base sm:text-xl font-semibold hover:underline leading-snug">{post.title}</h2>
       </Link>

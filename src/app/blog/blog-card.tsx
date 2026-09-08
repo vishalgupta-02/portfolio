@@ -11,7 +11,7 @@ interface BlogCardProps {
 
 export function BlogCard({ post }: BlogCardProps) {
   return (
-    <article>
+    <article className="py-6 first:pt-0 last:pb-0">
       <Link href={`/blog/${post.slug}`}>
         <h2 className="text-base sm:text-lg font-semibold hover:underline leading-snug">
           {post.metadata.title}

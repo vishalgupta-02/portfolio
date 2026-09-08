@@ -32,3 +32,22 @@ export function getProjectBySlug(slug: string): Project | undefined {
 export function getCaseStudyProjects(): Project[] {
   return PROJECTS.filter((p) => Boolean(p.hasCaseStudy && p.caseStudy))
 }
+
+export function getAdjacentProjects(slug: string): {
+  prev?: Project
+  next?: Project
+} {
+  const normalized = slug.toLowerCase().trim()
+  const index = PROJECTS.findIndex(
+    (p) => p.slug.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+  )
+
+  if (index === -1) {
+    return {}
+  }
+
+  const prev = index > 0 ? PROJECTS[index - 1] : undefined
+  const next = index < PROJECTS.length - 1 ? PROJECTS[index + 1] : undefined
+
+  return { prev, next }
+}

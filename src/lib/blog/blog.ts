@@ -94,6 +94,10 @@ function getDeveloperViewContent(slug: string): string | null {
   // Developer view files may optionally have frontmatter (ignored)
   const { content } = matter(source);
 
+  if (!content || content.trim().length === 0) {
+    return null;
+  }
+
   return content;
 }
 

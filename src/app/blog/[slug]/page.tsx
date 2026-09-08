@@ -103,7 +103,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   const jsonLd = generateBlogJsonLd(slug, post);
 
-  const hasDualView = post.hasDeveloperView && post.developerContent !== null;
+  const hasDualView = post.metadata.dualView;
 
   return (
     <>
@@ -145,7 +145,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               <span aria-hidden="true">·</span>
 
-              {hasDualView && post.developerReadingTime ? (
+              {hasDualView ? (
                 <Suspense
                   fallback={<span>{post.readingTime.minutes} min read</span>}
                 >
@@ -185,45 +185,37 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             )}
           </header>
 
-          {hasDualView && post.developerContent ? (
-            <Suspense
-              fallback={
-                <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
-                  <MDXRemote
-                    source={post.content}
-                    components={mdxComponents}
-                    options={mdxOptions}
-                  />
-                </div>
+          <Suspense
+            fallback={
+              <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
+                <MDXRemote
+                  source={post.content}
+                  components={mdxComponents}
+                  options={mdxOptions}
+                />
+              </div>
+            }
+          >
+            <ArticleContent
+              panelId={CONTENT_PANEL_ID}
+              userContent={
+                <MDXRemote
+                  source={post.content}
+                  components={mdxComponents}
+                  options={mdxOptions}
+                />
               }
-            >
-              <ArticleContent
-                panelId={CONTENT_PANEL_ID}
-                userContent={
-                  <MDXRemote
-                    source={post.content}
-                    components={mdxComponents}
-                    options={mdxOptions}
-                  />
-                }
-                developerContent={
+              developerContent={
+                post.developerContent ? (
                   <MDXRemote
                     source={post.developerContent}
                     components={mdxComponents}
                     options={mdxOptions}
                   />
-                }
-              />
-            </Suspense>
-          ) : (
-            <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
-              <MDXRemote
-                source={post.content}
-                components={mdxComponents}
-                options={mdxOptions}
-              />
-            </div>
-          )}
+                ) : null
+              }
+            />
+          </Suspense>
 
           <div className="max-w-3xl">
             {/* <ArticleNavigation navigation={navigation} /> */}

@@ -83,7 +83,7 @@ export default async function BlogPaginationPage({
         </p>
       </header>
 
-      <div className="space-y-10">
+      <div className="divide-y divide-border">
         {posts.map((post) => (
           <BlogCard key={post.slug} post={post} />
         ))}

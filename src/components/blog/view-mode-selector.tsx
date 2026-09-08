@@ -1,60 +1,60 @@
-"use client"
+"use client";
 
-import { useSearchParams, useRouter, usePathname } from "next/navigation"
-import { useCallback, useId } from "react"
-import { User, Code2 } from "lucide-react"
-import { motion } from "motion/react"
-import { cn } from "@/lib/utils"
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useCallback, useId } from "react";
+import { User, Code2 } from "lucide-react";
+import { motion } from "motion/react";
+import { cn } from "@/lib/utils";
 
-export type ViewMode = "user" | "developer"
+export type ViewMode = "user" | "developer";
 
 interface ViewModeSelectorProps {
-  contentPanelId: string
+  contentPanelId: string;
 }
 
 function parseViewMode(value: string | null): ViewMode {
-  if (value === "developer") return "developer"
-  return "user"
+  if (value === "developer") return "developer";
+  return "user";
 }
 
 export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const pathname = usePathname()
-  const id = useId()
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const id = useId();
 
-  const activeView = parseViewMode(searchParams.get("view"))
+  const activeView = parseViewMode(searchParams.get("view"));
 
   const handleSelect = useCallback(
     (view: ViewMode) => {
-      if (view === activeView) return
+      if (view === activeView) return;
 
-      const params = new URLSearchParams(searchParams.toString())
+      const params = new URLSearchParams(searchParams.toString());
 
       if (view === "user") {
-        params.delete("view")
+        params.delete("view");
       } else {
-        params.set("view", view)
+        params.set("view", view);
       }
 
-      const search = params.toString()
-      const url = search ? `${pathname}?${search}` : pathname
+      const search = params.toString();
+      const url = search ? `${pathname}?${search}` : pathname;
 
-      router.replace(url, { scroll: false })
+      router.replace(url, { scroll: false });
     },
     [activeView, searchParams, router, pathname],
-  )
+  );
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-        event.preventDefault()
-        const nextView = activeView === "user" ? "developer" : "user"
-        handleSelect(nextView)
+        event.preventDefault();
+        const nextView = activeView === "user" ? "developer" : "user";
+        handleSelect(nextView);
       }
     },
     [activeView, handleSelect],
-  )
+  );
 
   const tabs = [
     {
@@ -67,7 +67,7 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
       label: "Developer View",
       icon: Code2,
     },
-  ]
+  ];
 
   return (
     <div className="my-8">
@@ -81,9 +81,9 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
         )}
       >
         {tabs.map((tab) => {
-          const isActive = activeView === tab.value
-          const tabId = `${id}-tab-${tab.value}`
-          const Icon = tab.icon
+          const isActive = activeView === tab.value;
+          const tabId = `${id}-tab-${tab.value}`;
+          const Icon = tab.icon;
 
           return (
             <button
@@ -96,7 +96,7 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
               tabIndex={isActive ? 0 : -1}
               onClick={() => handleSelect(tab.value)}
               className={cn(
-                "relative z-10 flex flex-1 items-center justify-center gap-2",
+                "relative z-10 flex flex-1 items-center justify-center gap-2 cursor-pointer",
                 "rounded-md px-3 py-2 text-sm font-medium",
                 "transition-colors duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
@@ -123,7 +123,7 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
                 />
               )}
             </button>
-          )
+          );
         })}
       </div>
 
@@ -131,7 +131,7 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
         Choose how you want to explore this article.
       </p>
     </div>
-  )
+  );
 }
 
-export { parseViewMode }
+export { parseViewMode };

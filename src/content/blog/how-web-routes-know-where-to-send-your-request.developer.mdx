@@ -1,0 +1,1277 @@
+> **The short version:**  
+> Web routing is the process of matching an incoming request to a defined route and deciding which handler should process it.
+
+---
+
+> **Focus:** HTTP · Web Routing · Request Handling · APIs · Backend Architecture  
+> **You'll learn:** How a web server receives a request, matches its method and path against registered routes, extracts parameters, and eventually hands the request to the correct handler.
+
+---
+
+## Before We Go Deeper
+
+If you only remember three things from this article:
+
+1. **A route is a rule** — it connects an HTTP method and URL pattern to the code responsible for handling that request.
+2. **Routing is matching** — the server examines things like `GET /users/42` and determines which registered route matches it.
+3. **The router doesn't usually contain the business logic** — its primary job is to determine _where the request should go_.
+
+---
+
+## The Mental Model
+
+At the simplest level:
+
+```text
+HTTP Request
+     ↓
+   Router
+     ↓
+Route Matching
+     ↓
+Matched Route
+     ↓
+   Handler
+     ↓
+Business Logic
+     ↓
+  Response
+```
+
+For example:
+
+```http
+GET /users/42
+```
+
+might match:
+
+```ts
+router.get("/users/:id", getUser);
+```
+
+The router effectively asks:
+
+```text
+Method: GET
+Path:   /users/42
+
+        ↓
+
+Does this route match?
+
+GET /users/:id
+        ↓
+       YES
+        ↓
+getUser()
+```
+
+> **Routing is essentially the traffic controller of your application: it doesn't decide what the destination does; it decides where the request should go.**
+
+---
+
+## Why This Matters
+
+Routing can look deceptively simple:
+
+```ts
+app.get("/users", getUsers);
+```
+
+But in a real application, routing becomes the boundary between the outside world and your application logic.
+
+It affects:
+
+- **Request organization** — different resources and operations need predictable endpoints.
+- **API design** — URL structures and HTTP methods form part of the API contract.
+- **Middleware execution** — authentication, validation, rate limiting, and other middleware can be attached to routes.
+- **Maintainability** — clean route definitions keep request handling separate from business logic.
+- **Security** — routes often determine which middleware and authorization rules apply.
+- **Scalability** — larger applications need structured routing instead of one giant request handler.
+
+A route is therefore more than a URL.
+
+It represents a rule that answers:
+
+> **"When this kind of request arrives, which part of the application should handle it?"**
+
+---
+
+## Technical Deep Dive
+
+---
+
+## 1. Routing
+
+At the HTTP level, routing is the mechanism that maps an incoming request to the appropriate handler.
+
+A useful abstraction is:
+
+```text
+HTTP Request
+(method, path, headers, query, body)
+              │
+              ▼
+           Router
+              │
+              ▼
+        Route Handler
+              │
+              ▼
+      HTTP Response
+(status, headers, body)
+```
+
+For example:
+
+```http
+GET /api/v1/users/123
+Authorization: Bearer <token>
+```
+
+The router primarily uses the HTTP method and URL path to determine which handler should receive the request.
+
+The handler is then responsible for things such as:
+
+- validating input
+- authenticating the request
+- authorizing access
+- querying data
+- executing business logic
+- constructing the response
+
+A useful separation is:
+
+```text
+Router
+  ↓
+"Which handler should receive this request?"
+
+Handler
+  ↓
+"What should the application actually do?"
+```
+
+---
+
+## 2. Static Routes
+
+A static route has a fixed path pattern.
+
+For example, in Express:
+
+```ts
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+  });
+});
+```
+
+This matches:
+
+```text
+GET /health
+```
+
+but not:
+
+```text
+GET /health/123
+```
+
+Static routes are useful for endpoints such as:
+
+```text
+GET  /health
+GET  /metrics
+GET  /users
+POST /login
+GET  /pricing
+```
+
+The route path remains fixed.
+
+### HTTP Method Is Part of Routing
+
+These two routes have the same path but represent different operations:
+
+```ts
+app.get("/users", getUsers);
+
+app.post("/users", createUser);
+```
+
+Therefore:
+
+```text
+GET  /users
+```
+
+and:
+
+```text
+POST /users
+```
+
+are different routes from the application's perspective.
+
+A route can therefore be thought of as a combination of:
+
+```text
+HTTP Method + Path Pattern
+```
+
+---
+
+# 3. Dynamic Routes / Path Parameters
+
+A dynamic route contains one or more variable path segments.
+
+For example:
+
+```ts
+app.get("/users/:id", (req, res) => {
+  const userId = req.params.id;
+
+  // Fetch user...
+});
+```
+
+The route pattern is:
+
+```text
+/users/:id
+```
+
+It can match:
+
+```text
+/users/123
+/users/456
+/users/789
+```
+
+For:
+
+```text
+/users/123
+```
+
+the router extracts:
+
+```ts
+req.params.id;
+```
+
+as:
+
+```text
+"123"
+```
+
+The important distinction is that `:id` is a **placeholder in the route definition**, while `123` is the actual value supplied by the client.
+
+```text
+/users/:id
+       │
+       └── parameter definition
+
+/users/123
+        │
+        └── parameter value
+```
+
+---
+
+## Path Parameter Validation
+
+Route matching and validation are separate concerns.
+
+This route:
+
+```text
+/users/:id
+```
+
+can match:
+
+```text
+/users/hello
+```
+
+That does not mean `"hello"` is a valid user ID.
+
+For example:
+
+```ts
+app.get("/users/:id", async (req, res) => {
+  const userId = Number(req.params.id);
+
+  if (!Number.isInteger(userId)) {
+    return res.status(400).json({
+      message: "Invalid user id",
+    });
+  }
+
+  // Continue...
+});
+```
+
+The router answers:
+
+> Does the URL match `/users/:id`?
+
+Validation answers:
+
+> Is the extracted `id` acceptable?
+
+---
+
+# 4. Query Parameters
+
+Query parameters provide additional information after the path.
+
+Example:
+
+```text
+GET /users?status=active
+```
+
+The route is:
+
+```text
+/users
+```
+
+while:
+
+```text
+status=active
+```
+
+is query data.
+
+In Express:
+
+```ts
+app.get("/users", (req, res) => {
+  const status = req.query.status;
+
+  // ...
+});
+```
+
+For:
+
+```text
+/users?status=active
+```
+
+the application receives:
+
+```text
+status = "active"
+```
+
+Query parameters are commonly used for:
+
+```text
+Filtering
+Sorting
+Searching
+Pagination
+Optional configuration
+```
+
+For example:
+
+```text
+/products?category=shoes
+```
+
+```text
+/products?sort=price
+```
+
+```text
+/products?page=2&limit=20
+```
+
+```text
+/products?category=shoes&sort=price&page=2
+```
+
+All of these can be handled by the same route:
+
+```text
+GET /products
+```
+
+The query values change; the route does not.
+
+---
+
+## Query Parameters Should Be Validated
+
+Do not assume query parameters are valid simply because they came from a URL.
+
+For example:
+
+```text
+/products?page=hello&limit=-100
+```
+
+The URL is valid, but the values may not be valid for the application.
+
+With Zod:
+
+```ts
+import { z } from "zod";
+
+const productQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  sort: z.enum(["price", "name"]).optional(),
+});
+```
+
+Then:
+
+```ts
+const query = productQuerySchema.parse(req.query);
+```
+
+Now the application works with validated input rather than arbitrary client-controlled values.
+
+---
+
+# 5. Path Parameters vs Query Parameters
+
+This distinction is important when designing APIs.
+
+Consider:
+
+```text
+/users/123
+```
+
+versus:
+
+```text
+/users?status=active
+```
+
+The first uses a path parameter:
+
+```text
+/users/:id
+```
+
+The second uses a query parameter:
+
+```text
+/users?status=active
+```
+
+A useful mental model is:
+
+```text
+Path parameter
+       ↓
+Identify a resource
+
+Query parameter
+       ↓
+Modify or narrow a collection/request
+```
+
+For example:
+
+```text
+GET /products/123
+```
+
+can represent:
+
+> Fetch product 123.
+
+While:
+
+```text
+GET /products?category=shoes
+```
+
+can represent:
+
+> Fetch products filtered by category.
+
+This isn't an absolute rule for every API design, but it is a useful convention.
+
+---
+
+# 6. Nested Routes
+
+A nested route represents a relationship between resources.
+
+Example:
+
+```text
+GET /users/123/posts/345
+```
+
+Route definition:
+
+```text
+/users/:userId/posts/:postId
+```
+
+The parameters are:
+
+```ts
+req.params.userId;
+req.params.postId;
+```
+
+For:
+
+```text
+/users/123/posts/345
+```
+
+the values are:
+
+```text
+userId = "123"
+postId = "345"
+```
+
+The URL expresses a relationship:
+
+```text
+User 123
+   │
+   └── Post 345
+```
+
+Another example:
+
+```text
+/companies/10/employees/25
+```
+
+can represent:
+
+```text
+Company 10
+    │
+    └── Employee 25
+```
+
+---
+
+## Nested Routes Do Not Mean Multiple Requests
+
+This is an important distinction.
+
+A request such as:
+
+```text
+GET /users/123/posts/345
+```
+
+is still **one HTTP request**.
+
+The nested structure describes the resource relationship.
+
+It does not mean:
+
+```text
+Request 1 → /users/123
+
+then
+
+Request 2 → /posts/345
+```
+
+Instead:
+
+```text
+One HTTP request
+       │
+       ▼
+/users/123/posts/345
+       │
+       ▼
+One route handler
+```
+
+The handler may internally perform multiple database queries or service calls, but that is separate from HTTP routing.
+
+---
+
+# 7. Nested Routers
+
+Express also allows routes to be organized into routers.
+
+For example:
+
+```ts
+const usersRouter = express.Router();
+
+usersRouter.get("/:userId/posts/:postId", getPost);
+
+app.use("/users", usersRouter);
+```
+
+The resulting route is:
+
+```text
+/users/:userId/posts/:postId
+```
+
+This can make large applications easier to organize.
+
+For example:
+
+```text
+/users
+  ├── /:userId
+  ├── /:userId/posts
+  └── /:userId/posts/:postId
+```
+
+The URL hierarchy can therefore be reflected in the application's router structure.
+
+---
+
+# 8. Route Versioning
+
+API versioning provides a compatibility boundary between different API contracts.
+
+For example:
+
+```text
+/api/v1/users
+/api/v2/users
+```
+
+Suppose `v1` returns:
+
+```json
+{
+  "name": "Vishal"
+}
+```
+
+Later, the API contract changes:
+
+```json
+{
+  "firstName": "Vishal",
+  "lastName": "..."
+}
+```
+
+Changing the existing contract in place could break existing clients.
+
+Instead:
+
+```text
+v1
+ ↓
+Old contract
+
+v2
+ ↓
+New contract
+```
+
+Clients can migrate independently.
+
+---
+
+## Why Version APIs?
+
+An API may have many consumers:
+
+```text
+Web Application
+       │
+Mobile Application
+       │
+Third-party Integration
+       │
+Internal Services
+       │
+       ▼
+      API
+```
+
+Changing the contract unexpectedly can break one or more consumers.
+
+Versioning provides an explicit compatibility boundary:
+
+```text
+/api/v1/...
+```
+
+and:
+
+```text
+/api/v2/...
+```
+
+can evolve independently at the API boundary.
+
+---
+
+# 9. API Versioning Strategies
+
+Versioning does not have to be placed in the URL.
+
+Common approaches include:
+
+### URI Versioning
+
+```text
+/api/v1/users
+/api/v2/users
+```
+
+### Header-Based Versioning
+
+For example:
+
+```http
+Accept: application/vnd.example.v2+json
+```
+
+### Query-Based Versioning
+
+```text
+/api/users?version=2
+```
+
+Each approach has trade-offs.
+
+URI versioning is easy to understand and discover:
+
+```text
+/api/v2/users
+```
+
+immediately tells a developer which API version is being used.
+
+The important part is consistency. Choose a strategy and apply it consistently across the API.
+
+---
+
+# 10. Deprecation
+
+Versioning creates a lifecycle problem.
+
+Eventually, you may have:
+
+```text
+/api/v1/users
+/api/v2/users
+```
+
+and decide that `v1` should no longer be used.
+
+Instead of deleting it immediately, you can deprecate it.
+
+Deprecation means:
+
+> The old API is still available, but consumers should migrate to the replacement.
+
+A typical lifecycle is:
+
+```text
+Active
+  ↓
+New version released
+  ↓
+Old version deprecated
+  ↓
+Migration period
+  ↓
+Sunset
+  ↓
+Old version removed
+```
+
+A good deprecation process includes:
+
+1. Announcing the new version.
+2. Providing migration documentation.
+3. Communicating a removal timeline.
+4. Tracking remaining consumers where possible.
+5. Giving consumers enough time to migrate.
+6. Removing the old version after the agreed sunset period.
+
+The goal is to avoid unexpected breaking changes.
+
+---
+
+# 11. Catch-All Routes
+
+A catch-all route intentionally matches a broad range of paths.
+
+Conceptually:
+
+```text
+/docs/*
+```
+
+could represent:
+
+```text
+/docs/getting-started
+/docs/backend/authentication
+/docs/backend/database
+/docs/deployment
+```
+
+This can be useful when the application has an unknown number of nested paths.
+
+Common use cases include:
+
+```text
+Documentation
+Wildcard content
+Multi-segment slugs
+Frontend fallback pages
+Custom fallback handling
+```
+
+The exact syntax depends on the framework and router implementation.
+
+---
+
+# 12. Catch-All vs 404
+
+A catch-all route should not be confused with an unmatched route.
+
+A catch-all route is intentionally defined:
+
+```text
+/docs/*
+```
+
+The application says:
+
+> "I want this route to match a broad range of paths."
+
+A 404 occurs when no route matches:
+
+```text
+GET /something-that-does-not-exist
+```
+
+For an API, you might explicitly handle this:
+
+```ts
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found",
+  });
+});
+```
+
+The distinction is:
+
+```text
+Catch-all
+    ↓
+Intentional broad route
+
+404
+    ↓
+No route matched
+```
+
+A catch-all route can itself return a 404 if its own logic determines that the requested resource does not exist.
+
+---
+
+# 13. Complete Route Example
+
+Consider:
+
+```text
+GET /api/v2/users/123/orders/456?status=paid
+```
+
+Break it down:
+
+```text
+/api
+  ↓
+API namespace
+
+/v2
+  ↓
+API version
+
+/users
+  ↓
+Users resource
+
+/123
+  ↓
+Dynamic user ID
+
+/orders
+  ↓
+Nested resource
+
+/456
+  ↓
+Dynamic order ID
+
+?status=paid
+  ↓
+Query parameter
+```
+
+A corresponding Express route could look like:
+
+```ts
+app.get("/api/v2/users/:userId/orders/:orderId", async (req, res) => {
+  const { userId, orderId } = req.params;
+  const { status } = req.query;
+
+  // Validate input
+  // Authenticate request
+  // Authorize access
+  // Verify resource relationship
+  // Fetch order
+  // Build response
+
+  return res.status(200).json({
+    userId,
+    orderId,
+    status,
+  });
+});
+```
+
+The router determines:
+
+```text
+Which handler?
+```
+
+The handler determines:
+
+```text
+What should happen?
+```
+
+That separation becomes increasingly important as applications grow.
+
+---
+
+# 14. Route Matching vs Application Logic
+
+A useful architecture is:
+
+```text
+HTTP Request
+      │
+      ▼
+     Router
+      │
+      ▼
+   Controller
+      │
+      ▼
+    Service
+      │
+      ▼
+ Repository / Database
+      │
+      ▼
+   Response
+```
+
+For example:
+
+```ts
+app.get("/users/:id", userController.getUser);
+```
+
+The router should primarily deal with request routing.
+
+The controller can deal with request/response concerns:
+
+```ts
+const getUser = async (req, res) => {
+  const user = await userService.findById(req.params.id);
+
+  return res.status(200).json(user);
+};
+```
+
+The service can contain business logic:
+
+```ts
+const findById = async (id: string) => {
+  return userRepository.findById(id);
+};
+```
+
+This keeps route definitions from becoming large blocks of business logic.
+
+---
+
+# 15. Common Mistakes
+
+## Mistake 1: Confusing Path Parameters and Query Parameters
+
+These are different:
+
+```text
+/users/123
+```
+
+and:
+
+```text
+/users?id=123
+```
+
+The first puts `123` inside the path.
+
+The second puts `123` in the query string.
+
+Both can be valid designs depending on the API, but they communicate different intentions.
+
+---
+
+## Mistake 2: Assuming Route Matching Validates Input
+
+This:
+
+```text
+/users/:id
+```
+
+may match:
+
+```text
+/users/hello
+```
+
+The application still needs to determine whether `"hello"` is a valid ID.
+
+Always separate:
+
+```text
+Route matching
+```
+
+from:
+
+```text
+Input validation
+```
+
+---
+
+## Mistake 3: Assuming Nested Routes Create Multiple HTTP Requests
+
+This:
+
+```text
+/users/123/posts/345
+```
+
+is one request.
+
+The nested URL structure represents a relationship.
+
+---
+
+## Mistake 4: Treating a Catch-All as a 404 Handler
+
+A catch-all route is intentionally defined.
+
+A 404 means no route matched.
+
+They solve different problems.
+
+---
+
+## Mistake 5: Breaking an API Without Considering Existing Clients
+
+If clients depend on:
+
+```text
+/api/v1/users
+```
+
+changing its response format without a migration strategy can create breaking changes.
+
+Versioning and deprecation provide a safer path:
+
+```text
+v1
+ ↓
+Deprecate
+ ↓
+Migrate
+ ↓
+v2
+ ↓
+Remove v1
+```
+
+---
+
+# 16. A Practical Mental Model
+
+When designing or reviewing a route, ask these questions:
+
+```text
+1. What HTTP method is being used?
+             ↓
+2. What part of the path is fixed?
+             ↓
+3. Which parts are dynamic?
+             ↓
+4. Are query parameters being used?
+             ↓
+5. Is there a parent-child relationship?
+             ↓
+6. Does this API need versioning?
+             ↓
+7. Is the old version going to be deprecated?
+             ↓
+8. What happens when no route matches?
+```
+
+For:
+
+```text
+GET /api/v2/users/123/posts/345?sort=latest
+```
+
+you can model it as:
+
+```text
+HTTP Method
+     │
+     ▼
+    GET
+
+Path
+     │
+     ├── /api
+     │
+     ├── /v2
+     │
+     ├── /users
+     │
+     ├── /123
+     │
+     ├── /posts
+     │
+     └── /345
+
+Query
+     │
+     └── sort=latest
+```
+
+And conceptually:
+
+```text
+GET
+ │
+ └── /api/v2
+        │
+        └── users/:userId
+                 │
+                 └── posts/:postId
+                          │
+                          └── ?sort=latest
+```
+
+---
+
+# Final Developer Takeaway
+
+Routing is more than matching a URL to a function.
+
+It establishes the boundary between an incoming HTTP request and the application logic responsible for processing it.
+
+The major concepts fit together like this:
+
+```text
+Routing
+   │
+   ├── Static routes
+   │      └── Fixed paths
+   │
+   ├── Dynamic routes
+   │      └── Variable path parameters
+   │
+   ├── Query parameters
+   │      └── Filtering / sorting / pagination / options
+   │
+   ├── Nested routes
+   │      └── Resource relationships
+   │
+   ├── Versioning
+   │      └── API compatibility boundaries
+   │
+   ├── Deprecation
+   │      └── Controlled API lifecycle
+   │
+   └── Catch-all routes
+          └── Intentionally broad path matching
+```
+
+The core mental model is:
+
+```text
+HTTP Request
+     │
+     ▼
+Route Matching
+     │
+     ├── Method
+     ├── Path
+     ├── Path Parameters
+     └── Query Parameters
+     │
+     ▼
+Handler
+     │
+     ├── Validation
+     ├── Authentication
+     ├── Authorization
+     ├── Business Logic
+     └── Data Access
+     │
+     ▼
+HTTP Response
+```
+
+Once this model is clear, routing stops being a collection of unrelated terms.
+
+They're different mechanisms for answering two fundamental questions:
+
+> **Where should this request go?**
+
+and:
+
+> **What information does the application need from the request to process it correctly?**
+
+```
+
+```

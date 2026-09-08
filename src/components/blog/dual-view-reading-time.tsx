@@ -6,7 +6,7 @@ import type { ReadingTime } from "@/lib/blog/types"
 
 interface DualViewReadingTimeProps {
   userReadingTime: ReadingTime
-  developerReadingTime: ReadingTime
+  developerReadingTime: ReadingTime | null
 }
 
 export function DualViewReadingTime({
@@ -16,8 +16,14 @@ export function DualViewReadingTime({
   const searchParams = useSearchParams()
   const activeView = parseViewMode(searchParams.get("view"))
 
+  if (activeView === "developer" && !developerReadingTime) {
+    return null
+  }
+
   const readingTime =
-    activeView === "developer" ? developerReadingTime : userReadingTime
+    activeView === "developer" && developerReadingTime
+      ? developerReadingTime
+      : userReadingTime
 
   return <span>{readingTime.minutes} min read</span>
 }

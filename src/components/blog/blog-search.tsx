@@ -156,7 +156,7 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
             </div>
 
             {filteredPosts.length > 0 ? (
-              <div className="w-full space-y-10">
+              <div className="w-full divide-y divide-border">
                 {filteredPosts.map((post) => (
                   <BlogSearchCard key={post.slug} post={post} />
                 ))}
