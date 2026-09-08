@@ -22,10 +22,10 @@ export default function FooterContent({ quote }: Props) {
 
       {quote && (
         <div className="w-full flex flex-col p-4 gap-3 rounded-sm bg-custom-gray/10 border dark:border-custom-white/10 border-custom-black">
-          <p className="text-center text-lg">“ {quote.quote} ”</p>
+          <p className="text-center text-sm">“ {quote.quote} ”</p>
 
           <div className="space-y-1 text-right">
-            <p className="text-md font-display italic">
+            <p className="text-xs font-display italic">
               — {quote.author?.name},{" "}
               <span className="text-md ml-1">{quote.author?.company.name}</span>
             </p>
