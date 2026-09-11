@@ -20,7 +20,11 @@ import { generateBlogJsonLd } from "@/lib/blog/json-ld";
 import { JsonLd } from "@/components/seo/json-ld";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpLeftFromCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowUpLeftFromCircle,
+  ArrowUpLeftSquare,
+} from "lucide-react";
 import { ViewModeSelector } from "@/components/blog/view-mode-selector";
 import { ArticleContent } from "@/components/blog/article-content";
 import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
@@ -109,13 +113,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     <>
       <JsonLd data={jsonLd} />
 
-      <main className="mx-auto max-w-2xl px-4 pt-12 pb-2">
-        <div className="mb-4">
+      <main className="mx-auto max-w-2xl px-4 pt-6 pb-2">
+        <div className="mb-4 border-b w-full pb-4">
           <Link
             href="/blog"
             className="text-primary flex text-sm items-center hover:underline"
           >
-            <ArrowUpLeftFromCircle className="mr-1 inline size-3" />
+            <ArrowLeft className="mr-1 inline size-4" />
             Back to blog
           </Link>
         </div>

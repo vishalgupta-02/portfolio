@@ -17,7 +17,7 @@ export default function FooterContent({ quote }: Props) {
   }
 
   return (
-    <footer className="w-full max-w-2xl rounded-md mx-auto px-4 py-8">
+    <footer className="w-full max-w-2xl rounded-md mx-auto px-4 py-0">
       <Line type="horizontal" width={640} className="my-8" />
 
       {quote && (

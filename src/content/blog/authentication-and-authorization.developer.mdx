@@ -1,0 +1,1596 @@
+> **The short version:**  
+> Authentication establishes identity. Authorization determines permissions. Sessions, JWTs, cookies, API keys, OAuth, and OpenID Connect are different mechanisms that solve different parts of that problem.
+
+---
+
+> **Focus:** Authentication · Authorization · Sessions · JWT · Cookies · OAuth · OIDC · Access Control  
+> **You'll learn:** How authentication state is maintained, how sessions and JWTs differ, how cookies fit into browser authentication, how OAuth enables delegated access, and how authorization controls what an authenticated identity can actually do.
+
+---
+
+## Before We Go Deeper
+
+If you only remember three things from this article:
+
+1. **Authentication and authorization are different problems** — authentication answers _who are you?_, while authorization answers _what are you allowed to do?_
+2. **Sessions and JWTs represent different state-management models** — sessions commonly keep authentication state on the server, while JWT-based systems can carry verifiable claims in the token itself.
+3. **OAuth is about delegation, not simply "login"** — OAuth allows a client to obtain limited access to a resource on behalf of a user or system.
+
+---
+
+## The Mental Model
+
+A useful way to model authentication and authorization is:
+
+```text
+                    Request
+                       │
+                       ↓
+                Authentication
+                       │
+                 "Who are you?"
+                       │
+                       ↓
+                    Identity
+                       │
+                       ↓
+                Authorization
+                       │
+              "What can you do?"
+                       │
+                       ↓
+                 Permissions
+                       │
+                       ↓
+                 Application
+                       │
+                       ↓
+                   Response
+```
+
+The important separation is:
+
+```text
+Authentication → Identity
+Authorization  → Permissions
+```
+
+An application can correctly identify you and still reject your request because you don't have permission to perform that action.
+
+---
+
+## Why This Matters
+
+Authentication is often treated as:
+
+```text
+Login → Token → Done
+```
+
+Production systems are more complicated.
+
+Authentication design affects:
+
+- **Security** — stolen credentials or tokens can become an entry point into the system.
+- **Scalability** — authentication state must work across multiple application instances.
+- **Session management** — users need to be logged out, sessions need to expire, and compromised credentials may need to be invalidated.
+- **Authorization** — being authenticated doesn't mean being allowed to perform every operation.
+- **Distributed systems** — services may need to authenticate users, other services, or external identity providers.
+- **API design** — different consumers require different authentication mechanisms.
+- **Operational complexity** — token rotation, revocation, key management, and session storage all introduce trade-offs.
+
+The important engineering question isn't:
+
+> "Should I use JWT?"
+
+It's:
+
+> **"What authentication and authorization model fits the security, architecture, clients, and operational requirements of this system?"**
+
+---
+
+# Technical Deep Dive
+
+## 1. Authentication vs Authorization
+
+Let's formalize the distinction.
+
+### Authentication
+
+Authentication establishes an identity.
+
+```text
+Credentials
+     ↓
+Verification
+     ↓
+Identity
+```
+
+For example:
+
+```text
+email + password
+       ↓
+password verification
+       ↓
+userId = 42
+```
+
+The application now has an authenticated identity:
+
+```text
+userId = 42
+```
+
+### Authorization
+
+Authorization determines whether that identity can perform an operation.
+
+```text
+Identity
+   +
+Requested Action
+   +
+Resource
+      ↓
+Authorization Decision
+      ↓
+Allow / Deny
+```
+
+For example:
+
+```text
+User 42
+   ↓
+DELETE /users/99
+   ↓
+Does User 42 have permission?
+   ↓
+       NO
+   ↓
+403 Forbidden
+```
+
+Authentication succeeded.
+
+Authorization failed.
+
+---
+
+# 2. Stateful Authentication
+
+A stateful authentication system keeps authentication state on the server side.
+
+A common architecture looks like:
+
+```text
+Browser
+   │
+   │ Session ID
+   ↓
+Application
+   │
+   │ Lookup
+   ↓
+Session Store
+   │
+   ↓
+User / Session State
+```
+
+After login:
+
+```text
+POST /login
+     ↓
+Verify credentials
+     ↓
+Create session
+     ↓
+Generate session ID
+     ↓
+Send session ID to client
+```
+
+The client subsequently sends the session identifier with requests.
+
+The server uses it to find the associated state.
+
+---
+
+## 3. Session Structure
+
+A session commonly has three important pieces.
+
+### Session Creation
+
+The server creates the session after successful authentication.
+
+```text
+Credentials
+    ↓
+Verification
+    ↓
+Create Session
+```
+
+### Session ID
+
+The server associates the session with a unique identifier.
+
+```text
+Session ID
+    ↓
+abc123xyz
+```
+
+The client stores the identifier and sends it back on subsequent requests.
+
+### Expiration / TTL
+
+Sessions should have an expiration policy.
+
+```text
+Created
+  ↓
+Active
+  ↓
+Expires
+```
+
+TTL means **Time To Live**.
+
+The exact lifetime depends on the application's risk profile and session type.
+
+A shorter lifetime reduces the useful window of a stolen session, while longer sessions provide more convenience.
+
+---
+
+# 4. Where Should Session State Live?
+
+Session state needs a storage mechanism.
+
+Common approaches include:
+
+```text
+File-based
+Database
+Distributed cache / session store
+```
+
+For a small application, storing sessions in a database can be straightforward.
+
+For a horizontally scaled application:
+
+```text
+                Load Balancer
+               /      |      \
+              ↓       ↓       ↓
+          Server A Server B Server C
+```
+
+any server may receive the next request.
+
+A shared session store such as Redis can provide a common source of session state:
+
+```text
+                Load Balancer
+               /      |      \
+              ↓       ↓       ↓
+          Server A Server B Server C
+               \       |       /
+                \      |      /
+                     Redis
+                      ↓
+                Session State
+```
+
+This avoids requiring each application instance to maintain an independent copy of the session.
+
+However, it introduces another dependency into the authentication path.
+
+Now authentication-related requests may involve:
+
+```text
+Request
+   ↓
+Application
+   ↓
+Redis
+   ↓
+Session
+```
+
+This creates considerations around:
+
+- network latency
+- Redis availability
+- connection management
+- expiration
+- replication
+- failover
+- operational complexity
+
+This is one of the trade-offs of stateful authentication.
+
+---
+
+# 5. Why Stateless Authentication Became Attractive
+
+Consider a large distributed system:
+
+```text
+                  Load Balancer
+                /      |       \
+               ↓       ↓        ↓
+             API A   API B    API C
+```
+
+If authentication depends on centralized session state, every relevant application instance needs access to that state.
+
+A stateless token model can change the request flow.
+
+Instead of:
+
+```text
+Request
+   ↓
+Application
+   ↓
+Session Store
+   ↓
+User State
+```
+
+the request can contain a token with verifiable claims:
+
+```text
+Request
+   ↓
+Application
+   ↓
+Verify Token
+   ↓
+Read Claims
+```
+
+This is one reason JWTs became popular in distributed architectures.
+
+However, **stateless does not mean free**.
+
+It moves some complexity from server-side session storage toward token lifecycle, key management, revocation, and client-side security.
+
+---
+
+# 6. JWT
+
+JWT stands for **JSON Web Token**.
+
+A JWT is a compact representation containing claims that can be digitally signed.
+
+The common structure is:
+
+```text
+Header.Payload.Signature
+```
+
+For example:
+
+```text
+xxxxx.yyyyy.zzzzz
+```
+
+There are three sections.
+
+---
+
+## Header
+
+The header contains metadata about the token.
+
+For example:
+
+```json
+{
+  "alg": "RS256",
+  "typ": "JWT"
+}
+```
+
+It tells the verifier information about how the token was created and what type of token it is.
+
+The exact algorithm depends on the system.
+
+---
+
+## Payload
+
+The payload contains claims.
+
+For example:
+
+```json
+{
+  "sub": "42",
+  "role": "user",
+  "exp": 1780000000
+}
+```
+
+Common claims include:
+
+```text
+sub → subject
+exp → expiration time
+iat → issued-at time
+iss → issuer
+aud → audience
+```
+
+The payload is generally **not secret** merely because it is inside a JWT.
+
+A signed JWT provides integrity/authenticity properties when verified correctly; it does not inherently provide confidentiality.
+
+Never treat an ordinary signed JWT as an encrypted container for secrets.
+
+---
+
+## Signature
+
+The signature allows the recipient to verify that the signed contents have not been modified and that the token was signed by a trusted issuer/key.
+
+Conceptually:
+
+```text
+Header
+   +
+Payload
+   +
+Signing Key
+   ↓
+Signature
+```
+
+The verifier checks the token using the appropriate verification key.
+
+---
+
+# 7. JWT and Statelessness
+
+A JWT-based request can look like:
+
+```text
+Client
+  │
+  │ Authorization: Bearer <token>
+  ↓
+API
+  │
+  ├── Verify signature
+  ├── Validate claims
+  ├── Check expiration
+  └── Authorize request
+  ↓
+Response
+```
+
+The API doesn't necessarily need to look up a session record to determine the claims contained in the token.
+
+This gives JWTs useful properties in distributed systems.
+
+### Statelessness
+
+The server can validate the token without maintaining an equivalent session record for every request.
+
+### Scalability
+
+Multiple application instances can independently verify the same token.
+
+```text
+               JWT
+                │
+       ┌────────┼────────┐
+       ↓        ↓        ↓
+    API A     API B    API C
+       │        │        │
+       └──── Verify ─────┘
+```
+
+### Portability
+
+A token can be consumed by different services that understand and trust the same issuer and signing configuration.
+
+---
+
+# 8. JWT Challenges
+
+JWTs introduce important trade-offs.
+
+## Token Theft
+
+If an attacker obtains a valid token, they may be able to use it until it expires or is otherwise rejected.
+
+This makes token handling critical.
+
+Security depends on factors such as:
+
+- where tokens are stored
+- transport security
+- token lifetime
+- refresh-token strategy
+- rotation
+- issuer/audience validation
+- signing-key protection
+
+---
+
+## Revocation
+
+Traditional server-side sessions are often straightforward to invalidate:
+
+```text
+Session ID
+    ↓
+Delete / invalidate session
+```
+
+With a self-contained JWT, the token may remain cryptographically valid until its expiration unless the system adds additional mechanisms.
+
+This creates a fundamental trade-off:
+
+```text
+Self-contained token
+      ↓
+Easy local verification
+      +
+Harder immediate revocation
+```
+
+Systems that require immediate invalidation may need additional state or token-management mechanisms.
+
+---
+
+# 9. Cookies
+
+A cookie is a mechanism through which a server can ask a browser to store small pieces of data and send them with matching requests.
+
+For example:
+
+```http
+Set-Cookie: session_id=abc123
+```
+
+The browser stores the cookie.
+
+Later, it can send:
+
+```http
+Cookie: session_id=abc123
+```
+
+This makes cookies useful for browser authentication.
+
+But:
+
+> **A cookie is not an authentication protocol.**
+
+It is a browser storage and request mechanism.
+
+For example:
+
+```text
+Cookie
+   ↓
+Stores / transports
+   ↓
+Session ID
+```
+
+or:
+
+```text
+Cookie
+   ↓
+Stores / transports
+   ↓
+Authentication token
+```
+
+The cookie itself doesn't determine what authentication model you're using.
+
+---
+
+# 10. Important Cookie Security Attributes
+
+For authentication cookies, several attributes matter.
+
+### `Secure`
+
+The cookie should only be transmitted over secure HTTPS connections.
+
+### `HttpOnly`
+
+JavaScript running in the page cannot directly read the cookie.
+
+This can reduce the impact of some XSS-related token theft scenarios.
+
+It does **not** make the application immune to XSS.
+
+### `SameSite`
+
+Controls when browsers send cookies in cross-site contexts.
+
+It plays an important role in reducing certain CSRF risks.
+
+Common settings include:
+
+```text
+Strict
+Lax
+None
+```
+
+The appropriate setting depends on the application's architecture.
+
+---
+
+# 11. Stateful vs Stateless
+
+The distinction can be summarized as:
+
+| Stateful                                                 | Stateless                                             |
+| -------------------------------------------------------- | ----------------------------------------------------- |
+| Server maintains authentication state                    | Request carries verifiable authentication information |
+| Often uses session IDs                                   | Often uses tokens such as JWTs                        |
+| Easy server-side invalidation                            | Revocation requires additional design                 |
+| Requires shared session storage when scaled horizontally | Easier for independent service verification           |
+| Central state dependency                                 | Less per-request session lookup                       |
+| Useful for many browser applications                     | Useful for some distributed/API architectures         |
+
+Neither is universally better.
+
+The architecture determines the appropriate choice.
+
+---
+
+# 12. API Keys
+
+API keys are commonly used for application-to-application access.
+
+For example:
+
+```text
+Application A
+      │
+      │ API Key
+      ↓
+Application B / API
+```
+
+The receiving API can use the key to identify the calling application and determine whether it has access.
+
+API keys are commonly useful for:
+
+- internal services
+- third-party APIs
+- scripts
+- developer integrations
+- server-to-server communication
+
+They are generally not a replacement for full user authentication.
+
+An API key identifies or authorizes an API consumer; it doesn't inherently represent a human user's identity or provide delegated user authorization.
+
+---
+
+# 13. OAuth
+
+OAuth addresses a different problem:
+
+> **Delegated authorization.**
+
+Imagine a third-party application wants access to your calendar.
+
+You don't want to give that application your calendar password.
+
+Instead:
+
+```text
+User
+ ↓
+Application
+ ↓
+Authorization Server
+ ↓
+User grants permission
+ ↓
+Access Token
+ ↓
+Application accesses permitted resource
+```
+
+The application gets limited access without receiving the user's password.
+
+---
+
+# 14. Delegation
+
+Delegation means allowing another application or service to use a resource on your behalf within a defined scope.
+
+For example:
+
+```text
+Calendar Access
+```
+
+might allow:
+
+```text
+Read calendar
+```
+
+but not:
+
+```text
+Delete calendar
+```
+
+OAuth commonly represents this with **scopes**.
+
+Conceptually:
+
+```text
+Identity
+   ↓
+Grant
+   ↓
+Scopes
+   ↓
+Limited Resource Access
+```
+
+The important principle is:
+
+> **Give the client only the access it needs.**
+
+This is closely related to the principle of least privilege.
+
+---
+
+# 15. OAuth 1.0 vs OAuth 2.0
+
+OAuth 1.0 and OAuth 2.0 are different protocol generations.
+
+OAuth 2.0 became the dominant framework for modern OAuth deployments.
+
+It separates roles such as:
+
+```text
+Resource Owner
+Client
+Authorization Server
+Resource Server
+```
+
+A simplified architecture:
+
+```text
+                    User
+                     │
+                     ↓
+                   Client
+                     │
+                     ↓
+             Authorization Server
+                     │
+                     ↓
+                Access Token
+                     │
+                     ↓
+               Resource Server
+```
+
+OAuth 2.0 itself is an authorization framework.
+
+It should not be casually treated as a complete "login protocol."
+
+That distinction leads directly to OpenID Connect.
+
+---
+
+# 16. OAuth Flows
+
+Different clients and scenarios require different flows.
+
+## Authorization Code Flow
+
+Common for user-facing applications.
+
+Simplified:
+
+```text
+User
+  ↓
+Client
+  ↓
+Authorization Server
+  ↓
+User Authentication + Consent
+  ↓
+Authorization Code
+  ↓
+Client
+  ↓
+Token Endpoint
+  ↓
+Access Token
+```
+
+The authorization code is exchanged for tokens.
+
+Modern browser-based applications commonly use **Authorization Code Flow with PKCE**.
+
+PKCE helps protect the authorization-code exchange, particularly for public clients.
+
+---
+
+## Implicit Flow
+
+The Implicit Flow was designed for obtaining tokens directly through the authorization endpoint.
+
+It has important security limitations and is generally **not recommended for new applications**.
+
+Modern applications generally prefer Authorization Code Flow with PKCE where appropriate.
+
+---
+
+## Client Credentials Flow
+
+This is intended for machine-to-machine scenarios.
+
+There is no end-user granting permission during the request.
+
+```text
+Service A
+   ↓
+Client Credentials
+   ↓
+Authorization Server
+   ↓
+Access Token
+   ↓
+Service B
+```
+
+For example:
+
+```text
+Payment Service
+      ↓
+Analytics Service
+```
+
+The payment service authenticates itself as a client.
+
+---
+
+## Device Authorization Grant
+
+The Device Authorization Grant is useful for devices with limited input or browser capabilities.
+
+For example:
+
+```text
+Smart TV
+Game Console
+CLI
+IoT Device
+```
+
+A typical flow:
+
+```text
+Device
+  ↓
+Request device code
+  ↓
+Show user a code
+  ↓
+User uses another device
+  ↓
+User authorizes
+  ↓
+Device receives token
+```
+
+---
+
+# 17. OpenID Connect
+
+OAuth and authentication are frequently confused.
+
+OAuth answers:
+
+> **"Can this client access a resource?"**
+
+OpenID Connect, or **OIDC**, adds an identity layer on top of OAuth 2.0.
+
+It helps answer:
+
+> **"Who is the authenticated user?"**
+
+Conceptually:
+
+```text
+OAuth 2.0
+     ↓
+Delegated authorization
+
+OIDC
+     ↓
+Authentication / identity
+```
+
+OIDC introduces an **ID Token**, which carries identity claims about the authentication event and subject.
+
+This is why modern "Sign in with..." systems commonly involve OIDC when the application needs standardized user identity.
+
+---
+
+# 18. Machine-to-Machine vs User-to-Machine
+
+Authentication architecture changes depending on who is communicating.
+
+### User-to-Application
+
+```text
+Human
+  ↓
+Browser
+  ↓
+Application
+```
+
+Examples:
+
+- login
+- dashboard
+- account management
+
+Session cookies or OIDC-based authentication may be appropriate.
+
+### Machine-to-Machine
+
+```text
+Service A
+   ↓
+Service B
+```
+
+There may be no human user involved.
+
+Client Credentials, API keys, workload identity, or other service authentication mechanisms may be appropriate depending on the environment.
+
+### User-to-Machine Through a Client
+
+```text
+User
+ ↓
+Application
+ ↓
+External API
+```
+
+The application may need delegated authorization.
+
+This is where OAuth becomes particularly useful.
+
+---
+
+# 19. Authorization After Authentication
+
+Authentication should not end with:
+
+```text
+Token valid → Allow everything
+```
+
+Instead:
+
+```text
+Authentication
+      ↓
+Identity
+      ↓
+Authorization
+      ↓
+Permission check
+      ↓
+Allow / Deny
+```
+
+For example:
+
+```http
+DELETE /api/users/42
+```
+
+The server might verify:
+
+```text
+Is the token valid?
+       ↓
+Who is the user?
+       ↓
+What role do they have?
+       ↓
+Can this role delete users?
+       ↓
+Allow / Reject
+```
+
+This separation keeps identity and permissions conceptually distinct.
+
+---
+
+# 20. RBAC
+
+RBAC stands for **Role-Based Access Control**.
+
+Instead of assigning every permission individually to every user, permissions are associated with roles.
+
+For example:
+
+```text
+Admin
+ ├── users:read
+ ├── users:create
+ ├── users:update
+ └── users:delete
+
+Editor
+ ├── posts:read
+ ├── posts:create
+ └── posts:update
+
+User
+ └── profile:read
+```
+
+Then:
+
+```text
+User
+ ↓
+Role
+ ↓
+Permissions
+ ↓
+Allowed Actions
+```
+
+This makes authorization easier to manage as the system grows.
+
+---
+
+# 21. Generic Authentication Errors
+
+Authentication errors can unintentionally reveal information.
+
+Suppose an attacker tries:
+
+```text
+alice@example.com
+```
+
+and the system responds:
+
+> "This email does not exist."
+
+The attacker has learned something.
+
+Instead, a system may use:
+
+> "Invalid email or password."
+
+This avoids unnecessarily revealing whether the account exists.
+
+The same principle can apply to password-reset and account-recovery flows.
+
+Security sometimes means **revealing less information than the application internally knows**.
+
+---
+
+# 22. Timing Attacks
+
+Security can leak through more than error messages.
+
+It can also leak through **execution time**.
+
+Imagine a naive secret comparison:
+
+```text
+Secret:     abcdef
+Input:      abxxxx
+```
+
+If the implementation stops at the first mismatch, the amount of work can depend on how many characters matched.
+
+Conceptually:
+
+```text
+Input A
+↓
+1 character matches
+↓
+Shorter execution
+
+Input B
+↓
+5 characters match
+↓
+Longer execution
+```
+
+An attacker who can reliably measure these differences may extract information about the secret.
+
+For security-sensitive comparisons, applications can use **constant-time comparison** primitives that reduce information leakage through timing.
+
+The key idea is:
+
+> **Do not let secret-dependent execution paths unnecessarily reveal information through measurable timing differences.**
+
+---
+
+# 23. Session Security
+
+A session identifier is effectively a credential.
+
+If an attacker obtains it, they may be able to impersonate the user.
+
+Therefore, session security involves more than generating a random ID.
+
+Important considerations include:
+
+```text
+HTTPS
+Secure cookie
+HttpOnly
+SameSite
+Expiration
+Session rotation
+Session invalidation
+CSRF protection
+```
+
+For example, after a successful login, rotating the session identifier can help defend against certain session fixation scenarios.
+
+The session ID should also be generated using a cryptographically secure random source.
+
+---
+
+# 24. Token Security
+
+JWTs require similar discipline.
+
+A secure design needs to consider:
+
+```text
+Token lifetime
+Signing keys
+Algorithm configuration
+Issuer validation
+Audience validation
+Expiration
+Storage
+Transport
+Refresh tokens
+Rotation
+Revocation
+```
+
+A token being correctly signed does not automatically mean it should be accepted.
+
+The application should validate the claims relevant to its security model.
+
+For example:
+
+```text
+Signature valid?
+       ↓
+Not expired?
+       ↓
+Correct issuer?
+       ↓
+Correct audience?
+       ↓
+Required claims present?
+       ↓
+Authorization check
+```
+
+---
+
+# 25. Don't Put Secrets in JWT Payloads
+
+This deserves explicit attention.
+
+A typical signed JWT payload can be decoded by anyone who possesses the token.
+
+Therefore:
+
+```json
+{
+  "password": "my-secret-password"
+}
+```
+
+would be a serious design mistake.
+
+A signed JWT provides integrity/authenticity properties.
+
+It does not inherently hide the payload.
+
+If confidentiality is required, use an appropriate encryption mechanism rather than assuming JWT signing provides secrecy.
+
+---
+
+# 26. Choosing an Authentication Strategy
+
+The choice should start with requirements rather than technology preference.
+
+### Stateful Sessions
+
+Consider them when:
+
+```text
+Browser-based application
++
+Strong server-side session control
++
+Straightforward revocation
+```
+
+They are especially attractive when the application benefits from centrally managed login state.
+
+### JWT / Stateless Tokens
+
+Consider them when:
+
+```text
+Distributed APIs
++
+Multiple services need to verify claims
++
+Local verification is useful
+```
+
+But explicitly design token expiration, revocation, refresh, and key management.
+
+### API Keys
+
+Consider them for:
+
+```text
+Application → API
+Service → Service
+Developer → API
+```
+
+Use appropriate key storage, rotation, scoping, and monitoring.
+
+### OAuth
+
+Consider it when:
+
+```text
+A client needs delegated access
+to resources owned by a user
+or another authorization context.
+```
+
+### OIDC
+
+Consider it when:
+
+```text
+You need standardized authentication
+and identity on top of OAuth 2.0.
+```
+
+---
+
+# 27. A Practical Decision Model
+
+Instead of memorizing:
+
+```text
+JWT good
+Sessions bad
+OAuth complicated
+```
+
+ask these questions:
+
+```text
+Who is authenticating?
+        ↓
+Human or machine?
+
+What needs to be accessed?
+        ↓
+Own application or external resource?
+
+Who owns the resource?
+        ↓
+User / service / organization?
+
+Do we need delegation?
+        ↓
+Yes → OAuth may be relevant
+
+Do we need standardized identity?
+        ↓
+Yes → OIDC may be relevant
+
+Do we need centralized server-side state?
+        ↓
+Yes → Stateful sessions may fit
+
+Can requests carry independently verifiable claims?
+        ↓
+Possibly → Stateless tokens may fit
+```
+
+Architecture should drive the choice.
+
+---
+
+# 28. Putting Everything Together
+
+Consider a modern web application.
+
+A simplified flow could be:
+
+```text
+                    User
+                     │
+                     ↓
+                  Browser
+                     │
+                     ↓
+                Login Request
+                     │
+                     ↓
+              Authentication
+                     │
+                     ↓
+                  Identity
+                     │
+             ┌───────┴───────┐
+             ↓               ↓
+          Session           OIDC
+             │               │
+             ↓               ↓
+        Session ID        ID Token
+             │               │
+             └───────┬───────┘
+                     ↓
+                  Request
+                     │
+                     ↓
+              Authentication
+                     │
+                     ↓
+                Authorization
+                     │
+                     ↓
+               RBAC / Policy
+                     │
+                     ↓
+                Application
+                     │
+                     ↓
+                  Response
+```
+
+For an external API:
+
+```text
+User
+ ↓
+Application
+ ↓
+OAuth Authorization
+ ↓
+Access Token
+ ↓
+External Resource Server
+```
+
+For service-to-service communication:
+
+```text
+Service A
+   ↓
+Service Authentication
+   ↓
+Service B
+   ↓
+Authorization
+   ↓
+Response
+```
+
+Different flows, different problems.
+
+---
+
+# 29. The Security Boundary
+
+One of the most important engineering principles here is that **authentication data crosses security boundaries**.
+
+Anything that represents identity or permission should be treated as security-sensitive.
+
+For example:
+
+```text
+Cookie
+Session ID
+JWT
+API Key
+Access Token
+Refresh Token
+```
+
+These aren't ordinary application values.
+
+They can represent the ability to act as a user or service.
+
+Therefore:
+
+```text
+Log carefully
+Store carefully
+Transmit securely
+Expire appropriately
+Rotate when appropriate
+Revoke when necessary
+```
+
+A surprisingly large number of authentication vulnerabilities come from treating credentials as ordinary data.
+
+---
+
+# 30. The Complete Mental Model
+
+The complete picture is:
+
+```text
+                         REQUEST
+                            │
+                            ↓
+                    ┌───────────────┐
+                    │ Authentication│
+                    └───────┬───────┘
+                            │
+                       Who are you?
+                            │
+                            ↓
+                         Identity
+                            │
+                            ↓
+                    ┌───────────────┐
+                    │ Authorization  │
+                    └───────┬───────┘
+                            │
+                      What can you do?
+                            │
+                            ↓
+                       Permissions
+                            │
+                            ↓
+                         Resource
+                            │
+                            ↓
+                         Response
+```
+
+The mechanisms underneath can vary:
+
+```text
+Identity / Authentication
+        │
+        ├── Session
+        ├── JWT
+        ├── OIDC
+        ├── API Key
+        └── Other mechanisms
+
+Authorization
+        │
+        ├── RBAC
+        ├── Scopes
+        ├── Policies
+        └── Resource-level rules
+```
+
+---
+
+# Engineering Takeaways
+
+- **Authentication establishes identity; authorization evaluates permissions.**
+- **A session ID is not the session itself** — it is an identifier used to associate a request with server-side session state.
+- **Redis is one option for shared session storage** when multiple application instances need common session state.
+- **JWTs carry claims and can be verified without an equivalent session lookup**, making them useful in some distributed architectures.
+- **JWTs introduce lifecycle problems**, especially token theft and revocation.
+- **A cookie is a browser mechanism, not an authentication protocol.**
+- **API keys are commonly appropriate for application-to-application access, not as a universal replacement for user authentication.**
+- **OAuth is primarily about delegated authorization.**
+- **OIDC adds an identity/authentication layer on top of OAuth 2.0.**
+- **Authorization should happen after establishing the relevant identity and should be enforced at the resource/action boundary.**
+- **RBAC maps roles to permissions and can simplify authorization management.**
+- **Generic authentication errors can reduce unnecessary information leakage.**
+- **Security-sensitive comparisons should avoid secret-dependent timing leaks.**
+- **Signed JWTs are not automatically encrypted; don't put secrets in their payloads.**
+- **There is no universally superior authentication mechanism. Architecture, threat model, client type, and operational requirements should determine the choice.**
+
+> **Remember:**
+> **Authentication tells your system who is making the request. Authorization decides what that identity is allowed to do. The rest of the architecture is about securely carrying, verifying, and enforcing that decision.**
+
+---
+
+## Final Mental Model
+
+```text
+Authentication
+      ↓
+"Who are you?"
+      ↓
+Identity
+      ↓
+Authorization
+      ↓
+"What can you do?"
+      ↓
+Permissions
+      ↓
+Resource
+      ↓
+Allow / Deny
+```
+
+And the technologies fit around those two core questions:
+
+```text
+Sessions
+→ Server remembers authentication state
+
+JWT
+→ Request carries verifiable claims
+
+Cookies
+→ Browser stores and sends data
+
+API Keys
+→ Applications identify/authenticate to APIs
+
+OAuth
+→ Delegated access to resources
+
+OIDC
+→ Standardized user identity
+
+RBAC
+→ Roles map identities to permissions
+```
+
+The goal isn't to memorize every authentication technology.
+
+The goal is to understand **which problem each mechanism solves, what state it requires, what security properties it provides, and what trade-offs it introduces**.
+
+```
+
+```
