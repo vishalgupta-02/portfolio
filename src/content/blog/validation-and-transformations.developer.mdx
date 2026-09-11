@@ -1,0 +1,1997 @@
+<BlogImage
+  src="/blog/validatons/validations-and-transformations.webp"
+  alt="Validations & Transformations"
+  width={1400}
+  height={800}
+  priority
+/>
+
+---
+
+> **The short version:**
+> Validation determines whether incoming data is acceptable; transformation converts accepted data into a predictable representation that the rest of the system can safely operate on.
+
+---
+
+> **Focus:** Input validation, data types, syntax, semantic rules, transformations, request boundaries, API security
+> **You'll learn:** How validation layers differ, where validation belongs, why server-side validation is mandatory, how transformations should be handled, and how these concepts fit into a backend request pipeline.
+
+---
+
+## Before We Go Deeper
+
+If you only remember few things from this article:
+
+1. **Validation and transformation are different operations** — validation answers _"Is this acceptable?"_ while transformation answers _"How should we represent this?"_
+2. **Passing client-side validation means almost nothing to the server** — clients are under the user's control, so the server must independently validate incoming data.
+3. **Validate at the boundary, transform deliberately** — convert untrusted external input into a known internal representation before business logic operates on it.
+
+---
+
+# The Mental Model
+
+A useful backend pipeline looks like this:
+
+```text
+External Input
+     │
+     ▼
+┌──────────────────────┐
+│ Parse / Decode       │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Type / Shape Checks  │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Syntactic Validation │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Semantic Validation  │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Transformation       │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Business Logic       │
+└──────────────────────┘
+     │
+     ▼
+┌──────────────────────┐
+│ Persistence / Output │
+└──────────────────────┘
+```
+
+The exact ordering can vary depending on the system.
+
+For example, some transformations are necessary before a validation can even be performed.
+
+The important architectural idea is that **raw external input should not flow directly into business logic**.
+
+> **Boundary in → validate → transform → trusted internal representation → business logic.**
+
+---
+
+# What Exactly Is Validation?
+
+Validation is the process of determining whether data satisfies a set of constraints.
+
+Suppose an API accepts:
+
+```json
+{
+  "name": "Vishal",
+  "age": 24,
+  "email": "vishal@example.com"
+}
+```
+
+The server might define:
+
+```text
+name
+→ required
+→ string
+→ non-empty
+→ maximum length
+
+age
+→ required
+→ integer
+→ minimum value
+→ maximum value
+
+email
+→ required
+→ string
+→ valid email syntax
+```
+
+Validation turns an otherwise untrusted request into something the application can reason about.
+
+Without it, every downstream function has to wonder:
+
+```text
+"Can I trust this field?"
+"Could this be missing?"
+"Could this be the wrong type?"
+"Could this value violate a business rule?"
+```
+
+That produces defensive code everywhere.
+
+Good validation establishes a boundary.
+
+---
+
+# Validation Is Not One Single Check
+
+A common beginner mistake is treating validation as:
+
+```text
+"Is this a valid request?"
+```
+
+In practice, there are multiple dimensions.
+
+A useful breakdown is:
+
+```text
+Validation
+├── Type
+├── Structural / Shape
+├── Syntactic
+├── Semantic
+└── Business constraints
+```
+
+These categories can overlap depending on terminology and the validation library being used.
+
+The important thing is understanding **what question each check answers**.
+
+---
+
+# 1. Type Validation
+
+Type validation asks:
+
+> **Does this value have the expected data type?**
+
+Suppose the API expects:
+
+```json
+{
+  "age": 24
+}
+```
+
+but receives:
+
+```json
+{
+  "age": "24"
+}
+```
+
+Depending on the API contract, the second value may be invalid because `"24"` is a string rather than a number.
+
+Similarly:
+
+```json
+{
+  "name": 123
+}
+```
+
+would violate an expected:
+
+```text
+name → string
+```
+
+And:
+
+```json
+{
+  "isActive": "yes"
+}
+```
+
+would violate:
+
+```text
+isActive → boolean
+```
+
+Type validation is especially important in languages or environments where external input does not automatically match the application's internal types.
+
+---
+
+# A JavaScript Example
+
+Consider:
+
+```ts
+function createUser(name: string) {
+  // ...
+}
+```
+
+It is tempting to think TypeScript guarantees that `name` is a string.
+
+It doesn't at the API boundary.
+
+TypeScript's types are primarily a **development-time constraint**.
+
+If a client sends:
+
+```json
+{
+  "name": 123
+}
+```
+
+the request arrives at runtime.
+
+Your TypeScript compiler isn't sitting on the network inspecting HTTP requests.
+
+This is the distinction:
+
+```text
+TypeScript type system
+        ↓
+Helps developers write correct code
+
+Runtime validation
+        ↓
+Checks actual external data
+```
+
+> **Compile-time types do not validate runtime input.**
+
+---
+
+# 2. Structural / Shape Validation
+
+Before worrying about individual values, you often need to verify the overall structure.
+
+Suppose the API expects:
+
+```json
+{
+  "name": "Vishal",
+  "age": 24
+}
+```
+
+But receives:
+
+```json
+{
+  "user": {
+    "name": "Vishal"
+  }
+}
+```
+
+The values may individually look reasonable.
+
+The structure is different from the API contract.
+
+You can think of a schema like:
+
+```text
+CreateUserRequest
+├── name: string
+└── age: number
+```
+
+This is why schema validation is common at API boundaries.
+
+A schema describes what the request is supposed to look like.
+
+---
+
+# 3. Syntactic Validation
+
+Syntactic validation asks whether a value conforms to the expected **format or structural rules**.
+
+Examples include:
+
+```text
+Email
+→ valid email-like structure
+
+UUID
+→ valid UUID structure
+
+Date
+→ expected date representation
+
+URL
+→ valid URL structure
+
+Username
+→ allowed characters and length
+```
+
+For example:
+
+```text
+vishal@example.com
+```
+
+may satisfy an email format.
+
+Whereas:
+
+```text
+vishal@@example
+```
+
+does not.
+
+Syntactic validation is fundamentally concerned with:
+
+```text
+"Is this represented in an acceptable form?"
+```
+
+---
+
+# Syntax Does Not Mean Meaning
+
+This is an important distinction.
+
+Consider:
+
+```text
+2026-99-99
+```
+
+A string may match a superficial date pattern:
+
+```text
+YYYY-MM-DD
+```
+
+but that doesn't necessarily mean it represents a valid calendar date.
+
+This demonstrates why validation often needs more than pattern matching.
+
+A regex can tell you that something **looks like** a particular structure.
+
+It cannot automatically tell you that the value makes sense for your application.
+
+---
+
+# 4. Semantic Validation
+
+Semantic validation asks:
+
+> **Does this value make sense within the domain?**
+
+Consider:
+
+```json
+{
+  "age": -10
+}
+```
+
+The type is correct:
+
+```text
+number
+```
+
+The representation is also simple enough to parse.
+
+But the value violates a domain rule:
+
+```text
+age >= 0
+```
+
+Another example:
+
+```json
+{
+  "startDate": "2026-12-20",
+  "endDate": "2026-12-10"
+}
+```
+
+Both values may individually be valid dates.
+
+But the relationship may violate the application's rule:
+
+```text
+startDate <= endDate
+```
+
+This is semantic validation.
+
+---
+
+# Business Rules Are Where It Gets Interesting
+
+Consider an e-commerce API:
+
+```http
+POST /orders
+```
+
+with:
+
+```json
+{
+  "productId": "abc123",
+  "quantity": 5
+}
+```
+
+The request may pass basic validation:
+
+```text
+productId → string
+quantity → integer
+quantity → positive
+```
+
+But the application still has to ask:
+
+```text
+Does the product exist?
+
+Is the product available?
+
+Is the product purchasable?
+
+Is the requested quantity within the allowed limit?
+
+Can this user purchase it?
+
+Is the product already discontinued?
+```
+
+These aren't merely formatting checks.
+
+They're domain/business rules.
+
+This is why a validation layer should not become a dumping ground for every possible application rule.
+
+Some rules belong closer to the business/domain layer.
+
+---
+
+# Validation vs Business Logic
+
+Consider:
+
+```text
+quantity must be an integer
+```
+
+This is a straightforward input constraint.
+
+But:
+
+```text
+premium customers can purchase up to 50 units,
+standard customers can purchase up to 10
+```
+
+is much more closely tied to business policy.
+
+You might validate:
+
+```text
+quantity > 0
+```
+
+at the request boundary.
+
+Then the business layer determines whether the authenticated customer is allowed to purchase that quantity.
+
+A useful separation is:
+
+```text
+Input validation
+        ↓
+"Is this request structurally acceptable?"
+
+Business logic
+        ↓
+"Is this operation allowed according to our domain?"
+```
+
+The exact boundary depends on the architecture, but the distinction prevents validation code from becoming an unmaintainable business-rule warehouse.
+
+---
+
+# What Are Transformations?
+
+Transformation changes the representation of data.
+
+For example:
+
+```text
+"   Vishal   "
+```
+
+might become:
+
+```text
+"Vishal"
+```
+
+Or:
+
+```text
+"VISHAL@EXAMPLE.COM"
+```
+
+might become:
+
+```text
+"vishal@example.com"
+```
+
+Or an incoming string representation could be converted into a number when the API contract permits that behavior.
+
+Conceptually:
+
+```text
+External Representation
+        ↓
+Transformation
+        ↓
+Internal Representation
+```
+
+The purpose is to create consistency.
+
+---
+
+# Validation and Transformation Are Different
+
+This distinction is worth making explicit.
+
+Suppose the client sends:
+
+```json
+{
+  "email": " VISHAL@EXAMPLE.COM "
+}
+```
+
+A transformation could produce:
+
+```json
+{
+  "email": "vishal@example.com"
+}
+```
+
+Then validation could operate on the transformed representation.
+
+Or validation could first determine that the original representation is acceptable and transformation could happen afterward.
+
+The correct order depends on the transformation.
+
+For example:
+
+```text
+trim whitespace
+      ↓
+validate non-empty
+```
+
+can make sense.
+
+But a transformation that silently changes invalid data into valid-looking data may hide client errors.
+
+> **Transformation should normalize representation, not quietly redefine invalid input as valid.**
+
+---
+
+# Normalization
+
+One common transformation is normalization.
+
+Normalization means representing equivalent input in a consistent way.
+
+For example:
+
+```text
+" VISHAL "
+"vishal"
+"Vishal"
+```
+
+might all become:
+
+```text
+"vishal"
+```
+
+for a particular field where case normalization is appropriate.
+
+Common examples include:
+
+```text
+trim whitespace
+lowercase an email
+normalize phone number representation
+convert date representation
+remove formatting characters
+convert units
+```
+
+But normalization is **domain-dependent**.
+
+You should not blindly lowercase every string.
+
+For example:
+
+```text
+Password
+```
+
+should not generally be normalized by arbitrarily changing its case.
+
+Likewise, some names, identifiers, codes, or user-generated content may intentionally preserve capitalization.
+
+The rule is:
+
+> **Normalize only when the domain says those representations are equivalent.**
+
+---
+
+# Transformation Can Also Mean Type Conversion
+
+Consider query parameters.
+
+HTTP query parameters arrive as text:
+
+```http
+GET /products?page=2&limit=20
+```
+
+Conceptually:
+
+```text
+page  → "2"
+limit → "20"
+```
+
+But your application may want:
+
+```ts
+page: number;
+limit: number;
+```
+
+So a transformation may convert:
+
+```text
+"2" → 2
+"20" → 20
+```
+
+Then validation can ensure:
+
+```text
+page >= 1
+limit >= 1
+limit <= maximumAllowed
+```
+
+This is a very common request-processing pattern.
+
+---
+
+# Coercion vs Validation
+
+This is an important engineering distinction.
+
+Suppose the server receives:
+
+```json
+{
+  "age": "24"
+}
+```
+
+You could coerce:
+
+```text
+"24" → 24
+```
+
+But should you?
+
+That depends on your API contract.
+
+If the API explicitly expects:
+
+```json
+{
+  "age": 24
+}
+```
+
+silently accepting:
+
+```json
+{
+  "age": "24"
+}
+```
+
+may hide client-side bugs.
+
+A stricter API may reject it.
+
+A more permissive API may intentionally coerce it.
+
+Neither is universally correct.
+
+The important thing is to make the behavior **explicit and predictable**.
+
+---
+
+# Client-Side Validation
+
+Client-side validation happens before the request reaches the server.
+
+For example:
+
+```text
+User enters email
+       ↓
+Browser checks format
+       ↓
+Invalid?
+       ↓
+Show message
+```
+
+Its primary purpose is **user experience**.
+
+It provides:
+
+- immediate feedback
+- fewer unnecessary requests
+- clearer forms
+- faster correction of simple mistakes
+
+For example:
+
+```text
+Email: abc
+       ↓
+"Enter a valid email address"
+```
+
+The user gets feedback immediately.
+
+That is useful.
+
+But it isn't a security boundary.
+
+---
+
+# Server-Side Validation
+
+The server receives data from an environment it does not control.
+
+That means:
+
+```text
+Browser
+  ↓
+Untrusted request
+  ↓
+Server
+```
+
+The server must assume the input can be:
+
+- missing
+- malformed
+- modified
+- unexpected
+- intentionally malicious
+
+Even if the frontend validates:
+
+```text
+age >= 18
+```
+
+someone can bypass the frontend and send:
+
+```http
+POST /users
+```
+
+with:
+
+```json
+{
+  "age": 12
+}
+```
+
+The server must validate independently.
+
+This gives us the fundamental rule:
+
+> **Client-side validation improves UX. Server-side validation enforces the application's trust boundary.**
+
+---
+
+# The Client Cannot Be Trusted
+
+This doesn't mean every user is malicious.
+
+It means the server has no reliable way to assume that the client code being executed is the exact code you shipped.
+
+A request can be generated by:
+
+- your frontend
+- Postman
+- curl
+- another application
+- a modified browser
+- an automated script
+- an attacker
+
+Therefore:
+
+```text
+Frontend validation
+        ≠
+Server validation
+```
+
+The frontend is a convenience layer.
+
+The server is the authority.
+
+---
+
+# A Typical API Pipeline
+
+Consider:
+
+```http
+POST /users
+Content-Type: application/json
+```
+
+with:
+
+```json
+{
+  "name": "   Vishal   ",
+  "email": " VISHAL@EXAMPLE.COM ",
+  "age": 24
+}
+```
+
+A backend might conceptually process this as:
+
+```text
+Request
+   ↓
+Parse JSON
+   ↓
+Check object shape
+   ↓
+Validate types
+   ↓
+Normalize / transform
+   ↓
+Validate semantic constraints
+   ↓
+Business rules
+   ↓
+Persist
+```
+
+After normalization:
+
+```json
+{
+  "name": "Vishal",
+  "email": "vishal@example.com",
+  "age": 24
+}
+```
+
+The business layer now receives a predictable representation.
+
+---
+
+# Why Validate at the Boundary?
+
+Imagine you have:
+
+```text
+Controller
+Service
+Repository
+Database
+```
+
+If raw input flows through all four:
+
+```text
+Request
+ ↓
+Controller
+ ↓
+Service
+ ↓
+Repository
+```
+
+then every layer has to defend itself.
+
+You can end up with:
+
+```ts
+if (!name) ...
+if (typeof name !== "string") ...
+if (name.length > 100) ...
+```
+
+repeated throughout the application.
+
+Instead, establish a clear boundary:
+
+```text
+External Input
+      ↓
+Validation
+      ↓
+Known Internal Representation
+      ↓
+Business Logic
+```
+
+Now downstream code can operate under stronger assumptions.
+
+This is one of the practical benefits of **input contracts**.
+
+---
+
+# Schema-Based Validation
+
+Modern applications commonly define schemas for request data.
+
+Conceptually:
+
+```ts
+CreateUserSchema = {
+  name: string,
+  email: email,
+  age: integer,
+};
+```
+
+The schema becomes an executable description of the expected input.
+
+A validation library can then produce something like:
+
+```text
+Input
+  ↓
+Schema
+  ↓
+Success → typed/validated data
+Failure → validation errors
+```
+
+Examples of schema validation libraries in the JavaScript/TypeScript ecosystem include:
+
+- Zod
+- Joi
+- Yup
+- Valibot
+- Ajv
+
+The specific library is less important than understanding the architectural role.
+
+---
+
+# Validation Should Produce Useful Errors
+
+Consider an invalid request:
+
+```json
+{
+  "name": "",
+  "age": "hello",
+  "email": "invalid"
+}
+```
+
+A useful validation response can identify the affected fields.
+
+For example:
+
+```json
+{
+  "error": "Validation failed",
+  "fields": {
+    "name": "Name is required",
+    "age": "Age must be a number",
+    "email": "Invalid email format"
+  }
+}
+```
+
+The exact response format depends on your API contract.
+
+The important thing is that validation errors should be:
+
+- predictable
+- structured
+- understandable
+- safe to expose
+
+---
+
+# Don't Leak Internal Details
+
+Validation errors should help legitimate clients fix their requests.
+
+They shouldn't expose internal implementation details such as:
+
+```text
+Prisma validation failed because field X...
+```
+
+or:
+
+```text
+MongoDB cast error at internal model...
+```
+
+The client doesn't need to know how your persistence layer works.
+
+A useful separation is:
+
+```text
+Internal error
+       ↓
+Application logging
+
+Safe client-facing error
+       ↓
+API response
+```
+
+---
+
+# Validation Is Also a Security Boundary
+
+Validation isn't a complete security system, but it is an important part of defensive programming.
+
+Suppose an API expects:
+
+```json
+{
+  "limit": 20
+}
+```
+
+If you don't restrict the value, a client might request:
+
+```json
+{
+  "limit": 100000000
+}
+```
+
+That could cause excessive work.
+
+Similarly, unrestricted strings can lead to:
+
+- oversized payloads
+- unexpected processing
+- resource exhaustion
+- downstream failures
+
+Validation can enforce limits such as:
+
+```text
+string length <= 200
+array length <= 100
+page >= 1
+limit <= 100
+```
+
+These constraints protect both correctness and system resources.
+
+---
+
+# Validation Is Not Sanitization
+
+These concepts are often mixed together.
+
+**Validation** asks:
+
+> "Is this acceptable?"
+
+**Transformation/normalization** asks:
+
+> "How should this be represented?"
+
+**Sanitization** generally refers to removing or altering content considered unsafe for a particular use.
+
+These aren't interchangeable.
+
+For example, if a username contains unexpected characters, you shouldn't automatically remove characters until it becomes valid unless that behavior is explicitly part of your product rules.
+
+Often the better approach is:
+
+```text
+Invalid input
+    ↓
+Reject
+```
+
+rather than:
+
+```text
+Invalid input
+    ↓
+Silently modify
+    ↓
+Pretend it was valid
+```
+
+Silent modification can create surprising behavior.
+
+---
+
+# Validation and SQL Injection
+
+Input validation should not be treated as your primary SQL injection defense.
+
+For example, rejecting certain characters is not a substitute for parameterized queries.
+
+The correct defense is architectural:
+
+```text
+User input
+   ↓
+Validation
+   ↓
+Parameterized query
+   ↓
+Database
+```
+
+Validation helps enforce the API contract.
+
+Parameterized queries prevent data from being interpreted as SQL code.
+
+Different security controls solve different problems.
+
+---
+
+# Validation and XSS
+
+Similarly, validation isn't a universal defense against cross-site scripting.
+
+An application should understand **where data is going**.
+
+A string can be valid user content while still requiring safe handling when rendered into HTML.
+
+This is why:
+
+```text
+Validation
++
+Context-aware output handling
++
+Framework/browser protections
+```
+
+are separate concerns.
+
+A field containing:
+
+```text
+<script>...</script>
+```
+
+is not necessarily invalid merely because it contains those characters.
+
+Whether that content is safe depends on how the application uses it.
+
+---
+
+# Don't Over-Validate
+
+There is also a danger in the opposite direction.
+
+Suppose a name field only accepts:
+
+```text
+[A-Za-z]+
+```
+
+That looks simple.
+
+But real names can contain:
+
+- spaces
+- hyphens
+- apostrophes
+- non-Latin characters
+- other legitimate writing systems
+
+Overly restrictive validation can reject valid users.
+
+The goal isn't:
+
+> **"Reject anything unusual."**
+
+The goal is:
+
+> **"Enforce the actual requirements of the field."**
+
+Every validation rule should have a reason.
+
+---
+
+# Validation Rules Should Match the Domain
+
+Consider a username:
+
+```text
+length: 3–30
+allowed characters: a-z, 0-9, _
+```
+
+That may be perfectly reasonable if the product defines usernames that way.
+
+But applying the same rules to a person's name would be inappropriate.
+
+Likewise:
+
+```text
+email → case handling
+password → preserve exact input
+username → possibly normalized
+display name → preserve presentation
+```
+
+Different fields have different semantics.
+
+> **Validation is domain knowledge expressed as constraints.**
+
+---
+
+# Transformation Boundaries
+
+A useful design question is:
+
+> **Where should transformation happen?**
+
+Suppose your API receives:
+
+```text
+"  Vishal  "
+```
+
+You have several possibilities:
+
+```text
+HTTP Controller
+      ↓
+trim
+      ↓
+Service
+```
+
+or:
+
+```text
+Request Schema
+      ↓
+trim
+      ↓
+Controller
+```
+
+or:
+
+```text
+Database layer
+      ↓
+trim
+```
+
+The last option is generally problematic because now the database layer is silently changing application input.
+
+A cleaner architecture often transforms data near the **input boundary**, before business logic needs to reason about it.
+
+For example:
+
+```text
+HTTP Request
+    ↓
+Parse
+    ↓
+Validate + Transform
+    ↓
+Application DTO
+    ↓
+Service
+```
+
+The service receives a known representation.
+
+---
+
+# DTOs and Internal Models
+
+A useful pattern is separating the external request shape from your internal domain model.
+
+For example:
+
+```text
+HTTP Request DTO
+        ↓
+Validation
+        ↓
+Transformation
+        ↓
+Domain Input
+        ↓
+Business Logic
+        ↓
+Database Model
+```
+
+The API might receive:
+
+```json
+{
+  "firstName": " Vishal ",
+  "email": "VISHAL@EXAMPLE.COM"
+}
+```
+
+The internal representation might be:
+
+```ts
+{
+  firstName: "Vishal",
+  email: "vishal@example.com"
+}
+```
+
+And the database model may contain additional fields:
+
+```ts
+{
+  (id, firstName, email, createdAt, updatedAt);
+}
+```
+
+Keeping these concepts separate reduces accidental coupling.
+
+---
+
+# Unknown Fields
+
+Another question schema validation should answer:
+
+> **What happens when the client sends fields we don't expect?**
+
+Suppose the API expects:
+
+```json
+{
+  "name": "Vishal",
+  "email": "vishal@example.com"
+}
+```
+
+but receives:
+
+```json
+{
+  "name": "Vishal",
+  "email": "vishal@example.com",
+  "isAdmin": true
+}
+```
+
+Possible policies include:
+
+### Reject unknown fields
+
+Strict API contract.
+
+### Strip unknown fields
+
+Accept the request but discard fields not part of the contract.
+
+### Allow unknown fields
+
+More flexible, but requires careful reasoning.
+
+There is no universal answer.
+
+For security-sensitive APIs, explicitly defining this behavior is much better than letting it happen accidentally.
+
+---
+
+# Partial Updates Make Validation More Interesting
+
+Consider:
+
+```http
+PATCH /users/123
+```
+
+A full creation request might require:
+
+```text
+name
+email
+age
+```
+
+But a partial update may contain only:
+
+```json
+{
+  "name": "Vishal"
+}
+```
+
+So you now have different validation requirements:
+
+```text
+POST /users
+→ required fields
+
+PATCH /users/:id
+→ optional fields, if provided, must be valid
+```
+
+This is one reason request schemas are often endpoint-specific.
+
+A `CreateUser` schema and an `UpdateUser` schema may look similar but represent different contracts.
+
+---
+
+# Validation of Relationships
+
+Some rules involve multiple fields.
+
+For example:
+
+```json
+{
+  "password": "secret",
+  "confirmPassword": "different"
+}
+```
+
+Both fields individually might be valid strings.
+
+But together:
+
+```text
+password === confirmPassword
+```
+
+is false.
+
+Another example:
+
+```json
+{
+  "minPrice": 100,
+  "maxPrice": 50
+}
+```
+
+Both numbers are valid.
+
+The relationship is not.
+
+These are examples of **cross-field validation**.
+
+---
+
+# Validation of External Resources
+
+Some checks require interacting with other parts of the system.
+
+For example:
+
+```json
+{
+  "userId": "123"
+}
+```
+
+The ID may have the correct format.
+
+But does the user exist?
+
+That's no longer purely structural validation.
+
+You may need:
+
+```text
+Request
+ ↓
+Validate ID format
+ ↓
+Query database
+ ↓
+Check resource exists
+ ↓
+Business rule
+```
+
+This distinction matters because database lookups introduce:
+
+- latency
+- failure modes
+- transaction concerns
+- race conditions
+
+Not every "validation" belongs in the same synchronous schema check.
+
+---
+
+# Validation and Race Conditions
+
+Consider:
+
+```text
+User requests username "codemonkey"
+        ↓
+Check username is available
+        ↓
+Available
+        ↓
+Create user
+```
+
+Another request can execute the same check at almost the same time:
+
+```text
+Request A → username available
+Request B → username available
+```
+
+Both may attempt to create the same username.
+
+Application-level validation alone cannot guarantee uniqueness.
+
+The database should enforce the invariant:
+
+```text
+username UNIQUE
+```
+
+Then:
+
+```text
+Application validation
+        +
+Database constraint
+```
+
+provide stronger protection.
+
+This is an important engineering principle:
+
+> **Validation improves input correctness; authoritative constraints should enforce critical invariants.**
+
+---
+
+# Client + Server: Two Different Responsibilities
+
+A mature system doesn't think:
+
+```text
+Client OR Server
+```
+
+It thinks:
+
+```text
+Client
+ ↓
+Fast feedback
+
+Server
+ ↓
+Authoritative validation
+
+Database
+ ↓
+Critical invariants
+```
+
+Each layer has a different responsibility.
+
+For example:
+
+```text
+Client:
+"Quantity must be positive."
+
+Server:
+"Quantity must be positive and <= allowed maximum."
+
+Database:
+"Order must reference an existing product."
+```
+
+The exact division depends on the architecture, but redundancy at important boundaries is not necessarily bad.
+
+---
+
+# A Complete Example
+
+Consider:
+
+```http
+POST /orders
+```
+
+Request:
+
+```json
+{
+  "productId": "abc123",
+  "quantity": "2"
+}
+```
+
+Suppose the API contract requires:
+
+```text
+productId → string
+quantity → integer
+quantity → 1–10
+```
+
+A strict server might reject the request because:
+
+```text
+"2" ≠ 2
+```
+
+A permissive server might transform:
+
+```text
+"2" → 2
+```
+
+and then validate:
+
+```text
+2 >= 1
+2 <= 10
+```
+
+Then the business layer can check:
+
+```text
+product exists
+product is available
+user can purchase product
+inventory >= 2
+```
+
+Finally, the database transaction persists the order.
+
+The complete flow:
+
+```text
+                  Request
+                     │
+                     ▼
+             Parse JSON / Query
+                     │
+                     ▼
+              Type + Shape
+                     │
+                     ▼
+              Syntax Rules
+                     │
+                     ▼
+            Transform / Normalize
+                     │
+                     ▼
+             Semantic Rules
+                     │
+                     ▼
+              Business Rules
+                     │
+                     ▼
+           Database Constraints
+                     │
+                     ▼
+                 Persist
+```
+
+That is a much more realistic view of validation than simply checking whether an input field is empty.
+
+---
+
+# Common Mistakes
+
+## 1. Trusting client-side validation
+
+```text
+Frontend says valid
+        ↓
+Server accepts it
+```
+
+Wrong.
+
+The server must independently validate.
+
+---
+
+## 2. Assuming TypeScript validates API input
+
+```ts
+function createUser(user: User);
+```
+
+does not mean an HTTP client has actually supplied a valid `User`.
+
+Runtime input still needs runtime validation.
+
+---
+
+## 3. Treating validation as sanitization
+
+Don't blindly mutate invalid input into something that happens to pass validation.
+
+Prefer explicit rules.
+
+---
+
+## 4. Using regex for everything
+
+Regex is useful for syntactic patterns.
+
+It isn't a replacement for:
+
+- type checking
+- semantic rules
+- business logic
+- database constraints
+
+---
+
+## 5. Putting all business logic inside schemas
+
+Schemas are excellent for describing input contracts.
+
+They shouldn't become enormous collections of unrelated domain rules.
+
+---
+
+## 6. Ignoring unknown fields
+
+Decide explicitly whether your API should:
+
+```text
+reject
+strip
+or accept
+```
+
+unexpected properties.
+
+---
+
+## 7. Forgetting size limits
+
+A string can be valid but enormous.
+
+An array can contain valid values but millions of them.
+
+Validation should consider not only **correctness**, but also **resource usage**.
+
+---
+
+## 8. Normalizing everything
+
+Transformation should be intentional.
+
+Don't modify data simply because you can.
+
+---
+
+# A Practical Engineering Checklist
+
+When designing an endpoint, ask:
+
+### Input contract
+
+```text
+What fields are allowed?
+Which are required?
+Which are optional?
+```
+
+### Types
+
+```text
+What type should each field have?
+```
+
+### Structure
+
+```text
+What shape should the request have?
+```
+
+### Syntax
+
+```text
+Does each value follow the required format?
+```
+
+### Semantics
+
+```text
+Does the value make sense?
+```
+
+### Business rules
+
+```text
+Is this operation allowed in the current domain context?
+```
+
+### Transformation
+
+```text
+Should whitespace be removed?
+Should values be normalized?
+Should representations be converted?
+```
+
+### Security
+
+```text
+Could oversized or unexpected input cause problems?
+Could errors reveal sensitive information?
+```
+
+### Persistence
+
+```text
+Which invariants must the database enforce?
+```
+
+### Client experience
+
+```text
+Can the frontend provide immediate useful feedback?
+```
+
+---
+
+# The Bigger Picture
+
+Validation and transformation might initially look like small form-handling concepts.
+
+They're not.
+
+They are part of a much larger architectural principle:
+
+```text
+Untrusted World
+      │
+      ▼
+┌─────────────────────┐
+│ Boundary            │
+│                     │
+│ Parse               │
+│ Validate            │
+│ Transform           │
+└─────────────────────┘
+      │
+      ▼
+Known Representation
+      │
+      ▼
+Business Logic
+      │
+      ▼
+Persistence
+```
+
+The boundary is where your application turns **untrusted external data** into something the internal system can reason about.
+
+That is why validation belongs near the edges of the system.
+
+---
+
+# Final Mental Model
+
+Think about every request as passing through a series of questions:
+
+```text
+1. Can I parse it?
+        ↓
+2. Is the structure correct?
+        ↓
+3. Are the types correct?
+        ↓
+4. Is the format correct?
+        ↓
+5. Does the data make sense?
+        ↓
+6. Does it satisfy business rules?
+        ↓
+7. Does it need transformation?
+        ↓
+8. Can the operation safely continue?
+```
+
+And keep these distinctions clear:
+
+```text
+Validation
+→ Is this acceptable?
+
+Transformation
+→ How should this be represented?
+
+Business logic
+→ Is this operation allowed?
+
+Database constraints
+→ Can the system's critical invariants be violated?
+```
+
+The most important engineering rule is:
+
+> **Treat external input as untrusted, validate it at the boundary, transform it deliberately, and only then let business logic operate on it.**
+
+Once you start thinking this way, validation stops being just:
+
+```text
+if (!email) return error;
+```
+
+and becomes what it really is:
+
+**a contract between the outside world and your application's internal system.**
