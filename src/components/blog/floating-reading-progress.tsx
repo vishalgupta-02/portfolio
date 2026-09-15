@@ -39,14 +39,14 @@ export function FloatingReadingProgress({
     );
   }, []);
 
-  // Dynamically scan only H1 and H2 inside the active article container
+  // Dynamically scan headings inside the active article container
   React.useEffect(() => {
     function syncHeadings() {
       const container = getArticleContainer();
       if (!container) return;
 
       const elements = Array.from(
-        container.querySelectorAll("h1, h2")
+        container.querySelectorAll("h1, h2, h3, h4")
       ) as HTMLElement[];
 
       if (elements.length > 0) {
@@ -62,7 +62,8 @@ export function FloatingReadingProgress({
                 .replace(/\s+/g, "-");
             if (!el.id) el.id = id;
             const tagName = el.tagName.toLowerCase();
-            const level = (tagName === "h1" ? 1 : 2) as 1 | 2;
+            const match = tagName.match(/^h([1-6])$/);
+            const level = match ? parseInt(match[1], 10) : 2;
             return { id, title: text, level };
           })
           .filter(Boolean) as TableOfContentsItem[];
