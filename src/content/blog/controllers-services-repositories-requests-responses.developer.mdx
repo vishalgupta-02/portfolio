@@ -1,0 +1,2155 @@
+<BlogImage
+  src="/blog/requests-controllers/portfolio-controllers.webp"
+  alt="Controllers-Services-Repositories-Requests-Responses"
+  width={1400}
+  height={800}
+  priority
+/>
+
+> **The short version:**
+> A request-response lifecycle is the complete path an HTTP request takes from the client, through network infrastructure and server-side processing, application layers, business logic, data access, and error/observability systems, before an HTTP response is returned to the client.
+
+---
+
+> **Focus:** HTTP, networking, middleware, layered architecture, controllers, services, repositories, serialization, error handling, observability
+> **You'll learn:** What actually happens to an HTTP request, how backend layers process it, where validation and errors belong, how responses are produced, and how production systems trace a request from beginning to end.
+
+---
+
+## Before We Go Deeper
+
+If you only remember few things from this article:
+
+1. **A request is a journey, not a single function call.**
+   It passes through networking, infrastructure, middleware, application code, business logic, data access, and response processing.
+
+2. **Each layer should have a clear responsibility.**
+   Controllers deal with HTTP. Services deal with business rules. Repositories deal with persistence and many more.
+
+> Its upto you how you maintain the codebase and architecture for better scalability, easy-to-understand, onboarding new devs,etc.
+
+3. **The response is the result of the entire pipeline.**
+   A successful response means every required part of the system completed its responsibility—or that the system intentionally handled a failure.
+
+---
+
+# The Mental Model
+
+A simplified backend request can be visualized like this:
+
+```text
+┌──────────────┐
+│    Client    │
+│ Browser/App  │
+└──────┬───────┘
+       │
+       │ HTTP Request
+       ▼
+┌──────────────┐
+│ DNS / Network│
+│ TCP / TLS    │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│ CDN / Proxy  │
+│ Load Balancer│
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Middleware │
+│ Auth / Rate  │
+│ Limit / CORS │
+│ Logging      │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│  Controller  │
+│ HTTP Layer   │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Service    │
+│ Business     │
+│ Logic        │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│  Repository  │
+│ Data Access  │
+└──────┬───────┘
+       │
+       ▼
+┌──────────────┐
+│   Database   │
+└──────────────┘
+
+       Response
+          ▲
+          │
+          └── Back through application/network layers
+```
+
+The exact architecture differs between systems, but the principle remains:
+
+> **Move HTTP concerns outward, business rules inward, and persistence concerns toward the data layer.**
+
+---
+
+# 1. It Starts With an HTTP Request
+
+Suppose a user clicks:
+
+**Place Order**
+
+The frontend might execute:
+
+```http
+POST /api/orders HTTP/1.1
+Host: example.com
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "productId": "prod_123",
+  "quantity": 2
+}
+```
+
+At a high level, the request contains:
+
+```text
+Request
+├── Method
+├── URL
+├── Headers
+├── Query Parameters
+├── Path Parameters
+├── Cookies
+└── Body
+```
+
+For example:
+
+```text
+Method:
+POST
+
+Path:
+/api/orders
+
+Headers:
+Content-Type
+Authorization
+
+Body:
+{
+  productId: "prod_123",
+  quantity: 2
+}
+```
+
+The server doesn't simply receive "Place Order."
+
+It receives structured information that must be interpreted and processed.
+
+---
+
+# 2. Before the Application Receives the Request
+
+There is an important part that is often skipped in beginner explanations.
+
+The request may pass through several systems before reaching your application.
+
+```text
+Browser
+   │
+   ▼
+DNS
+   │
+   ▼
+Internet
+   │
+   ▼
+TLS
+   │
+   ▼
+CDN / Reverse Proxy
+   │
+   ▼
+Load Balancer
+   │
+   ▼
+Application Server
+```
+
+## DNS
+
+The browser needs to determine where:
+
+```text
+example.com
+```
+
+actually points.
+
+DNS translates the domain name into an IP address.
+
+Conceptually:
+
+```text
+example.com
+      ↓
+IP address
+      ↓
+server infrastructure
+```
+
+---
+
+## TCP
+
+For traditional HTTP/1.1 and HTTP/2 connections, TCP provides a reliable transport layer.
+
+It handles things such as:
+
+- ordered delivery
+- retransmission
+- connection management
+
+HTTP itself doesn't need to implement all of this.
+
+---
+
+## TLS
+
+For HTTPS, TLS establishes an encrypted connection.
+
+This provides:
+
+- encryption
+- server authentication
+- protection against many forms of network interception
+
+So:
+
+```text
+HTTP
+```
+
+becomes:
+
+```text
+HTTPS
+```
+
+when HTTP is transported through TLS.
+
+---
+
+# 3. Reverse Proxy / Load Balancer
+
+Production applications rarely expose a single application process directly to the internet.
+
+You might have:
+
+```text
+                ┌── Application A
+                │
+Client → Proxy ──┼── Application B
+                │
+                └── Application C
+```
+
+The proxy or load balancer can handle responsibilities such as:
+
+- TLS termination
+- routing
+- load balancing
+- connection management
+- request size limits
+- health checks
+- caching
+- forwarding headers
+
+This is one reason the phrase:
+
+> "The browser sends a request directly to my Express server"
+
+is usually an oversimplification in production.
+
+There may be several infrastructure components between them.
+
+---
+
+# 4. Middleware
+
+Once the request reaches the application, middleware can begin processing it.
+
+A useful conceptual model is:
+
+```text
+Request
+   │
+   ▼
+Middleware 1
+   │
+   ▼
+Middleware 2
+   │
+   ▼
+Middleware 3
+   │
+   ▼
+Controller
+```
+
+A middleware can:
+
+- inspect a request
+- modify request context
+- reject a request
+- authenticate a user
+- enforce rate limits
+- log information
+- set security-related headers
+- pass execution to the next middleware
+
+For example:
+
+```ts
+app.use(requestLogger);
+app.use(rateLimiter);
+app.use(authenticate);
+app.use("/api/orders", orderRoutes);
+```
+
+The important idea is that middleware can execute **before the actual endpoint handler**.
+
+Some middleware can also run after downstream processing when the framework unwinds the middleware chain.
+
+---
+
+# 5. Authentication vs Authorization
+
+These are often mixed together, but they solve different problems.
+
+### Authentication
+
+Answers:
+
+> **Who are you?**
+
+For example:
+
+```text
+Authorization: Bearer eyJ...
+```
+
+The server verifies the token and identifies:
+
+```text
+userId = 123
+```
+
+### Authorization
+
+Answers:
+
+> **Are you allowed to perform this operation?**
+
+For example:
+
+```text
+User 123
+   ↓
+Can this user modify Order 456?
+   ↓
+Yes / No
+```
+
+Authentication does not automatically mean authorization.
+
+A logged-in user can still be forbidden from accessing another user's resources.
+
+---
+
+# 6. Request Context
+
+During request processing, applications often need temporary information associated with the current request.
+
+For example:
+
+```text
+Request Context
+├── requestId
+├── authenticated user
+├── roles/permissions
+├── trace information
+└── request start time
+```
+
+A request ID might look like:
+
+```text
+req_7f31a8
+```
+
+Then logs can contain:
+
+```text
+req_7f31a8 → request received
+req_7f31a8 → user authenticated
+req_7f31a8 → product fetched
+req_7f31a8 → order created
+req_7f31a8 → response sent
+```
+
+This becomes extremely useful when debugging production systems.
+
+---
+
+# 7. Routing
+
+After middleware, the framework determines which endpoint should handle the request.
+
+For:
+
+```http
+POST /api/orders
+```
+
+the router might match:
+
+```ts
+router.post("/orders", createOrder);
+```
+
+The router essentially answers:
+
+> Which application handler is responsible for this HTTP operation?
+
+A useful distinction:
+
+```text
+Routing
+    ↓
+Which handler?
+
+Controller
+    ↓
+What should happen at the HTTP boundary?
+
+Service
+    ↓
+What business operation should happen?
+
+Repository
+    ↓
+How do we access persistence?
+```
+
+---
+
+# 8. Parsing and Deserialization
+
+The incoming HTTP request contains data represented through transport formats.
+
+For JSON:
+
+```json
+{
+  "productId": "prod_123",
+  "quantity": 2
+}
+```
+
+The server needs to turn this representation into something application code can work with.
+
+Conceptually:
+
+```text
+JSON bytes/text
+      ↓
+Parser
+      ↓
+JavaScript object
+```
+
+For example:
+
+```ts
+{
+  productId: "prod_123",
+  quantity: 2
+}
+```
+
+These concepts are related but shouldn't be treated as identical:
+
+### Parsing
+
+Interpreting a representation.
+
+```text
+JSON text → structured value
+```
+
+### Deserialization
+
+Reconstructing application data from a serialized representation.
+
+### Serialization
+
+Converting application data into a representation suitable for transport.
+
+```text
+Object → JSON
+```
+
+---
+
+# 9. Validation
+
+Parsing answers:
+
+> Can I understand this data?
+
+Validation answers:
+
+> Is this data acceptable?
+
+Suppose the client sends:
+
+```json
+{
+  "productId": "",
+  "quantity": -5
+}
+```
+
+The JSON may be perfectly valid.
+
+But the request isn't valid for the application's contract.
+
+A validation layer might check:
+
+```text
+productId
+├── required
+└── non-empty string
+
+quantity
+├── required
+├── integer
+└── greater than 0
+```
+
+The server could respond:
+
+```http
+400 Bad Request
+```
+
+with something like:
+
+```json
+{
+  "error": "Validation failed",
+  "fields": {
+    "quantity": "Must be greater than 0"
+  }
+}
+```
+
+Validation should happen before business logic relies on invalid input.
+
+---
+
+# 10. Controller
+
+The controller represents the HTTP boundary of the application.
+
+For example:
+
+```ts
+async function createOrder(req, res) {
+  const result = await orderService.createOrder({
+    userId: req.user.id,
+    productId: req.body.productId,
+    quantity: req.body.quantity,
+  });
+
+  return res.status(201).json(result);
+}
+```
+
+Notice what the controller is doing:
+
+```text
+HTTP Request
+     ↓
+Extract data
+     ↓
+Call service
+     ↓
+Convert result into HTTP response
+```
+
+Ideally, it isn't performing complicated business logic.
+
+Avoid turning controllers into this:
+
+```text
+Controller
+├── authentication
+├── pricing
+├── inventory
+├── discounts
+├── payment logic
+├── database queries
+├── email sending
+├── analytics
+└── response
+```
+
+That becomes difficult to test and maintain.
+
+A cleaner boundary is:
+
+```text
+Controller
+     ↓
+Service
+     ↓
+Repository / external systems
+```
+
+---
+
+# 11. Service Layer
+
+The service layer contains business logic.
+
+For example:
+
+```ts
+async function createOrder(input) {
+  const product = await productRepository.findById(input.productId);
+
+  if (!product) {
+    throw new ProductNotFoundError();
+  }
+
+  if (product.stock < input.quantity) {
+    throw new InsufficientStockError();
+  }
+
+  const total = product.price * input.quantity;
+
+  return orderRepository.create({
+    userId: input.userId,
+    productId: input.productId,
+    quantity: input.quantity,
+    total,
+  });
+}
+```
+
+This layer answers questions such as:
+
+- Does the product exist?
+- Is there enough stock?
+- Is this operation allowed?
+- How is the price calculated?
+- Does a discount apply?
+- Should another system be called?
+- Should an event be published?
+
+This is business behavior rather than HTTP behavior.
+
+---
+
+# 12. Repository Layer
+
+The repository provides an abstraction over persistence.
+
+For example:
+
+```ts
+const product = await productRepository.findById(productId);
+```
+
+Internally:
+
+```ts
+async function findById(id: string) {
+  return ProductModel.findById(id);
+}
+```
+
+The service shouldn't necessarily need to know whether the data comes from:
+
+```text
+MongoDB
+PostgreSQL
+Redis
+Another API
+```
+
+The repository can hide those persistence details.
+
+Conceptually:
+
+```text
+Service
+   │
+   ▼
+Repository
+   │
+   ▼
+Database
+```
+
+This separation makes the business layer less tightly coupled to a particular database implementation.
+
+---
+
+# 13. Database Interaction
+
+Eventually, the request may result in a database operation.
+
+For example:
+
+```sql
+SELECT *
+FROM products
+WHERE id = 'prod_123';
+```
+
+or an equivalent database query through an ORM/ODM.
+
+The database may return:
+
+```text
+Product
+├── id
+├── name
+├── price
+└── stock
+```
+
+The repository converts that database result into something the application can use.
+
+The service then applies business rules.
+
+---
+
+# 14. A Critical Distinction: Validation vs Business Rules
+
+These can look similar but occur at different conceptual levels.
+
+### Validation
+
+```text
+quantity must be an integer
+quantity must be > 0
+productId must be present
+```
+
+### Business rule
+
+```text
+User cannot order more than available stock.
+```
+
+The difference is:
+
+```text
+Validation
+    ↓
+Is the input structurally acceptable?
+
+Business logic
+    ↓
+Is this operation allowed according to the application's rules?
+```
+
+Both are important.
+
+---
+
+# 15. The Realistic End-to-End Example
+
+Let's follow the entire operation.
+
+The user clicks:
+
+**Place Order**
+
+The browser sends:
+
+```http
+POST /api/orders
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "productId": "prod_123",
+  "quantity": 2
+}
+```
+
+### Step 1 — Network
+
+```text
+Browser
+  ↓
+DNS
+  ↓
+TLS connection
+  ↓
+Internet
+```
+
+### Step 2 — Infrastructure
+
+```text
+Reverse Proxy
+      ↓
+Load Balancer
+      ↓
+Application Instance
+```
+
+### Step 3 — Middleware
+
+```text
+Request Logger
+      ↓
+Rate Limiter
+      ↓
+Authentication
+      ↓
+Validation
+```
+
+### Step 4 — Controller
+
+```text
+POST /api/orders
+      ↓
+Order Controller
+```
+
+The controller extracts:
+
+```text
+userId
+productId
+quantity
+```
+
+and calls the service.
+
+### Step 5 — Service
+
+```text
+Order Service
+      ↓
+Check product
+      ↓
+Check stock
+      ↓
+Calculate total
+```
+
+Suppose:
+
+```text
+Product price = ₹37,500
+Quantity = 2
+```
+
+Then:
+
+```text
+Total = ₹75,000
+```
+
+### Step 6 — Repository
+
+```text
+Order Service
+      ↓
+Order Repository
+      ↓
+Database
+```
+
+The repository creates the order.
+
+### Step 7 — Response
+
+The service returns:
+
+```json
+{
+  "orderId": "ORD-48291",
+  "total": 75000
+}
+```
+
+The controller converts that into an HTTP response:
+
+```http
+HTTP/1.1 201 Created
+Content-Type: application/json
+
+{
+  "message": "Order created successfully",
+  "orderId": "ORD-48291",
+  "total": 75000
+}
+```
+
+Then:
+
+```text
+Application
+    ↓
+Reverse Proxy
+    ↓
+Network
+    ↓
+Browser
+    ↓
+UI updates
+```
+
+What looked like:
+
+```text
+Click → Done
+```
+
+was actually:
+
+```text
+Click
+  ↓
+HTTP request
+  ↓
+Network
+  ↓
+Infrastructure
+  ↓
+Middleware
+  ↓
+Authentication
+  ↓
+Validation
+  ↓
+Routing
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Database
+  ↓
+Repository
+  ↓
+Service
+  ↓
+Controller
+  ↓
+HTTP response
+  ↓
+Network
+  ↓
+Browser
+```
+
+---
+
+# 16. What Happens When Something Fails?
+
+Production systems spend a lot of time handling failure.
+
+Suppose stock is insufficient.
+
+The service detects:
+
+```ts
+if (product.stock < quantity) {
+  throw new InsufficientStockError();
+}
+```
+
+The error might eventually be converted into:
+
+```http
+409 Conflict
+```
+
+or another status code according to the API's conventions.
+
+The client might receive:
+
+```json
+{
+  "error": "Insufficient stock"
+}
+```
+
+The important part is that the client doesn't need to know the internal implementation.
+
+It doesn't need:
+
+```text
+MongoDB query failed because...
+```
+
+It needs an appropriate API-level response.
+
+---
+
+# 17. Global Error Handling
+
+Instead of every controller manually handling every possible exception, applications commonly have centralized error handling.
+
+Conceptually:
+
+```text
+Controller
+    ↓
+Service
+    ↓
+Error
+    ↓
+Global Error Handler
+    ↓
+HTTP Response
+```
+
+For example:
+
+```ts
+app.use((err, req, res, next) => {
+  logger.error({
+    err,
+    requestId: req.id,
+  });
+
+  if (err instanceof InsufficientStockError) {
+    return res.status(409).json({
+      error: "Insufficient stock",
+    });
+  }
+
+  return res.status(500).json({
+    error: "Internal server error",
+  });
+});
+```
+
+The key principle is:
+
+> **Return useful information to the client without exposing internal implementation details.**
+
+You generally don't want to return:
+
+```json
+{
+  "error": "MongoServerError: duplicate key collection users index..."
+}
+```
+
+to an end user.
+
+That information belongs in internal logs.
+
+---
+
+# 18. HTTP Status Codes Are Part of the Contract
+
+The response isn't just data.
+
+It also communicates the outcome.
+
+Common examples:
+
+```text
+200 OK
+      Successful request
+
+201 Created
+      Resource successfully created
+
+204 No Content
+      Successful request with no response body
+
+400 Bad Request
+      Invalid/malformed request
+
+401 Unauthorized
+      Authentication required/failed
+
+403 Forbidden
+      Authenticated but not permitted
+
+404 Not Found
+      Resource not found
+
+409 Conflict
+      Request conflicts with current state
+
+422 Unprocessable Content
+      Semantically invalid request
+      (depending on API convention)
+
+500 Internal Server Error
+      Unexpected server-side failure
+```
+
+A frontend can then make decisions based on the response.
+
+---
+
+# 19. Serialization on the Way Out
+
+Eventually, application data needs to become a transport representation.
+
+For example:
+
+```ts
+{
+  orderId: "ORD-48291",
+  total: 75000
+}
+```
+
+becomes JSON:
+
+```json
+{
+  "orderId": "ORD-48291",
+  "total": 75000
+}
+```
+
+Conceptually:
+
+```text
+Application Object
+       ↓
+Serialization
+       ↓
+JSON
+       ↓
+HTTP Response
+```
+
+The browser receives the response and parses it back into a structure it can use.
+
+---
+
+# 20. Compression
+
+If the response is large, the server can compress it before transmission.
+
+Conceptually:
+
+```text
+Large JSON
+    ↓
+Compression
+    ↓
+Smaller payload
+    ↓
+Network
+    ↓
+Decompression
+    ↓
+Original representation
+```
+
+This reduces:
+
+- bandwidth usage
+- transfer size
+- potentially latency
+
+Compression is especially useful for large text-based responses.
+
+But compression and chunking solve different problems.
+
+### Compression
+
+Reduces the amount of data.
+
+### Chunking/streaming
+
+Controls how data is transferred over time.
+
+A response can be streamed in pieces without implying that it was compressed, and compressed data can be transferred without application-level streaming.
+
+---
+
+# 21. Observability
+
+Once an application reaches production, simply knowing that something failed isn't enough.
+
+You need to answer:
+
+```text
+What failed?
+Where?
+When?
+For which request?
+For which service?
+How often?
+How long did it take?
+```
+
+This is where observability becomes important.
+
+The three major signals are:
+
+```text
+Logs
+Metrics
+Traces
+```
+
+### Logs
+
+Individual events.
+
+```text
+request received
+order created
+database timeout
+```
+
+### Metrics
+
+Aggregated measurements.
+
+```text
+requests_total
+errors_total
+request_duration
+database_latency
+```
+
+### Traces
+
+Follow a request through multiple components.
+
+```text
+Request
+  ├── API
+  │    ├── Auth
+  │    └── Order Service
+  │          └── Database
+  │
+  └── Response
+```
+
+A request ID or trace ID connects these pieces together.
+
+---
+
+# 22. Request Lifecycle Timing
+
+A production request might look like:
+
+```text
+0ms       Request starts
+2ms       Proxy receives request
+5ms       Application receives request
+6ms       Authentication complete
+8ms       Validation complete
+10ms      Controller starts
+12ms      Service starts
+25ms      Database query completes
+40ms      Order created
+42ms      Response serialized
+45ms      Response sent
+```
+
+Now suppose users report:
+
+> "Orders are sometimes very slow."
+
+Tracing can reveal:
+
+```text
+API total:       2.4s
+Authentication:  10ms
+Validation:      2ms
+Business logic:  8ms
+Database:        2.3s
+Serialization:   5ms
+```
+
+The problem isn't the controller.
+
+It is probably the database operation.
+
+This is why observability is part of engineering rather than an afterthought.
+
+---
+
+# 23. Controllers, Services, and Repositories Are Not Exactly MVC
+
+This distinction is important.
+
+You may hear:
+
+> "Controller, Service, Repository is MVC."
+
+That's not strictly correct.
+
+Classic MVC is:
+
+```text
+Model
+View
+Controller
+```
+
+A layered backend architecture might instead look like:
+
+```text
+HTTP / Controller
+       ↓
+Service
+       ↓
+Repository
+       ↓
+Database
+```
+
+These patterns can coexist, but they aren't identical.
+
+For an API backend, there may not even be a traditional server-rendered "View."
+
+So it is more accurate to describe:
+
+```text
+Controller
+Service
+Repository
+```
+
+as a **layered architecture** or **separation-of-concerns pattern**, rather than calling the whole thing MVC.
+
+---
+
+# 24. Why Separation Matters
+
+Imagine everything exists inside one function:
+
+```ts
+createOrder(req, res) {
+  // authentication
+  // validation
+  // database queries
+  // pricing
+  // inventory
+  // discounts
+  // payment
+  // email
+  // logging
+  // response
+}
+```
+
+It may work initially.
+
+But eventually:
+
+```text
+Testing becomes harder
+Changes become riskier
+Functions become huge
+Dependencies become tangled
+Business logic gets duplicated
+Debugging becomes painful
+```
+
+Instead:
+
+```text
+Controller
+    ↓
+Service
+    ↓
+Repository
+```
+
+gives each layer a narrower responsibility.
+
+This doesn't mean every application must have exactly these three layers.
+
+Architecture should follow complexity rather than ceremony.
+
+---
+
+# 25. Data Flow vs Control Flow
+
+A useful way to understand the lifecycle is to separate two ideas.
+
+### Control flow
+
+Who calls whom?
+
+```text
+Router
+  ↓
+Controller
+  ↓
+Service
+  ↓
+Repository
+  ↓
+Database
+```
+
+### Data flow
+
+What information moves between them?
+
+```text
+HTTP body
+   ↓
+validated input
+   ↓
+service input
+   ↓
+database query
+   ↓
+database result
+   ↓
+domain result
+   ↓
+response DTO
+   ↓
+JSON
+```
+
+Understanding both makes backend architecture much easier to reason about.
+
+---
+
+# 26. Don't Trust the Client
+
+One of the most important principles in the lifecycle is:
+
+> **The client is not a trusted environment.**
+
+Suppose the frontend sends:
+
+```json
+{
+  "price": 1,
+  "productId": "expensive-product"
+}
+```
+
+The backend should not blindly trust:
+
+```text
+price = 1
+```
+
+The server should obtain authoritative information from trusted sources.
+
+For example:
+
+```text
+Client
+  ↓
+productId
+  ↓
+Server
+  ↓
+Database
+  ↓
+Actual price
+```
+
+Similarly, hiding a button in the frontend does not provide authorization.
+
+The backend must enforce authorization.
+
+---
+
+# 27. Resource Ownership
+
+Consider:
+
+```http
+GET /api/users/123/orders
+```
+
+A dangerous implementation might simply do:
+
+```ts
+Order.find({ userId: req.params.id });
+```
+
+without checking whether the authenticated user is allowed to access user `123`.
+
+A safer conceptual flow is:
+
+```text
+Authenticated User
+       ↓
+Requested Resource
+       ↓
+Ownership / Permission Check
+       ↓
+Allow or Reject
+```
+
+This is an important part of the request lifecycle because authorization must happen **before sensitive data is returned**.
+
+---
+
+# 28. Database Errors Are Different From Business Errors
+
+Consider two situations.
+
+### Business failure
+
+```text
+Product doesn't have enough stock.
+```
+
+This is an expected application condition.
+
+### Infrastructure failure
+
+```text
+Database connection timed out.
+```
+
+This is an infrastructure/system failure.
+
+They shouldn't necessarily produce the same response or be handled the same way.
+
+Conceptually:
+
+```text
+Business error
+    ↓
+Expected
+    ↓
+Meaningful client response
+
+Infrastructure error
+    ↓
+Unexpected
+    ↓
+Log / alert / safe server response
+```
+
+This distinction becomes increasingly important in production systems.
+
+---
+
+# 29. Transactions and Consistency
+
+Some requests involve multiple database operations.
+
+For example:
+
+```text
+Create Order
+     ↓
+Decrease Stock
+     ↓
+Create Payment Record
+```
+
+What happens if:
+
+```text
+Create Order       ✓
+Decrease Stock     ✓
+Create Payment     ✗
+```
+
+Now the system may be inconsistent.
+
+Transactions can help when multiple operations need atomicity.
+
+Conceptually:
+
+```text
+BEGIN TRANSACTION
+
+Create Order
+Decrease Stock
+Create Payment Record
+
+COMMIT
+```
+
+If something fails:
+
+```text
+ROLLBACK
+```
+
+However, transactions are not a universal solution. Distributed systems may require different patterns such as idempotency, retries, sagas, or event-driven workflows.
+
+---
+
+# 30. Idempotency
+
+Imagine the user clicks:
+
+**Pay**
+
+The browser sends:
+
+```http
+POST /payments
+```
+
+The network fails after the server processes the payment but before the response reaches the browser.
+
+The browser doesn't know whether payment succeeded.
+
+It retries.
+
+Without protection, the server might process the payment twice.
+
+An idempotency key can help:
+
+```http
+Idempotency-Key: pay_abc123
+```
+
+The server can recognize:
+
+```text
+pay_abc123
+```
+
+as the same logical operation.
+
+This is an example of how real production systems extend beyond the basic request-response model.
+
+---
+
+# 31. Retries Are Not Always Safe
+
+A failed request does not automatically mean:
+
+> Retry it.
+
+For example:
+
+```text
+GET product
+```
+
+may usually be safe to retry.
+
+But:
+
+```text
+POST charge-payment
+```
+
+requires much more care.
+
+This is why production systems think about:
+
+- idempotency
+- retry policies
+- timeouts
+- backoff
+- circuit breakers
+- duplicate requests
+
+The network is unreliable, and applications must be designed around that reality.
+
+---
+
+# 32. Timeouts
+
+Every dependency can potentially become slow:
+
+```text
+Client
+  ↓
+API
+  ↓
+Database
+  ↓
+External Payment API
+```
+
+If the payment API hangs indefinitely, your request might also hang indefinitely.
+
+Timeouts establish boundaries:
+
+```text
+Payment API
+    ↓
+wait max 5 seconds
+    ↓
+timeout
+```
+
+A good backend doesn't allow one unhealthy dependency to consume resources forever.
+
+---
+
+# 33. Rate Limiting
+
+Suppose someone sends:
+
+```text
+100,000 requests/second
+```
+
+to:
+
+```http
+POST /api/login
+```
+
+The backend needs protection.
+
+Rate limiting can enforce rules such as:
+
+```text
+100 requests / minute / IP
+```
+
+or:
+
+```text
+20 login attempts / minute / account
+```
+
+The exact strategy depends on the application.
+
+The important point is that rate limiting is part of controlling the request lifecycle before expensive application work occurs.
+
+---
+
+# 34. The Lifecycle Is Not Always Linear
+
+Real applications often look more like:
+
+```text
+                    ┌── Redis
+                    │
+Request → API → Service ── Database
+                    │
+                    ├── Payment API
+                    │
+                    ├── Message Queue
+                    │
+                    └── Email Service
+```
+
+The request may trigger asynchronous work:
+
+```text
+Request
+   ↓
+Create Order
+   ↓
+Publish Event
+   ↓
+Return Response
+```
+
+Then:
+
+```text
+Queue
+   ↓
+Background Worker
+   ↓
+Send Email
+```
+
+The email doesn't necessarily need to delay the original HTTP response.
+
+This is where the basic request-response model starts becoming a distributed system.
+
+---
+
+# 35. Synchronous vs Asynchronous Work
+
+### Synchronous
+
+The request waits for the operation.
+
+```text
+Request
+  ↓
+Database
+  ↓
+Response
+```
+
+### Asynchronous
+
+The request triggers work that happens later.
+
+```text
+Request
+  ↓
+Queue
+  ↓
+Response
+
+Later:
+
+Worker
+  ↓
+Process job
+```
+
+This can improve responsiveness and reliability for operations that don't need to finish before the user receives the initial response.
+
+---
+
+# 36. A Production Mental Model
+
+Instead of thinking:
+
+```text
+Frontend → Backend → Database
+```
+
+start thinking:
+
+```text
+                 ┌───────────────┐
+                 │   Browser     │
+                 └───────┬───────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ DNS / TLS / CDN │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │ Proxy / Gateway │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │   Middleware    │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │   Controller    │
+                └────────┬────────┘
+                         │
+                         ▼
+                ┌─────────────────┐
+                │     Service     │
+                └───────┬─────────┘
+                        │
+             ┌──────────┼──────────┐
+             ▼          ▼          ▼
+        Repository    Cache      External API
+             │
+             ▼
+         Database
+
+             │
+             ▼
+        Response DTO
+             │
+             ▼
+       Serialization
+             │
+             ▼
+       HTTP Response
+             │
+             ▼
+          Client
+```
+
+And alongside the entire pipeline:
+
+```text
+Logs
+Metrics
+Traces
+Error Handling
+Security
+Timeouts
+Rate Limits
+```
+
+---
+
+# 37. The Most Important Architectural Boundaries
+
+A useful rule of thumb:
+
+| Layer         | Primary Responsibility               |
+| ------------- | ------------------------------------ |
+| Router        | Match HTTP request to handler        |
+| Middleware    | Cross-cutting request processing     |
+| Controller    | HTTP boundary                        |
+| Service       | Business logic                       |
+| Repository    | Persistence/data access              |
+| Database      | Durable data storage                 |
+| Serializer    | Representation conversion            |
+| Error Handler | Convert failures into safe responses |
+| Logger        | Record events                        |
+| Metrics       | Measure system behavior              |
+| Tracing       | Follow operations across components  |
+
+The exact names can vary.
+
+The responsibilities matter more than the folder names.
+
+---
+
+# 38. The Full Lifecycle
+
+Putting everything together:
+
+```text
+USER ACTION
+    │
+    ▼
+BROWSER / CLIENT
+    │
+    │ Construct HTTP Request
+    ▼
+DNS
+    │
+    ▼
+NETWORK
+    │
+    ▼
+TLS
+    │
+    ▼
+CDN / REVERSE PROXY
+    │
+    ▼
+LOAD BALANCER
+    │
+    ▼
+APPLICATION SERVER
+    │
+    ▼
+REQUEST CONTEXT
+    │
+    ▼
+MIDDLEWARE
+    ├── Logging
+    ├── Security
+    ├── Rate Limiting
+    ├── Authentication
+    └── Other Cross-Cutting Concerns
+    │
+    ▼
+ROUTER
+    │
+    ▼
+CONTROLLER
+    │
+    ├── Extract request data
+    ├── Validate HTTP-level input
+    └── Call service
+    │
+    ▼
+SERVICE
+    │
+    ├── Business rules
+    ├── Authorization decisions
+    ├── Calculations
+    └── Orchestration
+    │
+    ▼
+REPOSITORY / DEPENDENCIES
+    │
+    ├── Database
+    ├── Cache
+    └── External services
+    │
+    ▼
+RESULT
+    │
+    ▼
+SERVICE
+    │
+    ▼
+CONTROLLER
+    │
+    ├── Choose status code
+    ├── Shape response
+    └── Serialize
+    │
+    ▼
+HTTP RESPONSE
+    │
+    ▼
+PROXY / NETWORK
+    │
+    ▼
+BROWSER
+    │
+    ▼
+DESERIALIZE RESPONSE
+    │
+    ▼
+UPDATE UI
+```
+
+And at any point:
+
+```text
+                ┌──────────────┐
+                │ Error occurs │
+                └──────┬───────┘
+                       ▼
+              Global Error Handler
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+       Safe HTTP Response     Logs / Traces
+```
+
+---
+
+# 39. The Engineering Rule to Remember
+
+> **A controller should understand HTTP, a service should understand the business, and a repository should understand persistence.**
+
+This isn't an absolute law.
+
+Small applications may combine layers.
+
+Large applications may introduce additional layers such as:
+
+```text
+Domain
+Use Cases
+Adapters
+Ports
+Repositories
+Infrastructure
+Workers
+Event Handlers
+```
+
+The goal isn't to create as many layers as possible.
+
+The goal is to create **clear boundaries around changing responsibilities**.
+
+---
+
+# Final Takeaway
+
+A request-response lifecycle is the backbone of most web applications.
+
+At the surface:
+
+```text
+User clicks button
+        ↓
+Server responds
+```
+
+Underneath:
+
+```text
+Client
+ ↓
+DNS
+ ↓
+Network
+ ↓
+TLS
+ ↓
+Proxy
+ ↓
+Load Balancer
+ ↓
+Middleware
+ ↓
+Authentication
+ ↓
+Validation
+ ↓
+Routing
+ ↓
+Controller
+ ↓
+Service
+ ↓
+Repository
+ ↓
+Database / External Services
+ ↓
+Business Result
+ ↓
+Serialization
+ ↓
+HTTP Response
+ ↓
+Network
+ ↓
+Client
+ ↓
+UI
+```
+
+And surrounding all of it:
+
+```text
+Security
+Error Handling
+Logging
+Metrics
+Tracing
+Timeouts
+Rate Limiting
+Caching
+Retries
+Consistency
+```
+
+That is why a backend isn't simply:
+
+> **"Receive request → query database → send response."**
+
+A production backend is a controlled pipeline where each layer has a responsibility, failures are expected and handled, data crosses well-defined boundaries, and the entire journey can be observed and debugged.
+
+What looks like:
+
+> **"I clicked a button."**
+
+to the user can actually be:
+
+> **"A distributed system just completed a carefully controlled request-response journey."**
