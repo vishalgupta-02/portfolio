@@ -17,15 +17,15 @@ export default function FooterContent({ quote }: Props) {
   }
 
   return (
-    <footer className="w-full max-w-2xl rounded-md mx-auto px-4 py-0">
+    <footer className="mx-auto w-full max-w-2xl rounded-md px-4 py-0">
       <Line type="horizontal" width={640} className="my-8" />
 
       {quote && (
-        <div className="w-full flex flex-col p-4 gap-3 rounded-sm bg-custom-gray/10 border dark:border-custom-white/10 border-custom-black">
+        <div className="bg-custom-gray/10 dark:border-custom-white/10 border-custom-black flex w-full flex-col gap-3 rounded-sm border p-4">
           <p className="text-center text-sm">“ {quote.quote} ”</p>
 
           <div className="space-y-1 text-right">
-            <p className="text-xs font-display italic">
+            <p className="font-display text-xs italic">
               — {quote.author?.name},{" "}
               <span className="text-md ml-1">{quote.author?.company.name}</span>
             </p>
@@ -33,17 +33,17 @@ export default function FooterContent({ quote }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 my-8">
-        <p className="text-xl font-sans">Connect With Me</p>
+      <div className="my-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <p className="font-sans text-xl">Connect With Me</p>
 
-        <div className="flex gap-2 justify-start sm:justify-end items-center flex-wrap">
+        <div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
           <Socials />
         </div>
       </div>
 
-      <Line type="horizontal" width={640} className="mb-4 mt-8" />
+      <Line type="horizontal" width={640} className="mt-8 mb-4" />
 
-      <p className="font-display font-light text-sm">
+      <p className="font-display text-sm font-light">
         &copy; 2026 Vishal Gupta. All rights reserved.
       </p>
     </footer>

@@ -22,10 +22,39 @@ import { extractTableOfContents } from "./table-of-contents";
 import type { SearchableBlogPost } from "./types";
 import { cache } from "react";
 import { BlogContentError } from "./errors";
+import { siteConfig } from "./site";
 
 export const POSTS_PER_PAGE = 10;
 
 const BLOG_DIRECTORY = path.join(process.cwd(), "src", "content", "blog");
+
+function extractPostImage(
+  metadata: BlogPostMetadata,
+  content: string,
+  developerContent: string | null,
+): string {
+  if (metadata.image) {
+    return metadata.image;
+  }
+
+  const blogImageRegex = /<BlogImage[^>]+src=["']([^"']+)["']/i;
+  const match =
+    content.match(blogImageRegex) ||
+    (developerContent && developerContent.match(blogImageRegex));
+  if (match && match[1]) {
+    return match[1];
+  }
+
+  const mdImageRegex = /!\[.*?\]\((.*?)\)/;
+  const mdMatch =
+    content.match(mdImageRegex) ||
+    (developerContent && developerContent.match(mdImageRegex));
+  if (mdMatch && mdMatch[1]) {
+    return mdMatch[1];
+  }
+
+  return siteConfig.ogImage;
+}
 
 function parsePostMetadata(data: unknown, slug: string): BlogPostMetadata {
   const result = blogPostMetadataSchema.safeParse(data);
@@ -67,6 +96,7 @@ export const getPostBySlug = cache((slug: string): BlogPost | null => {
   // Check for companion developer view file
   const developerContent = getDeveloperViewContent(slug);
   const hasDeveloperView = metadata.dualView && developerContent !== null;
+  const image = extractPostImage(metadata, content, developerContent);
 
   return {
     slug,
@@ -79,6 +109,7 @@ export const getPostBySlug = cache((slug: string): BlogPost | null => {
     developerReadingTime: hasDeveloperView && developerContent
       ? calculateReadingTime(developerContent)
       : null,
+    image,
   };
 });
 

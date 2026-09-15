@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, Terminal } from "lucide-react";
 import { Github } from "@/components/socials";
+import { ShareButtons } from "@/components/ui/share-buttons";
 import type { Project } from "@/lib/projects/types";
 
 interface CaseStudyHeroProps {
@@ -42,8 +43,8 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
           </Link>
         </div>
 
-        {project.githubUrl && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {project.githubUrl && (
             <Link
               href={project.githubUrl}
               target="_blank"
@@ -54,8 +55,16 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
               <span>Repository</span>
               <ArrowUpRight className="size-3" />
             </Link>
-          </div>
-        )}
+          )}
+
+          <ShareButtons
+            url={`/projects/${project.slug}/case-study`}
+            title={`${caseStudy.title} — ${project.name} Case Study`}
+            description={caseStudy.description}
+            tags={project.tags || []}
+            variant="compact"
+          />
+        </div>
       </nav>
 
       {/* Hero Section */}

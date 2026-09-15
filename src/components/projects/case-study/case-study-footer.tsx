@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowLeft, ArrowUpRight } from "lucide-react"
 import { Github } from "@/components/socials"
+import { ShareButtons } from "@/components/ui/share-buttons"
 import type { Project } from "@/lib/projects/types"
 
 interface CaseStudyFooterProps {
@@ -18,7 +19,15 @@ export default function CaseStudyFooter({ project }: CaseStudyFooterProps) {
         <span>Back to {project.name} Overview</span>
       </Link>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <ShareButtons
+          url={`/projects/${project.slug}/case-study`}
+          title={`${project.name} Case Study`}
+          description={project.caseStudy?.description}
+          tags={project.tags || []}
+          variant="compact"
+        />
+
         {project.githubUrl && (
           <Link
             href={project.githubUrl}

@@ -15,7 +15,7 @@ export function extractTableOfContents(content: string): TableOfContentsItem[] {
 
   const cleanedContent = removeCodeBlocks(content)
 
-  const headingRegex = /^(##|###)\s+(.+)$/gm
+  const headingRegex = /^(#{1,2})\s+(.+)$/gm
 
   let match: RegExpExecArray | null
 
@@ -29,7 +29,7 @@ export function extractTableOfContents(content: string): TableOfContentsItem[] {
 
     const title = cleanHeadingTitle(rawTitle)
 
-    const level = hashes.length as 2 | 3
+    const level = hashes.length as 1 | 2
 
     headings.push({
       id: createHeadingId(title),

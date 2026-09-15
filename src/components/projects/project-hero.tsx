@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { ArrowLeft, ArrowUpRight, FileText } from "lucide-react";
 import { Github } from "@/components/socials";
+import { ShareButtons } from "@/components/ui/share-buttons";
 import type { Project } from "@/lib/projects/types";
 
 interface ProjectHeroProps {
@@ -109,6 +110,16 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
               <ArrowUpRight className="size-3.5 text-foreground/60" />
             </Link>
           )}
+
+          <div className="inline-flex items-center px-2 py-1 rounded-lg border border-border/30 bg-background/80">
+            <ShareButtons
+              url={`/projects/${project.slug}`}
+              title={`${project.name} — ${project.subtitle || project.description}`}
+              description={project.description}
+              tags={project.tags || []}
+              variant="compact"
+            />
+          </div>
         </motion.div>
       </header>
 
