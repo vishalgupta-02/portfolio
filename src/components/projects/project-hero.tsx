@@ -1,22 +1,23 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import { motion, useReducedMotion } from "motion/react"
-import { ArrowLeft, ArrowUpRight, FileText } from "lucide-react"
-import { Github } from "@/components/socials"
-import type { Project } from "@/lib/projects/types"
+import Image from "next/image";
+import Link from "next/link";
+import { motion, useReducedMotion } from "motion/react";
+import { ArrowLeft, ArrowUpRight, FileText } from "lucide-react";
+import { Github } from "@/components/socials";
+import type { Project } from "@/lib/projects/types";
 
 interface ProjectHeroProps {
-  project: Project
+  project: Project;
 }
 
 export default function ProjectHero({ project }: ProjectHeroProps) {
-  const shouldReduceMotion = useReducedMotion()
+  const shouldReduceMotion = useReducedMotion();
 
-  const liveOrRepoUrl = project.liveUrl || project.githubUrl
-  const isGithubOnly = !project.liveUrl || project.liveUrl === project.githubUrl
-  const liveButtonLabel = isGithubOnly ? "View Live / Repo" : "View Live"
+  const liveOrRepoUrl = project.liveUrl || project.githubUrl;
+  const isGithubOnly =
+    !project.liveUrl || project.liveUrl === project.githubUrl;
+  const liveButtonLabel = isGithubOnly ? "View Live / Repo" : "View Live";
 
   return (
     <div className="space-y-12">
@@ -35,7 +36,8 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
 
         {project.status && (
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-border/30 bg-background/80 text-[11px] font-mono text-foreground/80">
-            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            {/* <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> */}
+            <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>{project.status}</span>
           </div>
         )}
@@ -136,5 +138,5 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
         </div>
       </motion.section>
     </div>
-  )
+  );
 }
