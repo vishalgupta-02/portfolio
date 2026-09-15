@@ -10,7 +10,7 @@ export interface ReadingTime {
 export interface TableOfContentsItem {
   id: string;
   title: string;
-  level: 1 | 2;
+  level: number;
 }
 
 export interface BlogTag {
