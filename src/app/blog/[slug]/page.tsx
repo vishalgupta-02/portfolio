@@ -20,15 +20,14 @@ import { generateBlogJsonLd } from "@/lib/blog/json-ld";
 import { JsonLd } from "@/components/seo/json-ld";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  ArrowUpLeftFromCircle,
-  ArrowUpLeftSquare,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { ViewModeSelector } from "@/components/blog/view-mode-selector";
 import { ArticleContent } from "@/components/blog/article-content";
 import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
-import { MoveToTop } from "@/components/blog/move-to-top";
+// import { MoveToTop } from "@/components/blog/move-to-top";
+import { ShareButtons } from "@/components/ui/share-buttons";
+import { BlogShareCard } from "@/components/blog/blog-share-card";
+import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -114,10 +113,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <JsonLd data={jsonLd} />
 
       <main className="mx-auto max-w-2xl px-4 pt-6 pb-2">
-        <div className="mb-4 border-b w-full pb-4">
+        <div className="mb-4 w-full border-b pb-4">
           <Link
             href="/blog"
-            className="text-primary flex text-sm items-center hover:underline"
+            className="text-primary flex items-center text-sm hover:underline"
           >
             <ArrowLeft className="mr-1 inline size-4" />
             Back to blog
@@ -131,36 +130,46 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {post.metadata.title}
             </h1>
 
-            <p className="mt-4 text-sm text-muted-foreground max-w-xl">
+            <p className="text-muted-foreground mt-4 max-w-xl text-sm">
               {post.metadata.description}
             </p>
 
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <time dateTime={post.metadata.publishedAt}>
-                {new Date(post.metadata.publishedAt).toLocaleDateString(
-                  "en-US",
-                  {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  },
+            <div className="text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2">
+                <time dateTime={post.metadata.publishedAt}>
+                  {new Date(post.metadata.publishedAt).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    },
+                  )}
+                </time>
+
+                <span aria-hidden="true">·</span>
+
+                {hasDualView ? (
+                  <Suspense
+                    fallback={<span>{post.readingTime.minutes} min read</span>}
+                  >
+                    <DualViewReadingTime
+                      userReadingTime={post.readingTime}
+                      developerReadingTime={post.developerReadingTime}
+                    />
+                  </Suspense>
+                ) : (
+                  <span>{post.readingTime.minutes} min read</span>
                 )}
-              </time>
+              </div>
 
-              <span aria-hidden="true">·</span>
-
-              {hasDualView ? (
-                <Suspense
-                  fallback={<span>{post.readingTime.minutes} min read</span>}
-                >
-                  <DualViewReadingTime
-                    userReadingTime={post.readingTime}
-                    developerReadingTime={post.developerReadingTime}
-                  />
-                </Suspense>
-              ) : (
-                <span>{post.readingTime.minutes} min read</span>
-              )}
+              <ShareButtons
+                url={`/blog/${slug}`}
+                title={post.metadata.title}
+                description={post.metadata.description}
+                tags={post.metadata.tags}
+                variant="compact"
+              />
             </div>
             {post.metadata.tags.length > 0 && (
               <div className="mt-5 flex flex-wrap gap-2">
@@ -191,7 +200,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
           <Suspense
             fallback={
-              <div className="prose prose-neutral max-w-3xl dark:prose-invert prose-pre:bg-transparent prose-pre:p-0">
+              <div className="prose prose-neutral dark:prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-3xl">
                 <MDXRemote
                   source={post.content}
                   components={mdxComponents}
@@ -222,11 +231,22 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </Suspense>
 
           <div className="max-w-3xl">
+            <BlogShareCard
+              title={post.metadata.title}
+              description={post.metadata.description}
+              slug={slug}
+              tags={post.metadata.tags}
+            />
+
             {/* <ArticleNavigation navigation={navigation} /> */}
             <RelatedArticles articles={relatedArticles} />
           </div>
 
-          <MoveToTop />
+          <FloatingReadingProgress
+            title={post.metadata.title}
+            tableOfContents={post.tableOfContents}
+          />
+          {/* <MoveToTop /> */}
         </article>
 
         {/* Table of Contents */}

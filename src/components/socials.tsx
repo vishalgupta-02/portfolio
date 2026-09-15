@@ -3,14 +3,14 @@ import Link from "next/link";
 
 export const Socials = () => {
   return (
-    <div className="flex items-center flex-wrap gap-3 sm:gap-4">
+    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
       <Link href="https://github.com/vishalgupta-02" target="_blank">
         <Github />
       </Link>
       <Link href="https://www.instagram.com/v1shal_gupta" target="_blank">
         <Instagram />
       </Link>
-      <Link href="https://x.com/VishalG41764750" target="_blank">
+      <Link href="https://x.com/v1shalworks" target="_blank">
         <X />
       </Link>
       <Link href="https://www.linkedin.com/in/v1shalgupt9" target="_blank">
@@ -29,7 +29,7 @@ export const Socials = () => {
 export const Github = () => {
   return (
     <svg
-      className="w-6 h-6 text-gray-800 dark:text-white"
+      className="h-6 w-6 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -49,7 +49,7 @@ export const Github = () => {
 export const Instagram = () => {
   return (
     <svg
-      className="w-6 h-6 text-gray-800 dark:text-white"
+      className="h-6 w-6 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -70,7 +70,7 @@ export const Instagram = () => {
 export const X = () => {
   return (
     <svg
-      className="w-5 h-5 text-gray-800 dark:text-white"
+      className="h-5 w-5 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -86,7 +86,7 @@ export const X = () => {
 export const LinkedIn = () => {
   return (
     <svg
-      className="w-7 h-7 text-gray-800 dark:text-white"
+      className="h-7 w-7 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -107,7 +107,7 @@ export const LinkedIn = () => {
 export const Discord = () => {
   return (
     <svg
-      className="w-6 h-6 text-gray-800 dark:text-white"
+      className="h-6 w-6 text-gray-800 dark:text-white"
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -141,7 +141,7 @@ export const Email = ({ className }: { className?: string }) => {
 export const CodeIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -163,7 +163,7 @@ export const CodeIcon = ({ className }: { className?: string }) => {
 export const BrainIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -185,7 +185,7 @@ export const BrainIcon = ({ className }: { className?: string }) => {
 export const ClockIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -207,7 +207,7 @@ export const ClockIcon = ({ className }: { className?: string }) => {
 export const UserIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -227,7 +227,7 @@ export const UserIcon = ({ className }: { className?: string }) => {
 export const PhoneIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -249,7 +249,7 @@ export const PhoneIcon = ({ className }: { className?: string }) => {
 export const LinkIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -271,7 +271,7 @@ export const LinkIcon = ({ className }: { className?: string }) => {
 export const LocationIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
@@ -291,7 +291,7 @@ export const LocationIcon = ({ className }: { className?: string }) => {
 export const EmailIcon = ({ className }: { className?: string }) => {
   return (
     <svg
-      className={cn("w-4 h-4 text-gray-800 dark:text-white", className)}
+      className={cn("h-4 w-4 text-gray-800 dark:text-white", className)}
       aria-hidden="true"
       xmlns="http://www.w3.org/2000/svg"
       width="24"

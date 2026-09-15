@@ -24,27 +24,65 @@ type BlockquoteProps = ComponentPropsWithoutRef<"blockquote">
 //     .replace(/\s+/g, "-")
 // }
 
-function H2({ children, ...props }: HeadingProps) {
-  const title = typeof children === "string" ? children : ""
+function getNodeText(node: React.ReactNode): string {
+  if (typeof node === "string") return node
+  if (typeof node === "number") return String(node)
+  if (!node) return ""
+  if (Array.isArray(node)) return node.map(getNodeText).join("")
+  if (
+    typeof node === "object" &&
+    node !== null &&
+    "props" in node &&
+    (node as { props?: { children?: React.ReactNode } }).props?.children
+  ) {
+    return getNodeText(
+      (node as { props: { children: React.ReactNode } }).props.children
+    )
+  }
+  return ""
+}
 
+function H1({ children, ...props }: ComponentPropsWithoutRef<"h1">) {
+  const title = getNodeText(children)
   const id = createHeadingId(title)
 
   return (
-    <h2 id={id} className='scroll-mt-24' {...props}>
+    <h1 id={id} className="scroll-mt-24 text-2xl sm:text-3xl font-bold tracking-tight my-6" {...props}>
+      {children}
+    </h1>
+  )
+}
+
+function H2({ children, ...props }: HeadingProps) {
+  const title = getNodeText(children)
+  const id = createHeadingId(title)
+
+  return (
+    <h2 id={id} className="scroll-mt-24 text-xl sm:text-2xl font-semibold tracking-tight my-5" {...props}>
       {children}
     </h2>
   )
 }
 
 function H3({ children, ...props }: ComponentPropsWithoutRef<"h3">) {
-  const title = typeof children === "string" ? children : ""
-
+  const title = getNodeText(children)
   const id = createHeadingId(title)
 
   return (
-    <h3 id={id} className='scroll-mt-24' {...props}>
+    <h3 id={id} className="scroll-mt-24 text-lg sm:text-xl font-semibold my-4" {...props}>
       {children}
     </h3>
+  )
+}
+
+function H4({ children, ...props }: ComponentPropsWithoutRef<"h4">) {
+  const title = getNodeText(children)
+  const id = createHeadingId(title)
+
+  return (
+    <h4 id={id} className="scroll-mt-24 text-base sm:text-lg font-medium my-3" {...props}>
+      {children}
+    </h4>
   )
 }
 
@@ -127,8 +165,10 @@ function Table({
 }
 
 export const mdxComponents = {
+  h1: H1,
   h2: H2,
   h3: H3,
+  h4: H4,
   a: CustomLink,
   blockquote: Blockquote,
   Callout,

@@ -1,5 +1,6 @@
 import About from "@/components/about";
 import ExperienceSection from "@/components/experience-section";
+import GithubSection from "@/components/github-section";
 import Hero from "@/components/hero";
 import { IntroLoader } from "@/components/intro-loader";
 import MainLayout from "@/components/main-layout";
@@ -16,7 +17,9 @@ export default async function Home() {
         <ProjectSection />
         <ExperienceSection />
         <SkillsSection />
+        <GithubSection />
       </MainLayout>
     </>
   );
 }
+
