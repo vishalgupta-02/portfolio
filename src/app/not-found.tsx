@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function NotFound() {
+  const router = useRouter();
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-20 text-foreground">
       {/* Background grid */}
@@ -114,7 +118,7 @@ export default function NotFound() {
 
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => router.back()}
             className="
               inline-flex
               h-11

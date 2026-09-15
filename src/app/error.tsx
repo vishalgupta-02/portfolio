@@ -5,10 +5,8 @@ import { useEffect } from "react";
 
 export default function GlobalError({
   error,
-  reset,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
 }) {
   useEffect(() => {
     console.error(error);
@@ -97,7 +95,8 @@ export default function GlobalError({
         {/* Actions */}
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <button
-            onClick={() => reset()}
+            // onClick={() => reset()}
+            onClick={() => window.location.reload()}
             className="group bg-foreground text-background inline-flex h-11 items-center justify-center gap-2 rounded-lg px-6 text-sm font-semibold transition-all hover:-translate-y-0.5 hover:shadow-lg"
           >
             Try again
