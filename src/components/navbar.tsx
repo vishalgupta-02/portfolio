@@ -16,7 +16,11 @@ export default function Navbar() {
           <li>
             <Link href='/blog'>Blog</Link>
           </li>
+          <li>
+            <Link href='/postmortems'>Postmortems</Link>
+          </li>
         </ul>
+
         <div className='flex items-center gap-4'>
           {/* <CommandMenu /> */}
           <AnimatedThemeToggler />

@@ -88,6 +88,16 @@ const CommandMenu = () => {
                 <span className='text-muted-foreground'>↵</span>
               </Command.Item>
               <Command.Item
+                value='View engineering postmortems'
+                onSelect={() => {
+                  setOpen(false)
+                  window.location.href = '/postmortems'
+                }}
+                className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>View engineering postmortems</span>
+                <span className='text-muted-foreground'>↵</span>
+              </Command.Item>
+              <Command.Item
                 value='Jump to contact'
                 onSelect={() => setOpen(false)}
                 className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
@@ -95,6 +105,7 @@ const CommandMenu = () => {
                 <span className='text-muted-foreground'>↵</span>
               </Command.Item>
             </Command.Group>
+
           </Command.List>
         </div>
       </Command.Dialog>

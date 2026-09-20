@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useMemo } from "react"
 import MainLayout from "@/components/main-layout"
 import CaseStudyHero from "./case-study/case-study-hero"
 import CaseStudyTOC from "./case-study/case-study-toc"
@@ -14,7 +15,7 @@ import CaseStudyTechStack from "./case-study/case-study-tech-stack"
 import CaseStudyResults from "./case-study/case-study-results"
 import CaseStudyLessons from "./case-study/case-study-lessons"
 import CaseStudyFooter from "./case-study/case-study-footer"
-import type { Project } from "@/lib/projects/types"
+import type { Project, CaseStudySectionItem } from "@/lib/projects/types"
 
 interface CaseStudyViewProps {
   project: Project
@@ -22,12 +23,87 @@ interface CaseStudyViewProps {
 
 export default function CaseStudyView({ project }: CaseStudyViewProps) {
   const caseStudy = project.caseStudy
+  const techStack = caseStudy?.techStack || project.techStack
+
+  // Dynamically detect which sections exist on this project and assign sequential step numbers
+  const { activeSections, stepMap } = useMemo(() => {
+    if (!caseStudy) return { activeSections: [], stepMap: new Map<string, string>() }
+
+    const candidates: { id: string; title: string; present: boolean }[] = [
+      {
+        id: "overview",
+        title: caseStudy.overview?.title || "Overview",
+        present: Boolean(caseStudy.overview?.paragraphs?.length),
+      },
+      {
+        id: "problem",
+        title: caseStudy.problem?.title || "The Problem",
+        present: Boolean(caseStudy.problem),
+      },
+      {
+        id: "goals",
+        title: caseStudy.goals?.title || "Engineering Goals",
+        present: Boolean(caseStudy.goals?.items?.length),
+      },
+      {
+        id: "architecture",
+        title: caseStudy.architecture?.title || "System Architecture",
+        present: Boolean(caseStudy.architecture?.layers?.length),
+      },
+      {
+        id: "challenges",
+        title: "Core Engineering Challenges",
+        present: Boolean(caseStudy.challenges?.length),
+      },
+      {
+        id: "implementation",
+        title: caseStudy.implementation?.title || "Code Primitives",
+        present: Boolean(caseStudy.implementation?.paragraphs?.length),
+      },
+      {
+        id: "data-flow",
+        title: caseStudy.dataFlow?.title || "Data Flow Pipelines",
+        present: Boolean(caseStudy.dataFlow?.steps?.length),
+      },
+      {
+        id: "tech-stack",
+        title: "Technology Stack",
+        present: Boolean(techStack?.length),
+      },
+      {
+        id: "results",
+        title: caseStudy.results?.title || "Results & Outcomes",
+        present: Boolean(caseStudy.results?.items?.length),
+      },
+      {
+        id: "lessons",
+        title: caseStudy.lessonsLearned?.title || "Lessons Learned",
+        present: Boolean(caseStudy.lessonsLearned?.items?.length),
+      },
+    ]
+
+    const presentItems = candidates.filter((c) => c.present)
+    const steps = new Map<string, string>()
+
+    const sectionsList: CaseStudySectionItem[] = presentItems.map((item, idx) => {
+      const numStr = (idx + 1).toString().padStart(2, "0")
+      steps.set(item.id, numStr)
+      return {
+        id: item.id,
+        label: numStr,
+        title: item.title,
+      }
+    })
+
+    return {
+      activeSections: caseStudy.sections && caseStudy.sections.length > 0 ? caseStudy.sections : sectionsList,
+      stepMap: steps,
+    }
+  }, [caseStudy, techStack])
+
   if (!caseStudy) {
     return null
   }
-
-  const sections = caseStudy.sections || []
-  const techStack = caseStudy.techStack || project.techStack
 
   return (
     <MainLayout>
@@ -36,85 +112,85 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
         <CaseStudyHero project={project} />
 
         {/* Table of Contents */}
-        {sections.length > 0 && <CaseStudyTOC sections={sections} />}
+        {activeSections.length > 0 && <CaseStudyTOC sections={activeSections} />}
 
-        {/* 01 — Overview */}
+        {/* Overview */}
         {caseStudy.overview && (
           <CaseStudyOverview
             overview={caseStudy.overview}
-            stepNumber="01"
+            stepNumber={stepMap.get("overview") || "01"}
           />
         )}
 
-        {/* 02 — The Problem & Constraints */}
+        {/* Problem & Constraints */}
         {caseStudy.problem && (
           <CaseStudyProblem
             problem={caseStudy.problem}
-            stepNumber="02"
+            stepNumber={stepMap.get("problem") || "02"}
           />
         )}
 
-        {/* 03 — Engineering Goals */}
+        {/* Engineering Goals */}
         {caseStudy.goals && (
           <CaseStudyGoals
             goals={caseStudy.goals}
-            stepNumber="03"
+            stepNumber={stepMap.get("goals") || "03"}
           />
         )}
 
-        {/* 04 — System Architecture */}
+        {/* System Architecture */}
         {caseStudy.architecture && (
           <CaseStudyArchitecture
             architecture={caseStudy.architecture}
-            stepNumber="04"
+            stepNumber={stepMap.get("architecture") || "04"}
           />
         )}
 
-        {/* 05 — Core Engineering Challenges (Deep Dives & Code Snippets) */}
+        {/* Core Engineering Challenges */}
         {caseStudy.challenges && caseStudy.challenges.length > 0 && (
           <CaseStudyChallenges
             challenges={caseStudy.challenges}
-            stepNumber="05"
+            stepNumber={stepMap.get("challenges") || "05"}
           />
         )}
 
-        {/* 06 — Code Primitives & Security Implementation */}
+        {/* Code Primitives */}
         {caseStudy.implementation && (
           <CaseStudyImplementation
             implementation={caseStudy.implementation}
-            stepNumber="06"
+            stepNumber={stepMap.get("implementation") || "06"}
           />
         )}
 
-        {/* 07 — Data Flow Pipelines */}
+        {/* Data Flow Pipelines */}
         {caseStudy.dataFlow && (
           <CaseStudyDataFlow
             dataFlow={caseStudy.dataFlow}
-            stepNumber="07"
+            stepNumber={stepMap.get("data-flow") || "07"}
           />
         )}
 
-        {/* 08 — Technology Stack */}
+        {/* Technology Stack */}
         {techStack && techStack.length > 0 && (
           <CaseStudyTechStack
             techStack={techStack}
-            stepNumber="08"
+            stepNumber={stepMap.get("tech-stack") || "08"}
           />
         )}
 
-        {/* 09 — Results & Outcomes */}
+        {/* Results & Outcomes */}
         {caseStudy.results && (
           <CaseStudyResults
             results={caseStudy.results}
-            stepNumber="09"
+            stepNumber={stepMap.get("results") || "09"}
           />
         )}
 
-        {/* 10 — Lessons Learned & Engineering Reflections */}
+        {/* Lessons Learned */}
         {caseStudy.lessonsLearned && (
           <CaseStudyLessons
             lessonsLearned={caseStudy.lessonsLearned}
-            stepNumber="10"
+            stepNumber={stepMap.get("lessons") || "10"}
           />
         )}
 

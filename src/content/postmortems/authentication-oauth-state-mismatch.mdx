@@ -1,0 +1,255 @@
+---
+title: "Authentication Incident: OAuth State Mismatch & Session Reliability"
+slug: "authentication-oauth-state-mismatch"
+description: "Investigation and resolution of cross-origin OAuth state verification failures, cookie scoping mismatches, and session lifecycle boundaries across Next.js and Express."
+date: "2026-03-21"
+status: "resolved"
+severity: "high"
+category: "authentication"
+tags:
+  - OAuth
+  - Better Auth
+  - Cookies
+  - Next.js
+  - Express
+  - PostgreSQL
+  - CORS
+duration: "3 hours 45 minutes"
+systemsAffected:
+  - "apps/api (Express Auth Handler)"
+  - "apps/web (Next.js Client)"
+  - "Better Auth OAuth Flow"
+  - "Session Cookie Storage"
+impact: "Users attempting social sign-in via Google and GitHub experienced state mismatch rejections. Cross-origin session cookies failed to persist across client redirects, resulting in 401s on protected dashboard routes."
+rootCause: "Dual origin mismatch: OAuth authorization initiated against the frontend origin while provider callbacks returned to the backend Express origin without state verification cookies. Compounded by wildcard CORS misconfiguration and uncoordinated database hooks."
+resolution: "Consolidated auth initiation to authoritative backend origin, enforced explicit CORS origin with credentials: true, standardized SameSite/Secure cookie attributes, and converted database hook operations from duplicate create to transactional update."
+author: "Vishal Gupta"
+featured: true
+published: true
+---
+
+## Executive Summary
+
+During the initial integration of social sign-in and session persistence in the Linkforge monorepo (Next.js 16 frontend on `localhost:3000` and Express backend on `localhost:5000`), social authentication repeatedly failed with `state_mismatch` and `invalid_session` errors upon redirect. Simultaneously, users authenticating via email/password observed that session cookies set by the backend were dropped by the browser when transitioning to protected dashboard routes.
+
+An investigation into the network layer and Better Auth lifecycle revealed that authentication state was being partitioned across two separate origins. The frontend initiated OAuth handshakes without forwarding state cookies to the backend callback handler, CORS headers were configured without explicit credential permissions, and database hooks were attempting duplicate inserts on shared user tables.
+
+This postmortem details the diagnosis, the underlying mechanics of cross-origin cookie security, the refactored architecture, and preventive controls implemented.
+
+---
+
+## Impact
+
+The incident impacted the core authentication and onboarding flows during integration testing:
+
+- **OAuth Authentication Failures:** 100% of social sign-in attempts through Google and GitHub failed during the token exchange phase with HTTP 400 `state_mismatch`.
+- **Session Cookie Rejection:** Following successful email/password login, the browser rejected or omitted the `auth_session` cookie on subsequent API requests, causing immediate 401 redirects back to `/login`.
+- **User Record Collisions:** In cases where registration hooks fired concurrently with Better Auth's internal table mapping, unique constraint violations halted the user provisioning pipeline.
+
+---
+
+## Incident Timeline
+
+<Timeline>
+  <TimelineEvent time="14:10 UTC" title="Issue Detected" status="detected">
+    Initial end-to-end testing of Google OAuth resulted in <code>INVALID_STATE</code> error on callback URL. Network tab confirmed provider redirected with code and state, but backend rejected verification.
+  </TimelineEvent>
+  <TimelineEvent time="14:35 UTC" title="Initial Investigation" status="investigating">
+    Inspected browser cookie jar. Noticed state cookies generated during <code>authClient.signIn.social()</code> were partitioned under frontend origin while backend callback handler checked backend origin.
+  </TimelineEvent>
+  <TimelineEvent time="15:15 UTC" title="Root Causes Identified" status="identified">
+    Identified three interdependent failure points: dual auth URL routing, CORS origin wildcarding preventing cookie transmission, and Prisma hook create collisions.
+  </TimelineEvent>
+  <TimelineEvent time="16:20 UTC" title="Fix Deployed to Development" status="mitigated">
+    Configured explicit CORS middleware with <code>credentials: true</code>, unified <code>NEXT_PUBLIC_BACKEND_URL</code> routing, and restructured database hooks to update rather than create.
+  </TimelineEvent>
+  <TimelineEvent time="17:30 UTC" title="End-to-End Verification Complete" status="resolved">
+    Verified full email/password and OAuth sign-in cycles in Chrome and Firefox. Sessions persist reliably and protected dashboard routes render with authenticated context.
+  </TimelineEvent>
+</Timeline>
+
+---
+
+## Root Causes & Technical Breakdown
+
+### 1. Dual Authentication Routing & OAuth State Mismatch
+
+OAuth 2.0 uses a cryptographically random `state` parameter to prevent Cross-Site Request Forgery (CSRF). When a user clicks "Sign in with Google", the client creates a temporary state cookie and sends the state value to Google. When Google redirects back to our callback, the server compares the state in the query parameters against the state stored in the cookie.
+
+```
+[Browser] ──(1) Initiate OAuth)──► [Next.js: localhost:3000]
+   │                                         │
+   ▼ Sets state cookie on localhost:3000      ▼ Redirects to Google
+[Google Authorization Server]
+   │
+   ▼ (2) Redirects with code & state
+[Express Backend: localhost:5000/api/auth/callback/google]
+   │
+   └──► Checks cookie on localhost:5000 (COOKIE MISSING!) ──► FAILS (state_mismatch)
+```
+
+Because Better Auth client was configured with a relative path on the Next.js server, the initial state cookie was written to `localhost:3000`. However, Google was configured with the callback redirect URI `http://localhost:5000/api/auth/callback/google`. When the browser followed Google's redirect, it sent cookies scoped to `localhost:5000`—which had never received the state cookie.
+
+### 2. Cross-Origin Cookie & CORS Configuration
+
+Browsers enforce strict cross-origin cookie policies. When the Next.js client (`localhost:3000`) made API requests to the Express backend (`localhost:5000`), the browser stripped `Set-Cookie` headers from responses because CORS was initialized with a wildcard origin:
+
+```typescript
+// Problematic configuration in Express
+app.use(cors({ origin: "*" })) // Browsers explicitly refuse cookies when origin is '*'
+```
+
+According to the Fetch / XMLHttpRequest specifications, when `credentials: 'include'` is set, the `Access-Control-Allow-Origin` header must match the exact requesting origin and cannot be a wildcard `*`.
+
+### 3. Database Hook Lifecycle & Table Mapping Conflict
+
+Better Auth and the application data layer both mapped to the same underlying `user` table in PostgreSQL via Prisma's `@@map("user")`. When a new user registered, Better Auth executed an `INSERT` into `user`. 
+
+Concurrently, a custom application `databaseHook` was also invoking `prisma.user.create()` to initialize vanity usernames and analytics profiles, triggering unique constraint violations on `user.id`.
+
+<Callout type="root-cause" title="Key Architectural Takeaway">
+Authentication state must have one authoritative origin. Mixing a frontend proxy path with a direct backend authentication endpoint creates dual cookie contexts and makes OAuth state dependent on which URL initiated the handshake.
+</Callout>
+
+---
+
+## Architecture: Before vs. After
+
+### Before Refactoring (Fragmented Origins)
+
+```text
+┌────────────────────────────────────────────────────────┐
+│ apps/web (localhost:3000)                              │
+│ • State cookie stored here                             │
+│ • CORS wildcard disables cookie acceptance             │
+└────────────────────────────────────────────────────────┘
+                    │                   ▲
+          Initiates │                   │ Redirect to /dashboard
+              OAuth │                   │ (Cookie missing -> 401)
+                    ▼                   │
+┌────────────────────────────────────────────────────────┐
+│ apps/api (localhost:5000)                              │
+│ • Callback arrives here without state cookie           │
+│ • Database hook collision on user insert               │
+└────────────────────────────────────────────────────────┘
+```
+
+### After Refactoring (Unified Origin & Strict Boundaries)
+
+```text
+┌────────────────────────────────────────────────────────┐
+│ apps/web (localhost:3000)                              │
+│ • Configured with NEXT_PUBLIC_BACKEND_URL              │
+│ • authClient targets Express directly with credentials │
+└────────────────────────────────────────────────────────┘
+                    ▲                   │
+       Credentials: │                   │ All auth calls direct
+       true allowed │                   │ to backend
+                    │                   ▼
+┌────────────────────────────────────────────────────────┐
+│ apps/api (localhost:5000)                              │
+│ • CORS explicitly allows http://localhost:3000         │
+│ • State cookie set and verified on localhost:5000      │
+│ • Database hook uses atomic update instead of create   │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+## What We Changed
+
+### 1. Unified Auth Client Base URL
+
+In `apps/web/src/lib/auth-client.ts`, the Better Auth client was explicitly bound to the authoritative API service:
+
+```typescript
+import { createAuthClient } from "better-auth/react"
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL, // http://localhost:5000
+  fetchOptions: {
+    credentials: "include",
+  },
+})
+```
+
+### 2. Express CORS Middleware Ordering & Scoping
+
+In `apps/api/src/server.ts`, CORS middleware was placed before route handlers and configured with explicit origin validation:
+
+```typescript
+import cors from "cors"
+import express from "express"
+
+const app = express()
+
+// CORS must precede route handlers and auth middleware
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Origin"],
+    exposedHeaders: ["Set-Cookie"],
+  }),
+)
+
+app.use(express.json())
+```
+
+### 3. Reconciling Database Hooks
+
+In `apps/api/src/auth.ts`, the registration database hook was updated from an insert operation to an atomic update:
+
+```typescript
+// apps/api/src/auth.ts
+databaseHooks: {
+  user: {
+    create: {
+      after: async (user) => {
+        // Better Auth already created the row; update profile metadata
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            username: generateDefaultUsername(user.name, user.id),
+            role: "USER",
+          },
+        })
+      },
+    },
+  },
+}
+```
+
+---
+
+## Testing & Verification
+
+| Test Scenario | Method | Expected Result | Status |
+| :--- | :--- | :--- | :--- |
+| Email / Password Registration | Browser form submission | User created, session cookie set, redirects to `/dashboard` | Verified ✅ |
+| Email / Password Login | Browser form submission | Session cookie validated, `/api/v1/profile` returns 200 | Verified ✅ |
+| Google OAuth Redirect | Browser social sign-in | State cookie matches on callback, token exchanged | Verified ✅ |
+| Cross-Origin Session Cookie | Next.js fetch to Express | `Cookie: auth_session=...` sent in request header | Verified ✅ |
+| Concurrent Username Mutation | Prisma `$transaction` | Unique constraint conflict handled deterministically | Verified ✅ |
+| Multi-Region Production Callback | Production deployment | Canonical callback domain matches OAuth provider console | Production verification pending ⏳ |
+
+<Callout type="preventive" title="Production Deployment Note">
+In production environments (e.g. Vercel frontend + Render/Railway backend), cookies must be configured with <code>SameSite=None; Secure</code> if running across different apex domains, or scoped to a common domain (e.g. <code>.yourdomain.com</code>) via reverse proxy.
+</Callout>
+
+---
+
+## Lessons Learned
+
+1. **Earn Your Abstractions:** High-level authentication libraries simplify token management, but understanding the underlying HTTP primitives (CORS preflight, cookie flags, `credentials: include`) is essential when debugging cross-origin monorepos.
+2. **One Origin for Handshake State:** In OAuth architectures, the origin that issues the initial state parameter must be the origin that evaluates the callback token exchange.
+3. **Fail-Fast Configuration Checks:** Validating all environment variables (`FRONTEND_URL`, `BACKEND_URL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`) at application startup via Zod prevents silent runtime routing failures.
+4. **Hook Ownership Contracts:** When an authentication library manages database records, application lifecycle hooks must treat existing entities as authoritative and perform idempotent mutations.
+
+---
+
+## Final Status
+
+**Status: RESOLVED**  
+All cross-origin authentication flows, session persistence boundaries, and database lifecycle hooks have been stabilized and verified across development environments. Continuous integration test suites now include end-to-end credential exchange validation.

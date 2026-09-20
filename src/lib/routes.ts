@@ -9,4 +9,10 @@ export const staticRoutes = [
     priority: 0.9,
     changeFrequency: "weekly",
   },
+  {
+    path: "/postmortems",
+    priority: 0.9,
+    changeFrequency: "weekly",
+  },
 ] as const
+
