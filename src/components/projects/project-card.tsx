@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowUpRight, Sparkles } from "lucide-react";
+import { ArrowUpRight, ExternalLink, BookOpen } from "lucide-react";
 import { Github } from "@/components/socials";
 import type { Project } from "@/lib/projects/types";
 
@@ -16,140 +15,125 @@ export default function ProjectCard({
   project,
   priorityImage = false,
 }: ProjectCardProps) {
-  const shouldReduceMotion = useReducedMotion();
-
   const projectPageUrl = `/projects/${project.slug}`;
   const caseStudyUrl = project.hasCaseStudy
     ? `/projects/${project.slug}/case-study`
     : undefined;
-  const liveOrRepoUrl = project.liveUrl || project.githubUrl;
-  const primaryCtaUrl =
-    project.hasCaseStudy || project.highlights?.length
-      ? projectPageUrl
-      : liveOrRepoUrl;
-  const isInternalCta = primaryCtaUrl.startsWith("/");
 
   return (
-    <div className="flex flex-col items-center text-center space-y-5">
-      {/* Visual Stage: Floating Project Screenshot */}
-      <div className="relative w-full max-w-lg mx-auto my-1 group">
-        {/* Ambient glow behind card */}
-        <div
-          aria-hidden="true"
-          className="absolute -inset-1.5 rounded-2xl bg-linear-to-r from-foreground/5 via-foreground/10 to-foreground/5 opacity-50 blur-xl transition duration-500 group-hover:opacity-75"
-        />
-
-        {/* Main Screenshot Wrapper */}
-        <div className="relative rounded-sm border border-border/40 bg-background overflow-hidden shadow-lg shadow-black/5 dark:shadow-black/40">
-          <div className="relative aspect-video w-full overflow-hidden bg-muted/20">
-            <Image
-              src={project.image}
-              alt={project.imageAlt}
-              fill
-              sizes="(max-width: 768px) 100vw, 600px"
-              priority={priorityImage}
-              className="object-cover object-top transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-            />
+    <article className="group relative rounded-xl border border-border/40 bg-card/30 p-4 sm:p-5 transition-all duration-300 hover:border-border/80 hover:bg-card/60 hover:shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-muted-foreground font-semibold">
+              {project.number}
+            </span>
+            <span className="text-muted-foreground/30 text-xs">/</span>
+            <Link
+              href={projectPageUrl}
+              className="group/title inline-flex items-center gap-1 font-sans text-xl font-bold tracking-tight text-foreground hover:underline"
+            >
+              <span>{project.name}</span>
+              <ArrowUpRight className="size-4 opacity-0 transition-all duration-200 group-hover/title:opacity-100 group-hover/title:translate-x-0.5 group-hover/title:-translate-y-0.5 text-muted-foreground" />
+            </Link>
           </div>
+          <p className="mt-1 font-display text-xs sm:text-sm text-muted-foreground">
+            {project.subtitle}
+          </p>
         </div>
 
-        {/* Floating Chip 1 (Top Left) */}
-        {project.floatingChips && project.floatingChips[0] && (
-          <motion.div
-            initial={shouldReduceMotion ? undefined : { y: 0 }}
-            animate={shouldReduceMotion ? undefined : { y: [-3, 3, -3] }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="hidden sm:inline-flex absolute -top-3 -left-2 z-10 items-center gap-1 px-2.5 py-1 rounded-full border border-border/40 bg-background/90 dark:bg-custom-black/90 text-[11px] font-display text-foreground/90 shadow-md backdrop-blur-md"
-          >
-            <Sparkles className="size-3 text-emerald-500" />
-            <span>{project.floatingChips[0].text}</span>
-          </motion.div>
-        )}
-
-        {/* Floating Chip 2 (Bottom Right) */}
-        {project.floatingChips && project.floatingChips[1] && (
-          <motion.div
-            initial={shouldReduceMotion ? undefined : { y: 0 }}
-            animate={shouldReduceMotion ? undefined : { y: [3, -3, 3] }}
-            transition={{
-              duration: 4.5,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="hidden sm:inline-flex absolute -bottom-3 -right-2 z-10 items-center gap-1 px-2.5 py-1 rounded-full border border-border/40 bg-background/90 dark:bg-custom-black/90 text-[11px] font-display text-foreground/90 shadow-md backdrop-blur-md"
-          >
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            <span>{project.floatingChips[1].text}</span>
-          </motion.div>
-        )}
+        <div className="flex items-center gap-1.5 self-start shrink-0">
+          {project.hasCaseStudy && (
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="size-1 rounded-full bg-emerald-500" />
+              Case Study
+            </span>
+          )}
+          {project.status && (
+            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-mono text-muted-foreground">
+              {project.status.includes("Progress") ? "In Progress" : project.status}
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Project Content */}
-      <div className="space-y-2 max-w-md mx-auto">
-        <h3 className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-foreground">
-          {project.name}
-        </h3>
-        <p className="font-display font-medium text-xs sm:text-sm text-foreground/80">
-          {project.subtitle}
-        </p>
-        <p className="font-display text-xs sm:text-sm text-foreground/60 leading-relaxed pt-1">
-          {project.description}
-        </p>
-      </div>
+      <Link
+        href={projectPageUrl}
+        aria-label={`View ${project.name} overview`}
+        className="block relative aspect-video w-full overflow-hidden rounded-lg border border-border/50 bg-muted/20 mb-3.5 cursor-pointer group/img"
+      >
+        <Image
+          src={project.image}
+          alt={project.imageAlt}
+          fill
+          sizes="(max-width: 768px) 100vw, 640px"
+          priority={priorityImage}
+          className="object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+        />
+      </Link>
 
-      {/* Tags */}
-      {project.tags && project.tags.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
-          {project.tags.map((tag) => (
+      <p className="font-display text-xs sm:text-sm text-foreground/75 leading-relaxed mb-4">
+        {project.description}
+      </p>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-border/40">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {project.tags?.map((tag) => (
             <span
               key={tag}
-              className="border border-border/25 bg-background/50 dark:bg-custom-black/50 px-2.5 py-0.5 rounded-full text-[11px] font-display text-foreground/70"
+              className="rounded-md border border-border/40 bg-muted/30 px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
             >
               {tag}
             </span>
           ))}
         </div>
-      )}
 
-      {/* CTA Buttons */}
-      <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
-        <Link
-          href={primaryCtaUrl}
-          target={isInternalCta ? undefined : "_blank"}
-          rel={isInternalCta ? undefined : "noopener noreferrer"}
-          className="group/cta inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs sm:text-sm font-medium transition-all duration-200 hover:bg-primary/90 hover:shadow-xs active:scale-[0.98]"
-        >
-          <span>{project.ctaText || "View Project"}</span>
-          <ArrowUpRight className="size-4 transition-transform duration-200 group-hover/cta:translate-x-0.5 group-hover/cta:-translate-y-0.5" />
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          {caseStudyUrl ? (
+            <Link
+              href={caseStudyUrl}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 transition-colors active:scale-[0.98]"
+            >
+              <BookOpen className="size-3.5" />
+              <span>Case Study</span>
+            </Link>
+          ) : (
+            <Link
+              href={projectPageUrl}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background hover:bg-muted/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors active:scale-[0.98]"
+            >
+              <span>Overview</span>
+              <ArrowUpRight className="size-3.5 text-muted-foreground" />
+            </Link>
+          )}
 
-        {caseStudyUrl && (
-          <Link
-            href={caseStudyUrl}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/30 bg-background/80 hover:bg-muted/40 text-xs sm:text-sm font-medium text-foreground transition-all duration-200 active:scale-[0.98]"
-          >
-            <span>Case Study</span>
-            <ArrowUpRight className="size-3 text-emerald-500" />
-          </Link>
-        )}
+          {project.liveUrl && (
+            <Link
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open live demo for ${project.name}`}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background hover:bg-muted/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors active:scale-[0.98]"
+            >
+              <span>Live Demo</span>
+              <ExternalLink className="size-3.5 text-muted-foreground" />
+            </Link>
+          )}
 
-        {project.githubUrl && (
-          <Link
-            href={project.githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`View source code for ${project.name}`}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border/30 bg-background/60 hover:bg-muted/40 text-xs sm:text-sm font-medium text-foreground transition-all duration-200 active:scale-[0.98]"
-          >
-            <Github />
-            <span className="hidden sm:inline">Source</span>
-          </Link>
-        )}
+          {project.githubUrl && (
+            <Link
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`View source code for ${project.name}`}
+              className="inline-flex items-center justify-center size-8 rounded-lg border border-border/60 bg-background hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors active:scale-[0.98]"
+            >
+              <Github />
+            </Link>
+          )}
+        </div>
       </div>
-    </div>
+    </article>
   );
 }
+

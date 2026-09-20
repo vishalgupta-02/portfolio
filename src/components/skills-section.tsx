@@ -1,5 +1,3 @@
-import { Line } from "./lines";
-import MainLayout from "./main-layout";
 import {
   ChatGPT,
   Claude,
@@ -22,195 +20,95 @@ import {
   Vercel,
 } from "./ui/svgs-of-techs";
 
+const SKILL_CATEGORIES = [
+  {
+    name: "Languages & Runtimes",
+    skills: [
+      { name: "TypeScript", icon: TypeScript },
+      { name: "JavaScript", icon: JavaScript },
+      { name: "Python", icon: Python },
+      { name: "C++", icon: null },
+      { name: "SQL", icon: null },
+    ],
+  },
+  {
+    name: "Backend & Systems",
+    skills: [
+      { name: "Node.js", icon: NodeJS },
+      { name: "Express.js", icon: null },
+      { name: "PostgreSQL", icon: PostgreSQL },
+      { name: "MongoDB", icon: MongoDB },
+      { name: "Docker", icon: Docker },
+      { name: "Django", icon: null },
+    ],
+  },
+  {
+    name: "Frontend & UI",
+    skills: [
+      { name: "Next.js", icon: NextJS },
+      { name: "React", icon: React },
+      { name: "TailwindCSS", icon: TailwindCSS },
+      { name: "Motion", icon: Motion },
+      { name: "ShadCN", icon: ShadCN },
+      { name: "TanStack", icon: TanStack },
+    ],
+  },
+  {
+    name: "Infrastructure & Tooling",
+    skills: [
+      { name: "Git", icon: Git },
+      { name: "GitHub", icon: Github },
+      { name: "Vercel", icon: Vercel },
+      { name: "Docker", icon: Docker },
+      { name: "Claude AI", icon: Claude },
+      { name: "Gemini", icon: Gemini },
+      { name: "ChatGPT", icon: ChatGPT },
+    ],
+  },
+];
+
 export default function SkillsSection() {
   return (
-    <MainLayout>
-      <section className="w-full max-w-2xl mx-auto py-4 px-4">
+    <section className="w-full max-w-2xl mx-auto py-8 px-4 border-b border-border/40">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-[24px] font-semibold mb-6 sm:mb-4 text-center md:text-left">
-            Skills
+          <h2 className="text-xl font-semibold tracking-tight text-foreground font-sans">
+            Technical Stack
           </h2>
+          <p className="text-xs text-muted-foreground font-display mt-0.5">
+            Core technologies, systems architecture, and engineering primitives
+          </p>
         </div>
-        <div className="flex justify-center gap-2 flex-col">
-          {/* Languages */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2.5 sm:gap-2 mb-2">
-            <p className="w-auto sm:w-28 shrink-0 text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
-              Languages
-            </p>
-            <Line
-              type="vertical"
-              width={2}
-              height={30}
-              className="hidden sm:block mr-2 sm:mr-4 shrink-0"
-            />
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap flex-1 min-w-0">
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <JavaScript className="size-3" />
-                JavaScript
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <TypeScript className="size-3" />
-                TypeScript
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Python />
-                Python
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit">
-                C++
-              </p>
-            </div>
-          </div>
+      </div>
 
-          {/* Frontend */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2.5 sm:gap-2 mb-2">
-            <p className="w-auto sm:w-28 shrink-0 text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
-              Frontend
-            </p>
-            <Line
-              type="vertical"
-              width={2}
-              height={60}
-              className="hidden sm:block mr-2 sm:mr-4 shrink-0"
-            />
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap flex-1 min-w-0">
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <React />
-                React
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <NextJS />
-                Next.js
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <ShadCN />
-                ShadCN
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <TailwindCSS />
-                TailwindCSS
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Motion />
-                Motion
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <TanStack />
-                TanStack
-              </p>
-            </div>
-          </div>
 
-          {/* Backend & Databases */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2.5 sm:gap-2 mb-2">
-            <p className="w-auto sm:w-28 shrink-0 text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
-              Backend & Databases
-            </p>
-            <Line
-              type="vertical"
-              width={2}
-              height={60}
-              className="hidden sm:block mr-2 sm:mr-4 shrink-0"
-            />
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap flex-1 min-w-0">
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <NodeJS />
-                Node.js
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                Express.js
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <MongoDB />
-                MongoDB
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <PostgreSQL />
-                PostgreSQL
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                Django
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit">
-                Django REST Framework
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit">
-                MySQL
-              </p>
-            </div>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {SKILL_CATEGORIES.map((category) => (
+          <div
+            key={category.name}
+            className="rounded-xl border border-border/40 bg-card/30 p-3.5 hover:border-border/80 hover:bg-card/60 hover:-translate-y-0.5 hover:shadow-xs transition-all duration-200"
+          >
+            <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground mb-2.5">
+              {category.name}
+            </h3>
 
-          {/* Workflow & Tools */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2.5 sm:gap-2 mb-2">
-            <p className="w-auto sm:w-28 shrink-0 text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
-              Workflow & Tools
-            </p>
-            <Line
-              type="vertical"
-              width={2}
-              height={50}
-              className="hidden sm:block mr-2 sm:mr-4 shrink-0"
-            />
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap flex-1 min-w-0">
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Git />
-                Git
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Github />
-                GitHub
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                VS Code
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                Postman
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Docker />
-                Docker
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <ChatGPT />
-                ChatGPT
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Claude />
-                Claude
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Gemini />
-                Gemini
-              </p>
+            <div className="flex flex-wrap gap-1.5">
+              {category.skills.map((skill) => {
+                const Icon = skill.icon;
+                return (
+                  <span
+                    key={skill.name}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 bg-background/60 px-2.5 py-1 text-xs font-medium text-foreground hover:border-foreground/30 hover:bg-muted/60 hover:-translate-y-0.5 hover:shadow-xs active:scale-95 transition-all duration-150 cursor-default select-none"
+                  >
+                    {Icon && <Icon className="size-3.5 shrink-0" />}
+                    <span>{skill.name}</span>
+                  </span>
+                );
+              })}
             </div>
           </div>
-
-          {/* Deployment */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-2.5 sm:gap-2 mb-2">
-            <p className="w-auto sm:w-28 shrink-0 text-xs sm:text-sm font-medium text-foreground text-center sm:text-left">
-              Deployment
-            </p>
-            <Line
-              type="vertical"
-              width={2}
-              height={30}
-              className="hidden sm:block mr-2 sm:mr-4 shrink-0"
-            />
-            <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap flex-1 min-w-0">
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                <Vercel />
-                Vercel
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                Netlify
-              </p>
-              <p className="border border-border/60 bg-muted/40 px-2.5 py-1 rounded-full text-[13px] text-foreground/80 hover:text-foreground hover:border-border transition-colors w-fit flex gap-1 items-center">
-                Render
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </MainLayout>
+        ))}
+      </div>
+    </section>
   );
 }

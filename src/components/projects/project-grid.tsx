@@ -21,16 +21,15 @@ export default function ProjectGrid({
       className={
         columns === 2
           ? "grid grid-cols-1 md:grid-cols-2 gap-6"
-          : "flex flex-col gap-8"
+          : "flex flex-col gap-6"
       }
     >
       {projects.map((project, index) => (
-        <div
+        <ProjectCard
           key={project.id || project.slug}
-          className="rounded-2xl border border-border/30 bg-card/60 dark:bg-custom-black/60 backdrop-blur-sm p-4 sm:p-7 shadow-sm"
-        >
-          <ProjectCard project={project} priorityImage={index === 0} />
-        </div>
+          project={project}
+          priorityImage={index === 0}
+        />
       ))}
     </div>
   )

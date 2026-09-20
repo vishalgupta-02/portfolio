@@ -194,8 +194,6 @@ function CompactSongCard({
         damping: 22,
       }}
       className='group relative w-full max-w-xl overflow-hidden rounded-[28px] border border-white/10 bg-neutral-950 p-3 shadow-2xl shadow-black/30'>
-      {/* Ambient artwork */}
-
       <div className='pointer-events-none absolute inset-0 overflow-hidden'>
         <Image
           src={song.artwork}
@@ -212,8 +210,6 @@ function CompactSongCard({
         onClick={onOpen}
         aria-label={`Open ${song.title} player`}
         className='relative flex w-full cursor-pointer items-center gap-4 rounded-[20px] text-left outline-none focus-visible:ring-2 focus-visible:ring-white/70'>
-        {/* Artwork */}
-
         <motion.div
           layoutId='song-artwork'
           className='relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl shadow-2xl shadow-black/60 sm:h-28 sm:w-28'>
@@ -227,8 +223,6 @@ function CompactSongCard({
 
           <div className='absolute inset-0 bg-black/0 transition group-hover:bg-black/10' />
         </motion.div>
-
-        {/* Information */}
 
         <div className='min-w-0 flex-1 py-2'>
           <div className='mb-2 flex items-center gap-2'>
@@ -262,8 +256,6 @@ function CompactSongCard({
 
         <Maximize2 className='mr-3 hidden size-4 text-white/30 transition group-hover:text-white/80 sm:block' />
       </button>
-
-      {/* Controls */}
 
       <div className='relative mt-2 flex items-center justify-between px-2 pb-1'>
         <button
@@ -376,8 +368,6 @@ function FullscreenPlayer({
         ease: [0.76, 0, 0.24, 1],
       }}
       className='fixed inset-0 z-[999] overflow-hidden bg-black text-white'>
-      {/* Artwork background */}
-
       <motion.div
         animate={
           playing
@@ -403,13 +393,9 @@ function FullscreenPlayer({
         />
       </motion.div>
 
-      {/* Gradient overlays */}
-
       <div className='absolute inset-0 bg-black/45' />
       <div className='absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/95' />
       <div className='absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/30' />
-
-      {/* Animated particles */}
 
       <div className='pointer-events-none absolute inset-0 hidden overflow-hidden md:block'>
         {particles.map((particle, index) => (
@@ -447,8 +433,6 @@ function FullscreenPlayer({
         ))}
       </div>
 
-      {/* Top bar */}
-
       <div className='absolute left-0 right-0 top-0 z-30 flex items-center justify-between p-5 sm:p-8'>
         <motion.button
           whileHover={{ y: 3 }}
@@ -475,12 +459,8 @@ function FullscreenPlayer({
         </button>
       </div>
 
-      {/* Main */}
-
       <div className='relative z-10 flex min-h-dvh items-center justify-center px-5 pb-8 pt-24 sm:px-8 lg:px-14'>
         <div className='grid w-full max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(400px,0.75fr)] lg:gap-16'>
-          {/* Artwork section */}
-
           <div className='relative mx-auto flex w-full max-w-[620px] items-center justify-center'>
             <motion.div
               animate={
@@ -547,8 +527,6 @@ function FullscreenPlayer({
             </AnimatePresence>
           </div>
 
-          {/* Information / controls */}
-
           <div className='mx-auto w-full max-w-xl'>
             <div className='mb-7 flex items-end justify-between gap-4'>
               <div className='min-w-0'>
@@ -591,8 +569,6 @@ function FullscreenPlayer({
               </motion.button>
             </div>
 
-            {/* Progress */}
-
             <div>
               <div className='group relative flex h-5 items-center'>
                 <input
@@ -628,8 +604,6 @@ function FullscreenPlayer({
                 <span>{formatDuration(song.duration)}</span>
               </div>
             </div>
-
-            {/* Main controls */}
 
             <div className='mt-7 flex items-center justify-between'>
               <ControlButton
@@ -686,8 +660,6 @@ function FullscreenPlayer({
               </ControlButton>
             </div>
 
-            {/* Equalizer */}
-
             <div className='mt-8 flex h-12 items-end justify-center gap-1 opacity-30'>
               {equalizerBars.map((height, index) => (
                 <motion.div
@@ -715,8 +687,6 @@ function FullscreenPlayer({
                 />
               ))}
             </div>
-
-            {/* Bottom controls */}
 
             <div className='mt-6 flex items-center justify-between border-t border-white/10 pt-5'>
               <button

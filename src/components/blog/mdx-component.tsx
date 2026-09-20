@@ -12,18 +12,6 @@ type AnchorProps = ComponentPropsWithoutRef<"a">
 
 type BlockquoteProps = ComponentPropsWithoutRef<"blockquote">
 
-// function createSlug(children: React.ReactNode): string {
-//   if (typeof children !== "string") {
-//     return ""
-//   }
-
-//   return children
-//     .toLowerCase()
-//     .trim()
-//     .replace(/[^\w\s-]/g, "")
-//     .replace(/\s+/g, "-")
-// }
-
 function getNodeText(node: React.ReactNode): string {
   if (typeof node === "string") return node
   if (typeof node === "number") return String(node)
@@ -138,21 +126,6 @@ function CodeBlock({
   )
 }
 
-// function MdxImage(props: ComponentPropsWithoutRef<"img">) {
-//   if (typeof props.src !== "string") {
-//     return null
-//   }
-
-//   return (
-//     <BlogImage
-//       src={props.src}
-//       alt={props.alt ?? ""}
-//       width={1400}
-//       height={800}
-//     />
-//   )
-// }
-
 function Table({
   className = "",
   ...props
@@ -175,5 +148,5 @@ export const mdxComponents = {
   BlogImage,
   pre: CodeBlock,
   table: Table,
-  // img: MdxImage,
 }
+

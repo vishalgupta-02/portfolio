@@ -5,25 +5,14 @@ import { useEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 interface GlyphMatrixProps extends React.HTMLAttributes<HTMLCanvasElement> {
-  /** Characters to randomly pick from */
   glyphs?: string
-  /** Cell size in px (also font size) */
   cellSize?: number
-  /** Probability (0-1) a cell mutates each tick */
   mutationRate?: number
-  /** Tick interval in ms */
   interval?: number
-  /** Fade out toward bottom (0 = no fade) */
   fadeBottom?: number
-  /** Glyph color (any CSS color). Pass a theme-aware value from the consumer. */
   color?: string
 }
 
-/**
- * GlyphMatrix — an animated grid of subtly shifting glyphs.
- * Pass a `color` prop (e.g. driven by next-themes) to adapt it to
- * light and dark modes.
- */
 export function GlyphMatrix({
   glyphs = "01·•+*/\\<>=",
   cellSize = 14,
@@ -36,21 +25,14 @@ export function GlyphMatrix({
   ...props
 }: GlyphMatrixProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  // Current glyph color as RGBA (a in 0-1). Kept in a ref so a color change
-  // (e.g. theme toggle) recolors the next frame without restarting the
-  // animation. Defaults to #6B7280.
   const rgbaRef = useRef({ r: 107, g: 114, b: 128, a: 1 })
 
-  // Resolve the CSS color string to RGBA (handles hex, rgb, hsl, oklch, ...).
   useEffect(() => {
     const probe = document.createElement("canvas")
     probe.width = 1
     probe.height = 1
     const probeCtx = probe.getContext("2d")
     if (!probeCtx) return
-    // Seed with the default so an invalid color falls back to it: the 2d
-    // context keeps the previous fillStyle when assigned an invalid value
-    // instead of silently turning black.
     probeCtx.fillStyle = "#6B7280"
     probeCtx.fillStyle = color
     probeCtx.fillRect(0, 0, 1, 1)

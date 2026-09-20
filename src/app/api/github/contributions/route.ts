@@ -61,8 +61,9 @@ export async function GET(request: Request) {
         variables: { username, from, to },
       }),
       next: {
-        revalidate: 3600, // Cache for 1 hour
+        revalidate: 3600,
       },
+
     });
 
     if (!response.ok) {

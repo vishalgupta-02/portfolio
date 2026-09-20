@@ -30,8 +30,8 @@ export function ShareButtons({
     if (typeof window !== "undefined") {
       const fullUrl = url
         ? url.startsWith("http")
-          ? url
-          : `${window.location.origin}${url.startsWith("/") ? "" : "/"}${url}`
+        ? url
+        : `${window.location.origin}${url.startsWith("/") ? "" : "/"}${url}`
         : window.location.href;
       setShareUrl(fullUrl);
       setCanNativeShare(typeof navigator !== "undefined" && !!navigator.share);
@@ -168,7 +168,6 @@ export function ShareButtons({
         Share:
       </span>
 
-      {/* Copy link button */}
       <button
         type="button"
         onClick={handleCopy}
@@ -186,7 +185,6 @@ export function ShareButtons({
         )}
       </button>
 
-      {/* X / Twitter */}
       <a
         href={twitterShareUrl}
         target="_blank"
@@ -198,7 +196,6 @@ export function ShareButtons({
         <XIcon className="size-3.5" />
       </a>
 
-      {/* LinkedIn */}
       <a
         href={linkedInShareUrl}
         target="_blank"
@@ -210,7 +207,6 @@ export function ShareButtons({
         <LinkedInIcon className="size-3.5" />
       </a>
 
-      {/* WhatsApp */}
       <a
         href={whatsappShareUrl}
         target="_blank"
@@ -222,7 +218,6 @@ export function ShareButtons({
         <WhatsAppIcon className="size-3.5" />
       </a>
 
-      {/* Web Share (Mobile) */}
       {canNativeShare && (
         <button
           type="button"

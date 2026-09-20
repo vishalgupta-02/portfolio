@@ -21,7 +21,6 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
 
   return (
     <>
-      {/* Top Header Navigation */}
       <nav
         aria-label="Breadcrumb Navigation"
         className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono text-foreground/60 border-b border-border/20 pb-4"
@@ -67,7 +66,6 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
         </div>
       </nav>
 
-      {/* Hero Section */}
       <header className="space-y-4">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/30 bg-card/60 text-[11px] font-mono uppercase tracking-wider text-foreground/80">
           <Terminal className="size-3 text-emerald-500" />
@@ -82,7 +80,6 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
           {caseStudy.description}
         </p>
 
-        {/* Metadata Block */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-border/20 text-xs font-display">
           {role && (
             <div className="space-y-0.5">
@@ -124,4 +121,3 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
     </>
   );
 }
-

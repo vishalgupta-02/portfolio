@@ -36,19 +36,16 @@ export function BlogTagsFilter({
   const [tagSearchQuery, setTagSearchQuery] = useState("")
   const [sortMode, setSortMode] = useState<SortMode>("popular")
 
-  // Sorted by popularity (post count descending)
   const popularTags = useMemo(() => {
     return [...tags].sort(
       (a, b) => b.count - a.count || a.name.localeCompare(b.name),
     )
   }, [tags])
 
-  // Primary top tags shown in compact view
   const topTags = useMemo(() => {
     return popularTags.slice(0, TOP_TAGS_COUNT)
   }, [popularTags])
 
-  // If selected tag is not among the topTags, find it so we can show it in the quick bar
   const activeExtraTag = useMemo(() => {
     if (!selectedTag) return null
     const isAlreadyInTop = topTags.some((t) => t.slug === selectedTag)
@@ -56,7 +53,6 @@ export function BlogTagsFilter({
     return tags.find((t) => t.slug === selectedTag) ?? null
   }, [selectedTag, topTags, tags])
 
-  // Filtered and sorted tags for expanded tray
   const displayedExpandedTags = useMemo(() => {
     let result = [...tags]
 
@@ -78,10 +74,8 @@ export function BlogTagsFilter({
 
   return (
     <div className='space-y-3'>
-      {/* Quick Tag Bar */}
       <div className='flex flex-wrap items-center justify-between gap-2'>
         <div className='flex flex-wrap items-center gap-1.5'>
-          {/* All Button */}
           <button
             type='button'
             onClick={() => onSelectTag(null)}
@@ -94,7 +88,6 @@ export function BlogTagsFilter({
             All
           </button>
 
-          {/* Top Most Popular Tags */}
           {topTags.map((tag) => {
             const isSelected = selectedTag === tag.slug
             return (
@@ -125,7 +118,6 @@ export function BlogTagsFilter({
             )
           })}
 
-          {/* Active tag if not in top 5 */}
           {activeExtraTag && (
             <button
               type='button'
@@ -139,7 +131,6 @@ export function BlogTagsFilter({
             </button>
           )}
 
-          {/* Expand / Collapse Button */}
           {remainingCount > 0 && (
             <button
               type='button'
@@ -164,7 +155,6 @@ export function BlogTagsFilter({
           )}
         </div>
 
-        {/* Clear filter action */}
         {hasFilters && onClearAll && (
           <button
             type='button'
@@ -175,7 +165,6 @@ export function BlogTagsFilter({
         )}
       </div>
 
-      {/* Expandable Topic Browser Drawer */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -186,9 +175,7 @@ export function BlogTagsFilter({
             transition={{ duration: 0.25, ease: "easeOut" }}
             className='overflow-hidden'>
             <div className='rounded-xl border border-border bg-muted/30 p-3.5 space-y-3'>
-              {/* Filter controls row */}
               <div className='flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 border-b border-border/50 pb-2.5'>
-                {/* Mini Search */}
                 <div className='relative flex-1 max-w-xs'>
                   <Search className='absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground' />
                   <input
@@ -208,7 +195,6 @@ export function BlogTagsFilter({
                   )}
                 </div>
 
-                {/* Sort Toggle and Counter */}
                 <div className='flex items-center justify-between sm:justify-end gap-2 text-xs text-muted-foreground'>
                   <span className='text-[11px]'>
                     {displayedExpandedTags.length}{" "}
@@ -246,7 +232,6 @@ export function BlogTagsFilter({
                 </div>
               </div>
 
-              {/* Tag Chips Grid */}
               {displayedExpandedTags.length > 0 ? (
                 <div className='flex flex-wrap gap-1.5 max-h-56 overflow-y-auto pr-1'>
                   {displayedExpandedTags.map((tag) => {

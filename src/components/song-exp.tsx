@@ -28,7 +28,7 @@ export default function CurrentlyPlaying({
   song = defaultSong,
 }: CurrentlyPlayingProps) {
   return (
-    <div className='relative z-50 w-full max-w-lg'>
+    <div className='relative z-10 w-full max-w-lg'>
       <SongTeaser song={song} />
     </div>
   )
@@ -40,7 +40,7 @@ type SongTeaserProps = {
 
 function SongTeaser({ song }: SongTeaserProps) {
   return (
-    <Link href={defaultSong.spotifyUrl} target='_blank'>
+    <Link href={song.spotifyUrl} target='_blank' rel='noopener noreferrer'>
       <motion.button
         type='button'
         layoutId='music-container'
@@ -56,54 +56,51 @@ function SongTeaser({ song }: SongTeaserProps) {
           opacity: 0,
           scale: 0.97,
         }}
+        whileHover={{
+          scale: 1.01,
+        }}
         whileTap={{
           scale: 0.98,
         }}
-        className='group relative flex w-full items-center gap-3 overflow-hidden rounded-full text-left outline-none transition-colors cursor-pointer'>
+        className='group relative flex w-full items-center gap-2.5 px-2.5 py-1.5 rounded-lg border border-border/40 bg-card/20 hover:border-emerald-500/30 hover:bg-card/50 text-left outline-none transition-all cursor-pointer'>
         <MiniEqualizer />
 
-        <div className='min-w-0 flex-1'>
-          <div className='flex items-center gap-2'>
-            <span className='shrink-0 text-[9px] font-semibold uppercase tracking-[0.2em] text-custom-black/40 dark:text-white/35'>
-              On repeat
-            </span>
+        <div className='min-w-0 flex-1 flex items-center gap-2'>
+          <span className='shrink-0 text-[10px] font-mono uppercase tracking-widest text-muted-foreground'>
+            Listening to
+          </span>
 
-            <span className='h-px w-3 shrink-0 dark:bg-white/15 bg-custom-black/20' />
+          <span className='h-px w-2.5 shrink-0 bg-border/80' />
 
-            <motion.span
-              layoutId='song-title'
-              className='truncate text-sm font-medium dark:text-white/90 text-custom-black'>
-              {song.title}
-            </motion.span>
+          <motion.span
+            layoutId='song-title'
+            className='truncate text-xs font-semibold text-foreground group-hover:text-emerald-500 dark:group-hover:text-emerald-400 transition-colors'>
+            {song.title}
+          </motion.span>
 
-            <span className='hidden shrink-0 dark:text-white/20 text-custom-black/40 sm:inline'>
-              —
-            </span>
+          <span className='hidden shrink-0 text-muted-foreground/60 sm:inline text-xs'>
+            —
+          </span>
 
-            <motion.span
-              layoutId='song-artist'
-              className='hidden truncate text-xs dark:text-white/35 transition-colors dark:group-hover:text-white/60 sm:block'>
-              {song.artist}
-            </motion.span>
-          </div>
+          <motion.span
+            layoutId='song-artist'
+            className='hidden truncate text-xs text-muted-foreground sm:block'>
+            {song.artist}
+          </motion.span>
         </div>
 
         <motion.div
-          initial={false}
-          whileHover={{
-            x: 2,
-            y: -2,
-          }}
-          className='text-white transition-colors opacity-0 group-hover:opacity-100'>
-          <ExternalLink className='size-3.5' />
+          className='text-muted-foreground group-hover:text-emerald-500 transition-colors opacity-0 group-hover:opacity-100 shrink-0'>
+          <ExternalLink className='size-3' />
         </motion.div>
       </motion.button>
     </Link>
   )
 }
+
 function MiniEqualizer() {
   return (
-    <div aria-hidden='true' className='flex h-3 shrink-0 items-end gap-0.5'>
+    <div aria-hidden='true' className='flex h-3 shrink-0 items-end gap-[2px] px-0.5'>
       {bars.map((height, index) => (
         <motion.span
           key={index}
@@ -111,18 +108,20 @@ function MiniEqualizer() {
             height: [
               `${height * 0.35}%`,
               `${height}%`,
-              `${Math.max(height * 0.55, 30)}%`,
+              `${Math.max(height * 0.5, 25)}%`,
             ],
           }}
           transition={{
-            duration: 0.45 + index * 0.12,
+            duration: 0.5 + index * 0.15,
             repeat: Infinity,
             repeatType: "mirror",
             ease: "easeInOut",
           }}
-          className='block w-0.5 rounded-full bg-green-400'
+          className='block w-[2.5px] rounded-full bg-emerald-500/80'
         />
       ))}
     </div>
   )
 }
+
+

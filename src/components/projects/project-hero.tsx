@@ -22,7 +22,6 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
 
   return (
     <div className="space-y-12">
-      {/* Top Header Navigation */}
       <nav
         aria-label="Breadcrumb Navigation"
         className="flex items-center justify-between text-xs font-mono text-foreground/60 border-b border-border/20 pb-4"
@@ -37,14 +36,12 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
 
         {project.status && (
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-border/30 bg-background/80 text-[11px] font-mono text-foreground/80">
-            {/* <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> */}
             <span className="size-1.5 rounded-full bg-amber-500 animate-pulse" />
             <span>{project.status}</span>
           </div>
         )}
       </nav>
 
-      {/* Header Info */}
       <header className="space-y-5 text-center">
         <motion.div
           initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
@@ -80,7 +77,6 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
           </motion.p>
         )}
 
-        {/* Primary Action Buttons */}
         <motion.div
           initial={shouldReduceMotion ? undefined : { opacity: 0, y: 10 }}
           animate={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -123,7 +119,6 @@ export default function ProjectHero({ project }: ProjectHeroProps) {
         </motion.div>
       </header>
 
-      {/* Hero Visual: Main Product Screenshot */}
       <motion.section
         initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.98 }}
         animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1 }}

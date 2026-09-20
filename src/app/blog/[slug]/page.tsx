@@ -24,7 +24,6 @@ import { ArrowLeft } from "lucide-react";
 import { ViewModeSelector } from "@/components/blog/view-mode-selector";
 import { ArticleContent } from "@/components/blog/article-content";
 import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
-// import { MoveToTop } from "@/components/blog/move-to-top";
 import { ShareButtons } from "@/components/ui/share-buttons";
 import { BlogShareCard } from "@/components/blog/blog-share-card";
 import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress";
@@ -57,7 +56,6 @@ export async function generateMetadata({
   return generateBlogMetadata(slug, post);
 }
 
-// Shared MDX options — extracted to avoid duplication
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mdxOptions: {
   mdxOptions: { remarkPlugins: any[]; rehypePlugins: any[] };
@@ -90,22 +88,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  // Get previous and next articles first.
   const navigation = getArticleNavigation(slug);
-
-  // Get their slugs so we can exclude them
-  // from the related articles section.
   const navigationSlugs = [
     navigation.previous?.slug,
     navigation.next?.slug,
   ].filter((slug): slug is string => Boolean(slug));
 
-  // Find related articles, but don't show
-  // previous/next articles again.
   const relatedArticles = getRelatedArticles(slug, 2, navigationSlugs);
-
   const jsonLd = generateBlogJsonLd(slug, post);
-
   const hasDualView = post.metadata.dualView;
 
   return (
@@ -122,8 +112,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             Back to blog
           </Link>
         </div>
-        {/* <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_240px]"> */}
-        {/* Article */}
+
         <article className="min-w-0">
           <header className="mb-12 max-w-3xl">
             <h1 className="text-3xl font-bold tracking-tight">
@@ -238,7 +227,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               tags={post.metadata.tags}
             />
 
-            {/* <ArticleNavigation navigation={navigation} /> */}
             <RelatedArticles articles={relatedArticles} />
           </div>
 
@@ -246,17 +234,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             title={post.metadata.title}
             tableOfContents={post.tableOfContents}
           />
-          {/* <MoveToTop /> */}
         </article>
-
-        {/* Table of Contents */}
-        {/* <aside className="hidden lg:block">
-            <div className="sticky top-24">
-              <TableOfContents items={post.tableOfContents} />
-
-            </div>
-          </aside> */}
-        {/* </div> */}
       </main>
     </>
   );

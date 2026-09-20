@@ -47,13 +47,11 @@ export function TimelineEvent({
 
   return (
     <li className={cn("relative pl-7 pb-6 last:pb-2 group", className)}>
-      {/* Vertical Connecting Line */}
       <span
         className="absolute left-[7px] top-3 bottom-0 w-px bg-border group-last:hidden"
         aria-hidden="true"
       />
 
-      {/* Status Dot */}
       <span
         className={cn(
           "absolute left-0 top-1.5 size-3.5 rounded-full border-2 bg-background flex items-center justify-center transition-colors",

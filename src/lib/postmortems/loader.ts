@@ -125,9 +125,7 @@ export function getPostmortemNavigation(slug: string): PostmortemNavigation {
     }
   }
 
-  // Older post is previous chronologically
   const olderPost = posts[currentIndex + 1] ?? null
-  // Newer post is next chronologically
   const newerPost = posts[currentIndex - 1] ?? null
 
   return {

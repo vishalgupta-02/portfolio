@@ -1,13 +1,13 @@
-import type { Metadata } from "next"
-import { siteConfig } from "@/lib/blog/site"
-import type { Postmortem } from "./types"
+import type { Metadata } from "next";
+import { siteConfig } from "@/lib/blog/site";
+import type { Postmortem } from "./types";
 
 export function generatePostmortemMetadata(
   slug: string,
   postmortem: Postmortem,
 ): Metadata {
-  const canonical = `/postmortems/${slug}`
-  const image = siteConfig.ogImage
+  const canonical = `/postmortems/${slug}`;
+  const image = siteConfig.ogImage;
 
   return {
     title: `${postmortem.metadata.title} | Engineering Postmortems`,
@@ -64,5 +64,5 @@ export function generatePostmortemMetadata(
       images: [image],
       creator: "@VishalG41764750",
     },
-  }
+  };
 }

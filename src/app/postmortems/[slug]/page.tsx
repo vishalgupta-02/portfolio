@@ -1,54 +1,54 @@
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { MDXRemote } from "next-mdx-remote/rsc"
-import rehypeShiki from "@shikijs/rehype"
-import remarkGfm from "remark-gfm"
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import rehypeShiki from "@shikijs/rehype";
+import remarkGfm from "remark-gfm";
 
 import {
   getAllPostmortems,
   getPostmortemBySlug,
   getPostmortemNavigation,
   getRelatedPostmortems,
-} from "@/lib/postmortems/loader"
-import { postmortemMdxComponents } from "@/components/postmortems/postmortem-mdx-components"
-import { copyCodeTransformer } from "@/lib/blog/shiki"
-import { generatePostmortemMetadata } from "@/lib/postmortems/metadata"
-import { generatePostmortemJsonLd } from "@/lib/postmortems/json-ld"
-import { JsonLd } from "@/components/seo/json-ld"
-import { PostmortemHeader } from "@/components/postmortems/postmortem-header"
-import { PostmortemSummary } from "@/components/postmortems/postmortem-summary"
-import { PostmortemNavigationNav } from "@/components/postmortems/postmortem-navigation"
-import { RelatedPostmortems } from "@/components/postmortems/related-postmortems"
-import { extractTableOfContents } from "@/lib/blog/table-of-contents"
-import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress"
+} from "@/lib/postmortems/loader";
+import { postmortemMdxComponents } from "@/components/postmortems/postmortem-mdx-components";
+import { copyCodeTransformer } from "@/lib/blog/shiki";
+import { generatePostmortemMetadata } from "@/lib/postmortems/metadata";
+import { generatePostmortemJsonLd } from "@/lib/postmortems/json-ld";
+import { JsonLd } from "@/components/seo/json-ld";
+import { PostmortemHeader } from "@/components/postmortems/postmortem-header";
+import { PostmortemSummary } from "@/components/postmortems/postmortem-summary";
+import { PostmortemNavigationNav } from "@/components/postmortems/postmortem-navigation";
+import { RelatedPostmortems } from "@/components/postmortems/related-postmortems";
+import { extractTableOfContents } from "@/lib/blog/table-of-contents";
+import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress";
 
 interface PostmortemDetailPageProps {
   params: Promise<{
-    slug: string
-  }>
+    slug: string;
+  }>;
 }
 
 export function generateStaticParams() {
-  const postmortems = getAllPostmortems()
+  const postmortems = getAllPostmortems();
   return postmortems.map((pm) => ({
     slug: pm.slug,
-  }))
+  }));
 }
 
 export async function generateMetadata({
   params,
 }: PostmortemDetailPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const postmortem = getPostmortemBySlug(slug)
+  const { slug } = await params;
+  const postmortem = getPostmortemBySlug(slug);
 
   if (!postmortem) {
-    return {}
+    return {};
   }
 
-  return generatePostmortemMetadata(slug, postmortem)
+  return generatePostmortemMetadata(slug, postmortem);
 }
 
-import type { ComponentProps } from "react"
+import type { ComponentProps } from "react";
 
 const mdxOptions: ComponentProps<typeof MDXRemote>["options"] = {
   mdxOptions: {
@@ -66,28 +66,27 @@ const mdxOptions: ComponentProps<typeof MDXRemote>["options"] = {
       ],
     ],
   },
-}
-
+};
 
 export default async function PostmortemDetailPage({
   params,
 }: PostmortemDetailPageProps) {
-  const { slug } = await params
-  const postmortem = getPostmortemBySlug(slug)
+  const { slug } = await params;
+  const postmortem = getPostmortemBySlug(slug);
 
   if (!postmortem || !(postmortem.metadata.published ?? true)) {
-    notFound()
+    notFound();
   }
 
-  const navigation = getPostmortemNavigation(slug)
+  const navigation = getPostmortemNavigation(slug);
   const navigationSlugs = [
     navigation.previous?.slug,
     navigation.next?.slug,
-  ].filter((s): s is string => Boolean(s))
+  ].filter((s): s is string => Boolean(s));
 
-  const related = getRelatedPostmortems(slug, 2, navigationSlugs)
-  const jsonLd = generatePostmortemJsonLd(slug, postmortem)
-  const toc = extractTableOfContents(postmortem.content)
+  const related = getRelatedPostmortems(slug, 2, navigationSlugs);
+  const jsonLd = generatePostmortemJsonLd(slug, postmortem);
+  const toc = extractTableOfContents(postmortem.content);
 
   return (
     <>
@@ -103,8 +102,7 @@ export default async function PostmortemDetailPage({
 
           <PostmortemSummary metadata={postmortem.metadata} />
 
-          {/* MDX Body Content */}
-          <div className="prose prose-neutral dark:prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-none text-foreground/90">
+          <div className="prose prose-neutral dark:prose-invert prose-pre:bg-transparent prose-pre:p-0 text-foreground/90 max-w-none">
             <MDXRemote
               source={postmortem.content}
               components={postmortemMdxComponents}
@@ -123,5 +121,5 @@ export default async function PostmortemDetailPage({
         </article>
       </main>
     </>
-  )
+  );
 }

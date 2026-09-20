@@ -21,11 +21,9 @@ export function BlogCard({ post }: BlogCardProps) {
         height={145}
         className="font-bold"
       >
-        {/* <Link href={`/blog/${post.slug}`}> */}
         <h2 className="text-base leading-snug font-semibold hover:underline sm:text-lg">
           {post.metadata.title}
         </h2>
-        {/* </Link> */}
 
         <p className="text-muted-foreground mt-1 line-clamp-2 max-w-xl text-xs sm:truncate sm:text-sm">
           {post.metadata.description}

@@ -74,7 +74,6 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
       const nextSearch = params.toString();
       const currentSearch = window.location.search.slice(1);
 
-      // Prevent unnecessary Next.js navigation / RSC request
       if (nextSearch === currentSearch) {
         return;
       }
@@ -132,7 +131,6 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
           />
         </div>
 
-        {/* Organized & Interactive Tags Filter */}
         <BlogTagsFilter
           tags={tags}
           selectedTag={selectedTag}
@@ -144,8 +142,8 @@ export function BlogSearch({ posts, tags, children }: BlogSearchProps) {
           hasFilters={hasFilters}
         />
 
-        {/* Results will go here */}
         {hasFilters ? (
+
           <div className="w-full space-y-8">
             <div
               aria-live="polite"

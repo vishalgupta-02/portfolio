@@ -69,7 +69,6 @@ function parsePostMetadata(data: unknown, slug: string): BlogPostMetadata {
     );
   }
 
-  // IMPORTANT:
   return result.data;
 }
 
@@ -93,7 +92,6 @@ export const getPostBySlug = cache((slug: string): BlogPost | null => {
 
   const metadata = parsePostMetadata(data, slug);
 
-  // Check for companion developer view file
   const developerContent = getDeveloperViewContent(slug);
   const hasDeveloperView = metadata.dualView && developerContent !== null;
   const image = extractPostImage(metadata, content, developerContent);
@@ -122,7 +120,6 @@ function getDeveloperViewContent(slug: string): string | null {
 
   const source = fs.readFileSync(filePath, "utf8");
 
-  // Developer view files may optionally have frontmatter (ignored)
   const { content } = matter(source);
 
   if (!content || content.trim().length === 0) {
@@ -206,11 +203,6 @@ export function getArticleNavigation(slug: string): ArticleNavigation {
     next: newerPost ? toNavigationItem(newerPost) : null,
   };
 }
-
-// interface RelatedArticleCandidate {
-//   article: RelatedArticle
-//   score: number
-// }
 
 export function getRelatedArticles(
   slug: string,

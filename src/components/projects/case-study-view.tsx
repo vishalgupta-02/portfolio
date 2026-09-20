@@ -25,7 +25,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
   const caseStudy = project.caseStudy
   const techStack = caseStudy?.techStack || project.techStack
 
-  // Dynamically detect which sections exist on this project and assign sequential step numbers
   const { activeSections, stepMap } = useMemo(() => {
     if (!caseStudy) return { activeSections: [], stepMap: new Map<string, string>() }
 
@@ -48,32 +47,32 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
       {
         id: "architecture",
         title: caseStudy.architecture?.title || "System Architecture",
-        present: Boolean(caseStudy.architecture?.layers?.length),
+        present: Boolean(caseStudy.architecture),
       },
       {
         id: "challenges",
-        title: "Core Engineering Challenges",
-        present: Boolean(caseStudy.challenges?.length),
+        title: "Engineering Challenges",
+        present: Boolean(caseStudy.challenges && caseStudy.challenges.length > 0),
       },
       {
         id: "implementation",
-        title: caseStudy.implementation?.title || "Code Primitives",
-        present: Boolean(caseStudy.implementation?.paragraphs?.length),
+        title: caseStudy.implementation?.title || "Core Primitives",
+        present: Boolean(caseStudy.implementation),
       },
       {
         id: "data-flow",
-        title: caseStudy.dataFlow?.title || "Data Flow Pipelines",
-        present: Boolean(caseStudy.dataFlow?.steps?.length),
+        title: caseStudy.dataFlow?.title || "Data Flow & Pipelines",
+        present: Boolean(caseStudy.dataFlow),
       },
       {
         id: "tech-stack",
-        title: "Technology Stack",
-        present: Boolean(techStack?.length),
+        title: "Tech Stack",
+        present: Boolean(techStack && techStack.length > 0),
       },
       {
         id: "results",
         title: caseStudy.results?.title || "Results & Outcomes",
-        present: Boolean(caseStudy.results?.items?.length),
+        present: Boolean(caseStudy.results),
       },
       {
         id: "lessons",
@@ -82,21 +81,20 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
       },
     ]
 
-    const presentItems = candidates.filter((c) => c.present)
+    const filtered = candidates.filter((c) => c.present)
     const steps = new Map<string, string>()
-
-    const sectionsList: CaseStudySectionItem[] = presentItems.map((item, idx) => {
-      const numStr = (idx + 1).toString().padStart(2, "0")
-      steps.set(item.id, numStr)
+    const sections: CaseStudySectionItem[] = filtered.map((c, index) => {
+      const stepStr = String(index + 1).padStart(2, "0")
+      steps.set(c.id, stepStr)
       return {
-        id: item.id,
-        label: numStr,
-        title: item.title,
+        id: c.id,
+        label: c.title,
+        title: c.title,
       }
     })
 
     return {
-      activeSections: caseStudy.sections && caseStudy.sections.length > 0 ? caseStudy.sections : sectionsList,
+      activeSections: sections,
       stepMap: steps,
     }
   }, [caseStudy, techStack])
@@ -108,13 +106,10 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
   return (
     <MainLayout>
       <div className="w-full max-w-2xl mx-auto px-4 py-6 space-y-12">
-        {/* Hero & Metadata */}
         <CaseStudyHero project={project} />
 
-        {/* Table of Contents */}
         {activeSections.length > 0 && <CaseStudyTOC sections={activeSections} />}
 
-        {/* Overview */}
         {caseStudy.overview && (
           <CaseStudyOverview
             overview={caseStudy.overview}
@@ -122,7 +117,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Problem & Constraints */}
         {caseStudy.problem && (
           <CaseStudyProblem
             problem={caseStudy.problem}
@@ -130,7 +124,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Engineering Goals */}
         {caseStudy.goals && (
           <CaseStudyGoals
             goals={caseStudy.goals}
@@ -138,7 +131,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* System Architecture */}
         {caseStudy.architecture && (
           <CaseStudyArchitecture
             architecture={caseStudy.architecture}
@@ -146,7 +138,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Core Engineering Challenges */}
         {caseStudy.challenges && caseStudy.challenges.length > 0 && (
           <CaseStudyChallenges
             challenges={caseStudy.challenges}
@@ -154,7 +145,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Code Primitives */}
         {caseStudy.implementation && (
           <CaseStudyImplementation
             implementation={caseStudy.implementation}
@@ -162,7 +152,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Data Flow Pipelines */}
         {caseStudy.dataFlow && (
           <CaseStudyDataFlow
             dataFlow={caseStudy.dataFlow}
@@ -170,7 +159,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Technology Stack */}
         {techStack && techStack.length > 0 && (
           <CaseStudyTechStack
             techStack={techStack}
@@ -178,7 +166,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Results & Outcomes */}
         {caseStudy.results && (
           <CaseStudyResults
             results={caseStudy.results}
@@ -186,7 +173,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Lessons Learned */}
         {caseStudy.lessonsLearned && (
           <CaseStudyLessons
             lessonsLearned={caseStudy.lessonsLearned}
@@ -194,7 +180,6 @@ export default function CaseStudyView({ project }: CaseStudyViewProps) {
           />
         )}
 
-        {/* Footer Navigation & Actions */}
         <CaseStudyFooter project={project} />
       </div>
     </MainLayout>
