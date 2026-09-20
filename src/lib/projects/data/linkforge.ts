@@ -29,7 +29,7 @@ export const linkforgeProject: Project = {
     { text: "Real-time Analytics", position: "bottom-right" },
   ],
 
-  liveUrl: "https://linkforge-web-iota.vercel.app",
+  liveUrl: "https://linkforge.vishalbuild.tech",
   githubUrl: "https://github.com/vishalgupta-02/linkforge.git",
   hasCaseStudy: true,
   ctaText: "View Overview",

@@ -1,4 +1,4 @@
-import type { Project } from "../types"
+import type { Project } from "../types";
 
 export const careerlyProject: Project = {
   id: "careerly",
@@ -24,7 +24,7 @@ export const careerlyProject: Project = {
     { text: "MCQ Testing", position: "top-left" },
     { text: "Resume Tooling", position: "bottom-right" },
   ],
-  liveUrl: "https://careerly-nu.vercel.app",
+  liveUrl: "https://careerly.vishalbuild.tech/",
   githubUrl: "https://github.com/vishalgupta-02/Careerly.git",
   hasCaseStudy: false,
   ctaText: "View Project",
@@ -61,4 +61,4 @@ export const careerlyProject: Project = {
       ],
     },
   ],
-}
+};
