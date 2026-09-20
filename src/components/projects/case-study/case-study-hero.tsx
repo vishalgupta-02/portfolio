@@ -119,12 +119,9 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
               <p className="font-medium text-foreground">{architectureLabel}</p>
             </div>
           )}
-          <p className="col-span-2 text-xs">
-            This is just for a demonstration purposes.{" "}
-            <span className="text-red-700 text-lg">*</span>
-          </p>
         </div>
       </header>
     </>
   );
 }
+
