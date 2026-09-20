@@ -1,116 +1,114 @@
-import ExperienceCard from "@/components/experience-card"
-import { Line } from "@/components/lines"
 import MainLayout from "@/components/main-layout"
-import {
-  Git,
-  Github,
-  JavaScript,
-  NextJS,
-  NodeJS,
-  Python,
-  TypeScript,
-} from "@/components/ui/svgs-of-techs"
+import { ProgressiveBlur } from "@/components/ui/progressive-blur"
+import WorkExperienceItem from "@/components/work/work-experience-item"
+import WorkStatsHeader from "@/components/work/work-stats-header"
+import { siteConfig } from "@/lib/blog/site"
+import { WORK_EXPERIENCES } from "@/lib/experience"
+import { ArrowUpRight, Mail } from "lucide-react"
+import type { Metadata } from "next"
+import Link from "next/link"
 
-export default function Work() {
+export const metadata: Metadata = {
+  title: "Work Experience | Vishal Gupta",
+  description:
+    "Engineering track record and production roles spanning full-stack web platforms, real-time voice AI pipelines, and distributed data systems.",
+  alternates: {
+    canonical: "/work",
+  },
+  openGraph: {
+    title: "Work Experience | Vishal Gupta",
+    description:
+      "Engineering roles, platform contributions, and production systems built for real-world client workloads and real-time AI architectures.",
+    url: `${siteConfig.url}/work`,
+    images: [
+      {
+        url: siteConfig.ogImage,
+        width: 1200,
+        height: 630,
+        alt: "Work Experience — Vishal Gupta",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Work Experience | Vishal Gupta",
+    description:
+      "Engineering roles, platform contributions, and production systems built for real-world client workloads and real-time AI architectures.",
+    images: [siteConfig.ogImage],
+  },
+}
+
+export default function WorkPage() {
   return (
     <MainLayout>
-      <section className='w-full max-w-2xl px-4 mx-auto py-4'>
-        <div className='flex flex-col gap-1 my-2'>
-          <h2 className='text-2xl font-sans font-semibold'>Work Experience</h2>
-          <p className='text-[14px] font-display text-custom-gray'>
-            Works that taught me something during its timeperiod.
+      <main className='mx-auto max-w-2xl px-4 py-6 pb-16'>
+        {/* Header Section */}
+        <header className='mb-8'>
+          <div className='text-muted-foreground mb-2 flex items-center gap-2 font-mono text-xs tracking-wider uppercase'>
+            <span className='inline-block size-2 rounded-full bg-emerald-500 animate-pulse' />
+            Career & Production History
+          </div>
+
+          <h1 className='text-foreground text-3xl font-bold tracking-tight sm:text-4xl font-sans'>
+            Work Experience
+          </h1>
+
+          <p className='text-muted-foreground mt-2 text-sm leading-relaxed font-display'>
+            Engineering roles, production platform contributions, and scalable
+            systems delivered across enterprise client engagements and high-throughput
+            real-time AI architectures.
           </p>
-        </div>
-        <div className='mt-8'>
-          <div className='w-full mb-3'>
-            <ExperienceCard
-              companyName='Reospark Technologies Pvt. Ltd.'
-              timeline='July 2025 - August 2026'
-              role='Software Engineer'
-              locations='Noida, India (On-site)'
+
+          <WorkStatsHeader
+            totalRoles={WORK_EXPERIENCES.length}
+            clientDeliveries={3}
+            domainsCount={3}
+          />
+        </header>
+
+        {/* Experience List */}
+        <section
+          aria-label='Employment history'
+          className='flex flex-col gap-6'
+        >
+          {WORK_EXPERIENCES.map((experience, index) => (
+            <WorkExperienceItem
+              key={experience.id}
+              experience={experience}
+              index={index}
             />
+          ))}
+        </section>
+
+        {/* Collaborative Callout Banner */}
+        <section className='mt-10 rounded-2xl border border-border/40 bg-card/20 p-5 text-center sm:p-6 transition-all duration-200 hover:border-border/70 hover:bg-card/40'>
+          <h2 className='text-base font-semibold text-foreground font-sans'>
+            Have an engineering challenge or opportunity?
+          </h2>
+          <p className='text-xs sm:text-sm text-muted-foreground mt-1.5 font-display max-w-md mx-auto'>
+            I specialize in full-stack architecture, high-performance backends,
+            and real-time systems. Let&apos;s build something impactful.
+          </p>
+          <div className='mt-4 flex flex-wrap items-center justify-center gap-3'>
+            <a
+              href='mailto:abhimanyug987@gmail.com'
+              className='inline-flex items-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3.5 py-1.5 text-xs font-medium hover:opacity-90 active:scale-95 transition-all shadow-xs'
+            >
+              <Mail className='size-3.5' />
+              <span>Get in Touch</span>
+            </a>
+            <Link
+              href='/postmortems'
+              className='inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted/60 active:scale-95 transition-all'
+            >
+              <span>Read Postmortems</span>
+              <ArrowUpRight className='size-3 text-muted-foreground' />
+            </Link>
           </div>
-          <Line type='horizontal' className='w-full' width={660} />
-          <div className='w-full flex items-start justify-center gap-1 flex-col mt-6'>
-            <div>
-              <h3 className='text-sm dark:text-custom-white text-custom-black font-bold mb-1'>
-                What I&apos;ve done
-              </h3>
-            </div>
-            <div className='text-sm text-custom-gray space-y-1.5 font-display'>
-              <p>
-                • Built admin dashboards with Django, DRF, and Next.js for
-                centralized operations and KPI tracking.
-              </p>
-              <p>
-                • Designed MySQL schemas for production workloads and
-                multi-client data isolation.
-              </p>
-              <p>
-                • Led 3 client engagements end-to-end across Python/Django and
-                Next.js, from requirements to delivery and iteration.
-              </p>
-            </div>
-            <div className='flex gap-2 flex-col'>
-              <p className='text-sm dark:text-custom-white text-custom-black font-bold mb-1 mt-3'>
-                Tools & Technologies
-              </p>
-              <div className='flex items-center gap-4 flex-wrap'>
-                <JavaScript className='size-5' />
-                <NextJS className='size-5' />
-                <Python className='size-5' />
-                <Git className='size-5' />
-                <Github className='size-5' />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className='mt-12'>
-          <div className='w-full mb-3'>
-            <ExperienceCard
-              companyName='Vomyra AI'
-              timeline='January 2025 - June 2025'
-              role='Software Engineer Intern'
-              locations='Noida, India (On-site)'
-            />
-          </div>
-          <Line type='horizontal' className='w-full' width={660} />
-          <div className='w-full flex items-start justify-center gap-1 flex-col mt-6'>
-            <div>
-              <h3 className='text-sm dark:text-custom-white text-custom-black font-bold mb-1'>
-                What I&apos;ve done
-              </h3>
-            </div>
-            <div className='text-sm text-custom-gray space-y-1.5 font-display'>
-              <p>
-                • Built and optimized real-time voice AI agents with Node.js,
-                WebSockets, and FFmpeg for efficient streaming and
-                transcription.
-              </p>
-              <p>
-                • Integrated voice APIs, optimized real-time streaming latency,
-                and collaborated across engineering and product teams.
-              </p>
-              <p>
-                • Developed SEO-optimized frontend pages to improve
-                discoverability and user engagement.
-              </p>
-            </div>
-            <div className='flex gap-2 flex-col'>
-              <p className='text-sm dark:text-custom-white text-custom-black font-bold mb-1 mt-3'>
-                Tools & Technologies
-              </p>
-              <div className='flex items-center gap-4 flex-wrap'>
-                <TypeScript className='size-5' />
-                <NextJS className='size-5' />
-                <NodeJS className='size-5' />
-                <Git className='size-5' />
-                <Github className='size-5' />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+        </section>
+      </main>
+
+      <ProgressiveBlur height='4rem' position='bottom' />
     </MainLayout>
   )
 }

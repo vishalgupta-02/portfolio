@@ -1,64 +1,64 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { MDXRemote } from "next-mdx-remote/rsc";
-import rehypeShiki from "@shikijs/rehype";
-import remarkGfm from "remark-gfm";
-import { Suspense } from "react";
-
+import { ArticleContent } from "@/components/blog/article-content"
+import { BlogShareCard } from "@/components/blog/blog-share-card"
+import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time"
+import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress"
+import { mdxComponents } from "@/components/blog/mdx-component"
+import { RelatedArticles } from "@/components/blog/related-articles"
+import { ViewModeSelector } from "@/components/blog/view-mode-selector"
+import MainLayout from "@/components/main-layout"
+import { JsonLd } from "@/components/seo/json-ld"
+import { ProgressiveBlur } from "@/components/ui/progressive-blur"
+import { ShareButtons } from "@/components/ui/share-buttons"
 import {
   getAllPosts,
   getArticleNavigation,
   getPostBySlug,
   getRelatedArticles,
-} from "@/lib/blog/blog";
-import { mdxComponents } from "@/components/blog/mdx-component";
-import { copyCodeTransformer } from "@/lib/blog/shiki";
-import { BlogTag } from "@/components/blog/blog-tag";
-import { RelatedArticles } from "@/components/blog/related-articles";
-import { generateBlogMetadata } from "@/lib/blog/metadata";
-import { generateBlogJsonLd } from "@/lib/blog/json-ld";
-import { JsonLd } from "@/components/seo/json-ld";
-import Image from "next/image";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { ViewModeSelector } from "@/components/blog/view-mode-selector";
-import { ArticleContent } from "@/components/blog/article-content";
-import { DualViewReadingTime } from "@/components/blog/dual-view-reading-time";
-import { ShareButtons } from "@/components/ui/share-buttons";
-import { BlogShareCard } from "@/components/blog/blog-share-card";
-import { FloatingReadingProgress } from "@/components/blog/floating-reading-progress";
+} from "@/lib/blog/blog"
+import { generateBlogJsonLd } from "@/lib/blog/json-ld"
+import { generateBlogMetadata } from "@/lib/blog/metadata"
+import { copyCodeTransformer } from "@/lib/blog/shiki"
+import rehypeShiki from "@shikijs/rehype"
+import { ArrowLeft, Calendar, Clock, Layers } from "lucide-react"
+import type { Metadata } from "next"
+import { MDXRemote } from "next-mdx-remote/rsc"
+import Image from "next/image"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
+import remarkGfm from "remark-gfm"
 
 interface BlogPostPageProps {
   params: Promise<{
-    slug: string;
-  }>;
+    slug: string
+  }>
 }
 
 export function generateStaticParams() {
-  const posts = getAllPosts();
+  const posts = getAllPosts()
 
   return posts.map((post) => ({
     slug: post.slug,
-  }));
+  }))
 }
 
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
+  const { slug } = await params
 
-  const post = getPostBySlug(slug);
+  const post = getPostBySlug(slug)
 
   if (!post) {
-    return {};
+    return {}
   }
 
-  return generateBlogMetadata(slug, post);
+  return generateBlogMetadata(slug, post)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mdxOptions: {
-  mdxOptions: { remarkPlugins: any[]; rehypePlugins: any[] };
+  mdxOptions: { remarkPlugins: any[]; rehypePlugins: any[] }
 } = {
   mdxOptions: {
     remarkPlugins: [remarkGfm],
@@ -75,81 +75,104 @@ const mdxOptions: {
       ],
     ],
   },
-};
+}
 
-const CONTENT_PANEL_ID = "article-content-panel";
+const CONTENT_PANEL_ID = "article-content-panel"
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
+  const { slug } = await params
 
-  const post = getPostBySlug(slug);
+  const post = getPostBySlug(slug)
 
   if (!post || !post.metadata.published) {
-    notFound();
+    notFound()
   }
 
-  const navigation = getArticleNavigation(slug);
+  const navigation = getArticleNavigation(slug)
   const navigationSlugs = [
     navigation.previous?.slug,
     navigation.next?.slug,
-  ].filter((slug): slug is string => Boolean(slug));
+  ].filter((slug): slug is string => Boolean(slug))
 
-  const relatedArticles = getRelatedArticles(slug, 2, navigationSlugs);
-  const jsonLd = generateBlogJsonLd(slug, post);
-  const hasDualView = post.metadata.dualView;
+  const relatedArticles = getRelatedArticles(slug, 2, navigationSlugs)
+  const jsonLd = generateBlogJsonLd(slug, post)
+  const hasDualView = post.metadata.dualView
+  const primaryTag = post.metadata.tags[0] || "Architecture"
 
   return (
-    <>
+    <MainLayout>
       <JsonLd data={jsonLd} />
 
-      <main className="mx-auto max-w-2xl px-4 pt-6 pb-2">
-        <div className="mb-4 w-full border-b pb-4">
+      <main className='mx-auto max-w-2xl px-4 pt-6 pb-16'>
+        {/* Back Navigation */}
+        <div className='border-border/50 mb-6 w-full border-b pb-4'>
           <Link
-            href="/blog"
-            className="text-primary flex items-center text-sm hover:underline"
+            href='/blog'
+            className='text-muted-foreground hover:text-foreground inline-flex items-center font-mono text-xs transition-colors'
           >
-            <ArrowLeft className="mr-1 inline size-4" />
-            Back to blog
+            <ArrowLeft className='mr-1.5 inline size-3.5' aria-hidden='true' />
+            Back to all articles
           </Link>
         </div>
 
-        <article className="min-w-0">
-          <header className="mb-12 max-w-3xl">
-            <h1 className="text-3xl font-bold tracking-tight">
+        <article className='min-w-0'>
+          {/* Header */}
+          <header className='mb-10 max-w-3xl'>
+            <div className='mb-3 flex flex-wrap items-center gap-2'>
+              <span className='border-border/60 bg-muted/40 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[11px] tracking-wider uppercase'>
+                {primaryTag}
+              </span>
+
+              {hasDualView && (
+                <span className='inline-flex items-center gap-1 rounded-md border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 font-mono text-[11px] text-blue-600 dark:text-blue-400'>
+                  <Layers className='size-3' aria-hidden='true' />
+                  Dual-View Available
+                </span>
+              )}
+            </div>
+
+            <h1 className='text-foreground text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight font-sans leading-tight'>
               {post.metadata.title}
             </h1>
 
-            <p className="text-muted-foreground mt-4 max-w-xl text-sm">
+            <p className='text-muted-foreground mt-3 text-sm sm:text-base leading-relaxed font-display'>
               {post.metadata.description}
             </p>
 
-            <div className="text-muted-foreground mt-4 flex flex-wrap items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2">
-                <time dateTime={post.metadata.publishedAt}>
-                  {new Date(post.metadata.publishedAt).toLocaleDateString(
-                    "en-US",
-                    {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    },
+            {/* Metadata and Share Bar */}
+            <div className='text-muted-foreground border-border/50 mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-xs'>
+              <div className='flex flex-wrap items-center gap-2 font-mono text-[11px]'>
+                <span className='inline-flex items-center gap-1'>
+                  <Calendar className='size-3 text-muted-foreground/70' aria-hidden='true' />
+                  <time dateTime={post.metadata.publishedAt}>
+                    {new Date(post.metadata.publishedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      },
+                    )}
+                  </time>
+                </span>
+
+                <span aria-hidden='true'>·</span>
+
+                <span className='inline-flex items-center gap-1'>
+                  <Clock className='size-3 text-muted-foreground/70' aria-hidden='true' />
+                  {hasDualView ? (
+                    <Suspense
+                      fallback={<span>{post.readingTime.minutes} min read</span>}
+                    >
+                      <DualViewReadingTime
+                        userReadingTime={post.readingTime}
+                        developerReadingTime={post.developerReadingTime}
+                      />
+                    </Suspense>
+                  ) : (
+                    <span>{post.readingTime.minutes} min read</span>
                   )}
-                </time>
-
-                <span aria-hidden="true">·</span>
-
-                {hasDualView ? (
-                  <Suspense
-                    fallback={<span>{post.readingTime.minutes} min read</span>}
-                  >
-                    <DualViewReadingTime
-                      userReadingTime={post.readingTime}
-                      developerReadingTime={post.developerReadingTime}
-                    />
-                  </Suspense>
-                ) : (
-                  <span>{post.readingTime.minutes} min read</span>
-                )}
+                </span>
               </div>
 
               <ShareButtons
@@ -157,25 +180,33 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 title={post.metadata.title}
                 description={post.metadata.description}
                 tags={post.metadata.tags}
-                variant="compact"
+                variant='compact'
               />
             </div>
+
+            {/* Tags Pills */}
             {post.metadata.tags.length > 0 && (
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className='mt-4 flex flex-wrap gap-1.5'>
                 {post.metadata.tags.map((tag) => (
-                  <BlogTag key={tag} tag={tag} />
+                  <span
+                    key={tag}
+                    className='rounded-md border border-border/50 bg-muted/20 px-2 py-0.5 font-mono text-[10px] text-muted-foreground'
+                  >
+                    #{tag}
+                  </span>
                 ))}
               </div>
             )}
+
             {post.metadata.image && (
-              <div className="relative mt-8 aspect-video overflow-hidden rounded-xl">
+              <div className='relative mt-8 aspect-video overflow-hidden rounded-2xl border border-border/40'>
                 <Image
                   src={post.metadata.image}
                   alt={post.metadata.title}
                   fill
                   priority
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, 768px"
+                  className='object-cover'
+                  sizes='(max-width: 768px) 100vw, 768px'
                 />
               </div>
             )}
@@ -187,9 +218,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             )}
           </header>
 
+          {/* Article Body */}
           <Suspense
             fallback={
-              <div className="prose prose-neutral dark:prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-3xl">
+              <div className='prose prose-neutral dark:prose-invert prose-pre:bg-transparent prose-pre:p-0 max-w-3xl text-foreground/90'>
                 <MDXRemote
                   source={post.content}
                   components={mdxComponents}
@@ -219,7 +251,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
           </Suspense>
 
-          <div className="max-w-3xl">
+          {/* Share Card & Related Articles */}
+          <div className='max-w-3xl'>
             <BlogShareCard
               title={post.metadata.title}
               description={post.metadata.description}
@@ -236,6 +269,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           />
         </article>
       </main>
-    </>
-  );
+
+      <ProgressiveBlur height='4rem' position='bottom' />
+    </MainLayout>
+  )
 }
