@@ -6,8 +6,8 @@ export default function BlogLoading() {
   return (
     <div className='flex min-h-[50vh] items-center justify-center px-6'>
       <div className='flex flex-col items-center text-center'>
-        {/* Animated writing cursor */}
         <div className='mb-6 flex items-center gap-1.5'>
+
           {[0, 1, 2].map((i) => (
             <motion.span
               key={i}

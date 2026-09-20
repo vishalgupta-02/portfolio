@@ -47,7 +47,6 @@ export default function CaseStudyChallenges({
             key={ch.number}
             className="rounded-xl border border-border/30 bg-card/40 dark:bg-custom-black/40 p-5 space-y-4 hover:border-border/60 transition-colors"
           >
-            {/* Challenge Header */}
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-1">
                 <span className="text-xs font-mono text-emerald-500 font-semibold">
@@ -59,7 +58,6 @@ export default function CaseStudyChallenges({
               </div>
             </div>
 
-            {/* Problem & Risk */}
             <div className="space-y-2 text-xs sm:text-sm font-display text-foreground/75 leading-relaxed">
               <div>
                 <span className="font-mono text-[11px] uppercase tracking-wider text-foreground/50 block mb-0.5">
@@ -90,7 +88,6 @@ export default function CaseStudyChallenges({
               </div>
             </div>
 
-            {/* Code Snippet if present */}
             {ch.codeSnippet && (
               <div className="rounded-lg border border-border/30 bg-background overflow-hidden space-y-1 text-xs">
                 <div className="flex items-center justify-between px-3 py-1.5 bg-muted/20 border-b border-border/20 font-mono text-[11px] text-foreground/60">

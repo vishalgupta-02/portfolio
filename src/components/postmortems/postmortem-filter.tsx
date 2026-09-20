@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useMemo } from "react"
+import { motion, AnimatePresence } from "motion/react"
 import type {
   Postmortem,
   PostmortemCategory,
@@ -8,7 +9,8 @@ import type {
   PostmortemStatus,
 } from "@/lib/postmortems/types"
 import { PostmortemCard } from "./postmortem-card"
-import { Search, X, SlidersHorizontal } from "lucide-react"
+import { Search, X, SlidersHorizontal, ChevronDown, RotateCcw, Tag, AlertCircle, CheckCircle2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface PostmortemFilterProps {
   postmortems: Postmortem[]
@@ -42,6 +44,7 @@ const STATUSES: { label: string; value: PostmortemStatus | "all" }[] = [
 ]
 
 export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<
     PostmortemCategory | "all"
@@ -55,7 +58,6 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
 
   const filteredPostmortems = useMemo(() => {
     return postmortems.filter((pm) => {
-      // Category filter
       if (
         selectedCategory !== "all" &&
         pm.metadata.category !== selectedCategory
@@ -63,7 +65,6 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
         return false
       }
 
-      // Severity filter
       if (
         selectedSeverity !== "all" &&
         pm.metadata.severity !== selectedSeverity
@@ -71,12 +72,10 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
         return false
       }
 
-      // Status filter
       if (selectedStatus !== "all" && pm.metadata.status !== selectedStatus) {
         return false
       }
 
-      // Search query filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase().trim()
         const matchTitle = pm.metadata.title.toLowerCase().includes(query)
@@ -114,11 +113,13 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
     selectedStatus,
   ])
 
+  const activeDropdownFilterCount =
+    (selectedCategory !== "all" ? 1 : 0) +
+    (selectedSeverity !== "all" ? 1 : 0) +
+    (selectedStatus !== "all" ? 1 : 0)
+
   const hasActiveFilters =
-    searchQuery !== "" ||
-    selectedCategory !== "all" ||
-    selectedSeverity !== "all" ||
-    selectedStatus !== "all"
+    searchQuery !== "" || activeDropdownFilterCount > 0
 
   const clearFilters = () => {
     setSearchQuery("")
@@ -129,99 +130,219 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filters Bar */}
-      <div className="space-y-3 rounded-xl border border-border bg-card/40 p-4 sm:p-5 backdrop-blur-xs">
-        <div className="relative">
-          <Search
-            className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search incidents by keyword, system, tag, root cause..."
-            aria-label="Search incidents"
-            className="w-full rounded-lg border border-border bg-background py-2.5 pl-10 pr-10 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery("")}
-              aria-label="Clear search query"
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground"
-            >
-              <X className="size-3.5" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <div className="flex items-center gap-1.5 text-muted-foreground font-mono text-[11px] mr-1">
-            <SlidersHorizontal className="size-3" aria-hidden="true" />
-            Filter:
+      <div className="rounded-xl border border-border bg-card/40 p-3 sm:p-4 backdrop-blur-xs space-y-3 shadow-xs">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search incidents by keyword, system, tag, root cause..."
+              aria-label="Search incidents"
+              className="w-full rounded-lg border border-border bg-background py-2 pl-9 pr-9 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:border-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                aria-label="Clear search query"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
-          {/* Category Select */}
-          <select
-            value={selectedCategory}
-            onChange={(e) =>
-              setSelectedCategory(e.target.value as PostmortemCategory | "all")
-            }
-            aria-label="Filter by category"
-            className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          <button
+            type="button"
+            onClick={() => setIsFilterOpen((prev) => !prev)}
+            aria-expanded={isFilterOpen}
+            aria-controls="postmortem-filters-tray"
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-all cursor-pointer shrink-0 select-none",
+              isFilterOpen
+                ? "border-foreground/30 bg-muted text-foreground shadow-xs"
+                : "border-border bg-background text-muted-foreground hover:border-foreground/40 hover:text-foreground hover:bg-muted/40",
+            )}
           >
-            {CATEGORIES.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Severity Select */}
-          <select
-            value={selectedSeverity}
-            onChange={(e) =>
-              setSelectedSeverity(e.target.value as PostmortemSeverity | "all")
-            }
-            aria-label="Filter by severity"
-            className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {SEVERITIES.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Status Select */}
-          <select
-            value={selectedStatus}
-            onChange={(e) =>
-              setSelectedStatus(e.target.value as PostmortemStatus | "all")
-            }
-            aria-label="Filter by status"
-            className="rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          >
-            {STATUSES.map((st) => (
-              <option key={st.value} value={st.value}>
-                {st.label}
-              </option>
-            ))}
-          </select>
-
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1 rounded-md border border-border bg-muted/50 px-2 py-1.5 font-mono text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-auto"
-            >
-              <X className="size-3" aria-hidden="true" />
-              Reset Filters
-            </button>
-          )}
+            <SlidersHorizontal className="size-3.5" aria-hidden="true" />
+            <span>Filters</span>
+            {activeDropdownFilterCount > 0 && (
+              <span className="flex size-4 items-center justify-center rounded-full bg-foreground text-[10px] font-mono font-bold text-background">
+                {activeDropdownFilterCount}
+              </span>
+            )}
+            <ChevronDown
+              className={cn(
+                "size-3.5 transition-transform duration-200 text-muted-foreground",
+                isFilterOpen && "rotate-180 text-foreground",
+              )}
+              aria-hidden="true"
+            />
+          </button>
         </div>
+
+        {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs">
+            <span className="text-[11px] font-mono text-muted-foreground mr-1">Active:</span>
+
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
+                <Search className="size-2.5 text-muted-foreground" />
+                <span className="truncate max-w-[120px]">&ldquo;{searchQuery}&rdquo;</span>
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Remove search filter"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+
+            {selectedCategory !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
+                <Tag className="size-2.5 text-muted-foreground" />
+                <span className="capitalize">{selectedCategory}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory("all")}
+                  className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Remove category filter"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+
+            {selectedSeverity !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
+                <AlertCircle className="size-2.5 text-rose-500" />
+                <span className="capitalize">{selectedSeverity}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSeverity("all")}
+                  className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Remove severity filter"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+
+            {selectedStatus !== "all" && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2 py-0.5 text-[11px] text-foreground">
+                <CheckCircle2 className="size-2.5 text-emerald-500" />
+                <span className="capitalize">{selectedStatus}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedStatus("all")}
+                  className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Remove status filter"
+                >
+                  <X className="size-2.5" />
+                </button>
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-mono text-muted-foreground hover:text-foreground hover:underline cursor-pointer transition-colors ml-auto"
+            >
+              <RotateCcw className="size-2.5" />
+              Reset all
+            </button>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {isFilterOpen && (
+            <motion.div
+              id="postmortem-filters-tray"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden border-t border-border/50 pt-3"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block">
+                    Domain Category
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) =>
+                      setSelectedCategory(
+                        e.target.value as PostmortemCategory | "all",
+                      )
+                    }
+                    aria-label="Filter by category"
+                    className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block">
+                    Incident Severity
+                  </label>
+                  <select
+                    value={selectedSeverity}
+                    onChange={(e) =>
+                      setSelectedSeverity(
+                        e.target.value as PostmortemSeverity | "all",
+                      )
+                    }
+                    aria-label="Filter by severity"
+                    className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    {SEVERITIES.map((s) => (
+                      <option key={s.value} value={s.value}>
+                        {s.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground block">
+                    Lifecycle Status
+                  </label>
+                  <select
+                    value={selectedStatus}
+                    onChange={(e) =>
+                      setSelectedStatus(
+                        e.target.value as PostmortemStatus | "all",
+                      )
+                    }
+                    aria-label="Filter by status"
+                    className="w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer"
+                  >
+                    {STATUSES.map((st) => (
+                      <option key={st.value} value={st.value}>
+                        {st.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* Results stats */}
       <div className="flex items-center justify-between text-xs font-mono text-muted-foreground px-1">
         <span>
           Showing {filteredPostmortems.length} of {postmortems.length}{" "}
@@ -229,7 +350,6 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
         </span>
       </div>
 
-      {/* Postmortems List */}
       {filteredPostmortems.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
           {filteredPostmortems.map((postmortem) => (
@@ -245,9 +365,11 @@ export function PostmortemFilter({ postmortems }: PostmortemFilterProps) {
             Try adjusting your search terms or resetting the active filters.
           </p>
           <button
+            type="button"
             onClick={clearFilters}
-            className="mt-4 inline-flex items-center rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
           >
+            <RotateCcw className="size-3" />
             Clear all filters
           </button>
         </div>

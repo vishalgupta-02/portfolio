@@ -1,57 +1,7 @@
-// "use client"
-
-// import { usePathname } from "next/navigation"
-// import { ArrowUpRight } from "lucide-react"
-
-// interface ExperienceCardProps {
-//   companyName: string
-//   timeline: string
-//   role: string
-//   locations: string
-// }
-
-// export default function ExperienceCard({
-//   companyName,
-//   timeline,
-//   role,
-//   locations,
-// }: ExperienceCardProps) {
-//   const pathname = usePathname()
-
-//   return (
-//     <div className='flex justify-center flex-col items-center group'>
-//       <a href='/work' className='w-full'>
-//         <div className='w-full flex justify-between items-center gap-1'>
-//           <h3 className='text-[16px] font-semibold tracking-wide font-sans dark:text-custom-white text-custom-black flex items-center gap-1'>
-//             {companyName}
-//             <span className='opacity-0 group-hover:opacity-100 text-custom-gray group-hover:translate-x-1 transition-transform duration-150'>
-//               {pathname === "/work" ? (
-//                 <></>
-//               ) : (
-//                 <ArrowUpRight className='size-4' />
-//               )}
-//             </span>
-//           </h3>
-//           <p className='text-[13px] font-display text-custom-gray'>
-//             {timeline}
-//           </p>
-//         </div>
-//         <div className='w-full flex justify-between items-center gap-1'>
-//           <p className='text-[13px] font-display text-custom-gray'>{role}</p>
-//           <p className='text-[13px] font-display text-custom-gray'>
-//             {locations}
-//           </p>
-//         </div>
-//       </a>
-//     </div>
-//   )
-// }
-
-//! --------------------------------------------------------------------------------------------
-
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
 interface ExperienceCardProps {
@@ -71,48 +21,49 @@ export default function ExperienceCard({
   const isHomePage = pathname === "/";
 
   const content = (
-    <div className="w-full flex sm:flex-row justify-between items-start sm:items-center gap-0.5">
-      <h3 className="text-[15px] sm:text-[16px] font-semibold tracking-wide font-sans dark:text-custom-white text-custom-black flex items-center gap-1">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+      <h3 className="text-base sm:text-lg font-bold font-sans text-foreground flex items-center gap-1.5 group-hover:text-primary transition-colors">
         {companyName}
-
         {isHomePage && (
-          <span className="opacity-0 group-hover:opacity-100 text-custom-gray group-hover:translate-x-1 transition-all duration-150">
-            <ArrowUpRight className="size-4" />
-          </span>
+          <ArrowUpRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all duration-200" />
         )}
       </h3>
 
-      <p className="text-[12px] sm:text-[13px] font-display text-custom-gray italic">
+      <span className="font-mono text-xs text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md border border-border/50 self-start sm:self-auto">
         {timeline}
-      </p>
+      </span>
     </div>
   );
 
   const details = (
-    <div className="w-full flex flex-row justify-between items-start sm:items-center gap-0.5 sm:gap-1">
-      <p className="text-[12px] sm:text-[13px] font-display text-custom-gray italic">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pt-1.5 text-xs sm:text-sm">
+      <p className="font-display font-medium text-foreground/80">
         {role}
       </p>
 
-      <p className="text-[12px] sm:text-[13px] font-display text-custom-gray italic">
+      <p className="font-display text-muted-foreground text-xs">
         {locations}
       </p>
     </div>
   );
 
+  if (isHomePage) {
+    return (
+      <Link
+        href="/work"
+        className="group w-full rounded-xl border border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/60 p-3.5 sm:p-4 transition-all duration-200 active:scale-[0.99] block"
+      >
+        {content}
+        {details}
+      </Link>
+    );
+  }
+
   return (
-    <div className="flex justify-center flex-col items-center group">
-      {isHomePage ? (
-        <a href="/work" className="w-full">
-          {content}
-          {details}
-        </a>
-      ) : (
-        <div className="w-full">
-          {content}
-          {details}
-        </div>
-      )}
+    <div className="w-full rounded-xl border border-border/40 bg-card/30 p-3.5 sm:p-4">
+      {content}
+      {details}
     </div>
   );
 }
+

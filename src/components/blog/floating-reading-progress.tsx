@@ -28,7 +28,6 @@ export function FloatingReadingProgress({
   const [items, setItems] = React.useState<TableOfContentsItem[]>(tableOfContents);
   const popoverRef = React.useRef<HTMLDivElement>(null);
 
-  // Helper to get visible article content container
   const getArticleContainer = React.useCallback(() => {
     const panel = document.getElementById("article-content-panel");
     if (!panel) return null;
@@ -39,7 +38,6 @@ export function FloatingReadingProgress({
     );
   }, []);
 
-  // Dynamically scan headings inside the active article container
   React.useEffect(() => {
     function syncHeadings() {
       const container = getArticleContainer();
@@ -79,7 +77,6 @@ export function FloatingReadingProgress({
     return () => clearTimeout(timer);
   }, [title, getArticleContainer]);
 
-  // Close TOC popover on outside click or Escape key
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -107,7 +104,6 @@ export function FloatingReadingProgress({
     };
   }, [isTocOpen]);
 
-  // Track scroll position, active heading, and reading progress ONLY within article content
   React.useEffect(() => {
     function handleScroll() {
       const scrollY = window.scrollY;
@@ -131,7 +127,6 @@ export function FloatingReadingProgress({
       setScrollProgress(progress);
       setIsVisible(scrollY > threshold);
 
-      // Query ONLY H1 and H2 strictly inside the active article container
       const headingElements = Array.from(
         container.querySelectorAll("h1, h2")
       ) as HTMLElement[];
@@ -142,7 +137,6 @@ export function FloatingReadingProgress({
         return;
       }
 
-      // Offset from viewport top to consider heading "active"
       const scrollOffset = Math.min(180, window.innerHeight * 0.3);
       let currentActiveHeading = title;
       let currentActiveId = "";
@@ -159,7 +153,6 @@ export function FloatingReadingProgress({
         }
       }
 
-      // If user has scrolled past the entire article container into footer/related articles, keep the last heading
       if (rect.bottom < window.innerHeight * 0.5 && headingElements.length > 0) {
         const lastEl = headingElements[headingElements.length - 1];
         currentActiveHeading = lastEl.textContent?.trim() || title;
@@ -200,7 +193,6 @@ export function FloatingReadingProgress({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // SVG Circular progress metrics
   const radius = 9;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset =
@@ -232,7 +224,6 @@ export function FloatingReadingProgress({
             className
           )}
         >
-          {/* Table of Contents Popover */}
           <AnimatePresence>
             {isTocOpen && items.length > 0 && (
               <motion.div
@@ -292,7 +283,6 @@ export function FloatingReadingProgress({
             )}
           </AnimatePresence>
 
-          {/* Floating Pill Bar */}
           <div
             onClick={() => items.length > 0 && setIsTocOpen(!isTocOpen)}
             role={items.length > 0 ? "button" : undefined}
@@ -308,13 +298,11 @@ export function FloatingReadingProgress({
                 "hover:border-foreground/40 hover:bg-background/95 dark:hover:bg-neutral-900/95 cursor-pointer"
             )}
           >
-            {/* Active Indicator Dot */}
             <span
               className="size-2 rounded-full bg-emerald-500 shrink-0 transition-transform group-hover:scale-125 shadow-xs shadow-emerald-500/50"
               aria-hidden="true"
             />
 
-            {/* Current Active Heading */}
             <div className="flex items-center gap-1.5 overflow-hidden">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
@@ -340,7 +328,6 @@ export function FloatingReadingProgress({
               )}
             </div>
 
-            {/* Circular Progress Indicator with Click to Top */}
             <button
               type="button"
               onClick={scrollToTop}
@@ -349,7 +336,6 @@ export function FloatingReadingProgress({
               className="relative size-6 flex items-center justify-center shrink-0 cursor-pointer rounded-full hover:scale-110 active:scale-95 transition-transform"
             >
               <svg className="size-6 -rotate-90" viewBox="0 0 24 24">
-                {/* Background Ring */}
                 <circle
                   cx="12"
                   cy="12"
@@ -358,7 +344,6 @@ export function FloatingReadingProgress({
                   strokeWidth="2.5"
                   className="stroke-muted/40 dark:stroke-muted/30"
                 />
-                {/* Animated Progress Ring */}
                 <circle
                   cx="12"
                   cy="12"
@@ -374,7 +359,6 @@ export function FloatingReadingProgress({
                 />
               </svg>
 
-              {/* Hover arrow up icon inside circle */}
               <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-background/90 dark:bg-neutral-900/90 rounded-full">
                 <ArrowUp className="size-3 text-foreground" />
               </div>

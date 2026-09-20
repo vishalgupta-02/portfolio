@@ -48,7 +48,6 @@ export default function CaseStudyArchitecture({
         </p>
       )}
 
-      {/* Architecture Diagram Box */}
       <div className="rounded-xl border border-border/40 bg-card/50 p-5 space-y-4 shadow-sm">
         {(architecture.badge || architecture.subBadge) && (
           <div className="flex items-center justify-between text-xs font-mono text-foreground/60 border-b border-border/20 pb-2">
@@ -60,7 +59,6 @@ export default function CaseStudyArchitecture({
           </div>
         )}
 
-        {/* Architecture Node Flow */}
         <div className="space-y-3 font-mono text-xs">
           {architecture.layers?.map((layer, index) => (
             <div key={layer.title}>

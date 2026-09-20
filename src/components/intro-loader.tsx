@@ -1,232 +1,198 @@
-// "use client"
+"use client";
 
-// import { AnimatePresence, motion } from "motion/react"
-// import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
-// const greetings = [
-//   "Bonjour",
-//   "Hola",
-//   "Ciao",
-//   "Olá",
-//   "Hallo",
-//   "こんにちは",
-//   "안녕하세요",
-//   "你好",
-//   "مرحبا",
-//   "Привет",
-//   "Merhaba",
-//   "שלום",
-//   "Hej",
-//   "Cześć",
-//   "Sawubona",
-//   "Jambo",
-//   "Xin chào",
-//   "สวัสดี",
-//   "Hello",
-//   "नमस्ते",
-// ]
+export const INTRO_SEEN_KEY = "portfolio-intro-seen-v2";
 
-// const INITIAL_DELAY = 230
-// const MIN_DELAY = 65
-// const ACCELERATION = 11
+export function replayIntro() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("portfolio:replay-intro"));
+  }
+}
 
-// export function IntroLoader() {
-//   const [index, setIndex] = useState(0)
-//   const [finished, setFinished] = useState(false)
-
-//   useEffect(() => {
-//     if (index === greetings.length - 1) {
-//       const timeout = window.setTimeout(() => {
-//         setFinished(true)
-//       }, 250)
-
-//       return () => window.clearTimeout(timeout)
-//     }
-
-//     const delay = Math.max(INITIAL_DELAY - index * ACCELERATION, MIN_DELAY)
-
-//     const timeout = window.setTimeout(() => {
-//       setIndex((current) => current + 1)
-//     }, delay)
-
-//     return () => window.clearTimeout(timeout)
-//   }, [index])
-
-//   return (
-//     <AnimatePresence>
-//       {!finished && (
-//         <motion.div
-//           initial={{ y: 0 }}
-//           exit={{ y: "-120%" }}
-//           transition={{
-//             duration: 1.15,
-//             ease: [0.76, 0, 0.24, 1],
-//           }}
-//           className='fixed inset-x-0 top-0 z-9999 h-dvh bg-background text-foreground'>
-//           <div className='flex h-full items-center justify-center'>
-//             <AnimatePresence mode='wait'>
-//               <motion.p
-//                 key={greetings[index]}
-//                 initial={{
-//                   opacity: 0,
-//                   y: 12,
-//                   filter: "blur(4px)",
-//                 }}
-//                 animate={{
-//                   opacity: 1,
-//                   y: 0,
-//                   filter: "blur(0px)",
-//                 }}
-//                 exit={{
-//                   opacity: 0,
-//                   y: -12,
-//                   filter: "blur(4px)",
-//                 }}
-//                 transition={{
-//                   duration: 0.09,
-//                   ease: "easeOut",
-//                 }}
-//                 className='text-4xl font-medium tracking-[-0.04em] sm:text-5xl md:text-6xl'>
-//                 {greetings[index]}
-//               </motion.p>
-//             </AnimatePresence>
-//           </div>
-
-//           {/* Curved bottom edge */}
-//           <div className='absolute -bottom-16 left-1/2 h-32 w-[120%] -translate-x-1/2 rounded-[50%] bg-background' />
-//         </motion.div>
-//       )}
-//     </AnimatePresence>
-//   )
-// }
-
-//! ------------------------------------------------------------------------
-
-"use client"
-
-import { AnimatePresence, motion } from "motion/react"
-import { useEffect, useState } from "react"
-
-const greetings = [
-  "Bonjour",
-  "Hola",
-  "Ciao",
-  "Olá",
-  "Hallo",
-  "こんにちは",
-  "안녕하세요",
-  "你好",
-  "مرحبا",
-  "Привет",
-  "Merhaba",
-  "שלום",
-  "Hej",
-  "Cześć",
-  "Sawubona",
-  "Jambo",
-  "Xin chào",
-  "สวัสดี",
-  "Hello",
-  "नमस्ते",
-]
-
-const INITIAL_DELAY = 230
-const MIN_DELAY = 65
-const ACCELERATION = 11
-
-const INTRO_SEEN_KEY = "portfolio-intro-seen"
+const statusSteps = [
+  { at: 0, text: "Initializing runtime environment" },
+  { at: 25, text: "Allocating system primitives" },
+  { at: 55, text: "Hydrating architecture & telemetry" },
+  { at: 85, text: "Establishing secure pipelines" },
+  { at: 100, text: "Ready. System mounted." },
+];
 
 export function IntroLoader() {
-  const [index, setIndex] = useState(0)
-  const [finished, setFinished] = useState(false)
-  const [shouldShow, setShouldShow] = useState(false)
+  const shouldReduceMotion = useReducedMotion();
+  const [progress, setProgress] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const [visible, setVisible] = useState(false);
 
-  /**
-   * Decide whether this session has already seen the intro.
-   */
+  const startBootSequence = useCallback(() => {
+    setProgress(0);
+    setMounted(true);
+    setVisible(true);
+  }, []);
+
+  const skipIntro = useCallback(() => {
+    setProgress(100);
+    setTimeout(() => {
+      setVisible(false);
+    }, 50);
+  }, []);
+
+  // Check on mount whether intro should display
   useEffect(() => {
-    const hasSeenIntro = sessionStorage.getItem(INTRO_SEEN_KEY)
+    const params = new URLSearchParams(window.location.search);
+    const forceIntro =
+      params.get("intro") === "1" || params.get("intro") === "true";
+    const hasSeenIntro = sessionStorage.getItem(INTRO_SEEN_KEY);
 
-    if (hasSeenIntro) {
-      setFinished(true)
-      return
+    if (!forceIntro && (hasSeenIntro || shouldReduceMotion)) {
+      return;
     }
 
-    // Mark it immediately so navigation/re-renders don't replay it.
-    sessionStorage.setItem(INTRO_SEEN_KEY, "true")
-    setShouldShow(true)
-  }, [])
+    sessionStorage.setItem(INTRO_SEEN_KEY, "true");
+    startBootSequence();
+  }, [shouldReduceMotion, startBootSequence]);
 
-  /**
-   * Run the greeting sequence only when the intro
-   * actually needs to be displayed.
-   */
+  // Listen for replay trigger
   useEffect(() => {
-    if (!shouldShow || finished) {
-      return
-    }
+    const handleReplay = () => {
+      startBootSequence();
+    };
 
-    if (index === greetings.length - 1) {
-      const timeout = window.setTimeout(() => {
-        setFinished(true)
-      }, 250)
+    window.addEventListener("portfolio:replay-intro", handleReplay);
+    return () => window.removeEventListener("portfolio:replay-intro", handleReplay);
+  }, [startBootSequence]);
 
-      return () => window.clearTimeout(timeout)
-    }
+  // Handle ESC key to skip
+  useEffect(() => {
+    if (!visible) return;
 
-    const delay = Math.max(INITIAL_DELAY - index * ACCELERATION, MIN_DELAY)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        skipIntro();
+      }
+    };
 
-    const timeout = window.setTimeout(() => {
-      setIndex((current) => current + 1)
-    }, delay)
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [visible, skipIntro]);
 
-    return () => window.clearTimeout(timeout)
-  }, [index, finished, shouldShow])
+  // Animate progress smoothly
+  useEffect(() => {
+    if (!visible) return;
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            setVisible(false);
+          }, 350);
+          return 100;
+        }
+
+        const remaining = 100 - prev;
+        // Calibrated increment for ~1.1s total boot time: feels alive, responsive, not sluggish
+        const increment = Math.max(1, Math.floor(Math.random() * (remaining * 0.12 + 3)));
+        return Math.min(100, prev + increment);
+      });
+    }, 38);
+
+    return () => clearInterval(interval);
+  }, [visible]);
+
+  const currentStatus =
+    [...statusSteps].reverse().find((s) => progress >= s.at)?.text ||
+    statusSteps[0].text;
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
-    <AnimatePresence>
-      {shouldShow && !finished && (
+    <AnimatePresence onExitComplete={() => setMounted(false)}>
+      {visible && (
         <motion.div
-          initial={{ y: 0 }}
-          exit={{ y: "-120%" }}
-          transition={{
-            duration: 1.15,
-            ease: [0.76, 0, 0.24, 1],
+          key="intro-curtain"
+          initial={{ y: 0, opacity: 1 }}
+          exit={{
+            y: "-100%",
+            transition: {
+              duration: 0.75,
+              ease: [0.76, 0, 0.24, 1],
+            },
           }}
-          className='fixed inset-x-0 top-0 z-9999 h-dvh overflow-hidden bg-background text-foreground'>
-          <div className='flex h-full items-center justify-center'>
-            <AnimatePresence mode='wait'>
-              <motion.p
-                key={greetings[index]}
-                initial={{
-                  opacity: 0,
-                  y: 12,
-                  filter: "blur(4px)",
-                }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  filter: "blur(0px)",
-                }}
-                exit={{
-                  opacity: 0,
-                  y: -12,
-                  filter: "blur(4px)",
-                }}
-                transition={{
-                  duration: 0.09,
-                  ease: "easeOut",
-                }}
-                className='text-4xl font-medium tracking-[-0.04em] sm:text-5xl md:text-6xl'>
-                {greetings[index]}
-              </motion.p>
-            </AnimatePresence>
+          className="fixed inset-0 z-99999 flex flex-col justify-between bg-background text-foreground p-6 sm:p-12 select-none overflow-hidden"
+        >
+          {/* Top telemetry bar */}
+          <div className="flex items-center justify-between font-mono text-xs text-muted-foreground border-b border-border/40 pb-4">
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full size-2 bg-emerald-500" />
+              </span>
+              <span className="tracking-wider uppercase font-semibold text-foreground">
+                Vishal Gupta
+              </span>
+            </div>
+            <span className="text-[11px] tracking-widest text-muted-foreground hidden sm:inline">
+              [ SYSTEMS // RELIABILITY ]
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={skipIntro}
+                className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground border border-border/60 rounded px-1.5 py-0.5 transition-colors cursor-pointer"
+              >
+                ESC to skip
+              </button>
+              <span className="font-mono text-xs text-foreground">
+                {new Date().getFullYear()}
+              </span>
+            </div>
           </div>
 
-          {/* Curved bottom edge */}
-          <div className='absolute -bottom-16 left-1/2 h-32 w-[120%] -translate-x-1/2 rounded-[50%] bg-background' />
+          {/* Center progress counter */}
+          <div className="my-auto mx-auto w-full max-w-md space-y-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+              className="space-y-2"
+            >
+              <div className="font-mono text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-foreground">
+                {progress.toString().padStart(3, "0")}
+                <span className="text-xl sm:text-2xl font-light text-muted-foreground ml-1">
+                  %
+                </span>
+              </div>
+
+              <div className="h-5 flex items-center justify-center">
+                <p className="font-mono text-xs tracking-wider uppercase text-muted-foreground flex items-center gap-1.5">
+                  <span className="inline-block size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {currentStatus}
+                </p>
+              </div>
+            </motion.div>
+
+            <div className="relative h-[2px] w-full max-w-xs mx-auto overflow-hidden rounded-full bg-muted">
+              <motion.div
+                className="absolute inset-y-0 left-0 bg-foreground"
+                style={{ width: `${progress}%` }}
+                transition={{ duration: 0.05, ease: "linear" }}
+              />
+            </div>
+          </div>
+
+          {/* Bottom metadata */}
+          <div className="flex flex-wrap items-center justify-between text-[11px] font-mono text-muted-foreground border-t border-border/40 pt-4">
+            <span>PORTFOLIO OS // V2.0</span>
+            <span className="hidden sm:inline">OPTIMIZED FOR PRODUCTION</span>
+            <span>STATUS: {progress === 100 ? "MOUNTED" : "BOOTING"}</span>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
-  )
+  );
 }
+

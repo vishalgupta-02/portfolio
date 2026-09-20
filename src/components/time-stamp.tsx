@@ -30,9 +30,10 @@ function getOffsetInHours(timeZone: string) {
 }
 
 export default function TimeDisplay() {
-  const [now, setNow] = useState(new Date())
+  const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
+    setNow(new Date())
     const interval = setInterval(() => {
       setNow(new Date())
     }, 1000)
@@ -40,25 +41,38 @@ export default function TimeDisplay() {
     return () => clearInterval(interval)
   }, [])
 
+  if (!now) {
+    return <span className="font-mono text-muted-foreground">--:--:--</span>
+  }
+
   const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
   const time = new Intl.DateTimeFormat("en-US", {
     timeZone: userTimezone,
     hour: "2-digit",
     minute: "2-digit",
+    second: "2-digit",
     hour12: true,
   }).format(now)
 
   const difference = getOffsetInHours(userTimezone)
 
   return (
-    <p className='space-x-1'>
-      {time} //
-      <span className='text-foreground/60 ml-1'>
+    <div className="flex items-center gap-2">
+      <span className="font-mono font-medium text-foreground tracking-tight flex items-center gap-1.5">
+        <span className="relative flex size-1.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex rounded-full size-1.5 bg-emerald-500" />
+        </span>
+        {time}
+      </span>
+      <span className="text-[10px] font-mono text-muted-foreground bg-muted/40 border border-border/40 px-1.5 py-0.5 rounded">
         {difference === 0
-          ? "same time"
+          ? "Local (IST)"
           : `${Math.abs(difference)}h ${difference > 0 ? "ahead" : "behind"}`}
       </span>
-    </p>
+    </div>
   )
 }
+
+

@@ -2,17 +2,14 @@
 
 import { Command } from "cmdk"
 import React from "react"
-
-const quickActions = [
-  { id: "home", label: "Go to Home", shortcut: "H" },
-  { id: "work", label: "View Work", shortcut: "W" },
-  { id: "about", label: "About Me", shortcut: "A" },
-  { id: "contact", label: "Contact", shortcut: "C" },
-  { id: "theme", label: "Toggle Theme", shortcut: "T" },
-]
+import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
+import { replayIntro } from "./intro-loader"
 
 const CommandMenu = () => {
   const [open, setOpen] = React.useState(false)
+  const router = useRouter()
+  const { theme, setTheme } = useTheme()
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -26,15 +23,49 @@ const CommandMenu = () => {
     return () => document.removeEventListener("keydown", down)
   }, [])
 
+  const handleAction = (actionId: string) => {
+    setOpen(false)
+    switch (actionId) {
+      case "home":
+        router.push("/")
+        break
+      case "work":
+        router.push("/work")
+        break
+      case "blog":
+        router.push("/blog")
+        break
+      case "postmortems":
+        router.push("/postmortems")
+        break
+      case "theme":
+        setTheme(theme === "dark" ? "light" : "dark")
+        break
+      case "replay-intro":
+        replayIntro()
+        break
+      case "copy-email":
+        navigator.clipboard?.writeText("abhimanyug987@gmail.com")
+        break
+      case "github":
+        window.open("https://github.com/vishalgupta-02", "_blank")
+        break
+      default:
+        break
+    }
+  }
+
   return (
     <>
       <button
         type='button'
         onClick={() => setOpen(true)}
-        className='group flex items-center gap-2 rounded-full border border-border px-2 py-1 text-sm font-medium text-foreground shadow-sm transition-all duration-200 hover:bg-accent/70 hover:shadow-md'>
-        <span className='text-xs'>Search</span>
-        <span className='hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground sm:inline'>
-          K
+        aria-label="Open command palette"
+        className='group flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-xs transition-all duration-200 hover:border-border hover:bg-muted/50 hover:text-foreground active:scale-95 cursor-pointer'>
+        <span className='hidden sm:inline font-mono text-[11px]'>Search</span>
+        <span className='inline-flex items-center gap-0.5 rounded border border-border/80 bg-background/80 px-1.5 py-0.2 font-mono text-[10px] font-semibold text-muted-foreground group-hover:text-foreground transition-colors'>
+          <span>⌘</span>
+          <span>K</span>
         </span>
       </button>
 
@@ -42,70 +73,98 @@ const CommandMenu = () => {
         open={open}
         onOpenChange={setOpen}
         label='Global Command Menu'
-        className='fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-20 backdrop-blur-sm'>
-        <div className='w-full max-w-2xl overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-2xl shadow-black/20 ring-1 ring-border'>
+        className='fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 pt-20 sm:pt-28 backdrop-blur-sm animate-in fade-in-0 duration-150'>
+        <div className='w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-2xl ring-1 ring-border/50'>
           <div className='flex items-center gap-3 border-b border-border px-4 py-3'>
-            <span className='flex h-8 w-8 items-center justify-center rounded-full border border-border bg-muted text-sm font-semibold'>
+            <span className='flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-muted/60 font-mono text-xs font-semibold text-foreground'>
               ⌘
             </span>
             <Command.Input
-              placeholder='Search commands or pages...'
-              className='h-10 w-full border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground'
+              placeholder='Type a command, jump to page, or search...'
+              className='h-9 w-full border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground font-sans'
             />
-            <kbd className='rounded border border-border bg-muted px-2 py-1 text-[10px] font-semibold uppercase text-muted-foreground'>
-              esc
+            <kbd className='rounded border border-border bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground'>
+              ESC
             </kbd>
           </div>
 
-          <Command.List className='max-h-[60vh] overflow-y-auto p-2'>
-            <Command.Empty className='rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground'>
-              No matches found. Try a different keyword.
+          <Command.List className='max-h-[60vh] overflow-y-auto p-2 scrollbar-thin'>
+            <Command.Empty className='rounded-xl border border-dashed border-border/60 px-4 py-8 text-center text-xs font-mono text-muted-foreground'>
+              No matching commands found.
             </Command.Empty>
 
-            <Command.Group heading='Quick actions' className='px-1 py-2'>
-              {quickActions.map((item) => (
-                <Command.Item
-                  key={item.id}
-                  value={item.label}
-                  onSelect={() => setOpen(false)}
-                  className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
-                  <span>{item.label}</span>
-                  <span className='rounded border border-border bg-muted px-2 py-1 text-[10px] uppercase text-muted-foreground'>
-                    {item.shortcut}
-                  </span>
-                </Command.Item>
-              ))}
-            </Command.Group>
-
-            <Command.Separator className='my-2 h-px bg-border' />
-
-            <Command.Group heading='Navigate' className='px-1 py-2'>
+            <Command.Group heading='Navigation' className='px-1 py-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground'>
               <Command.Item
-                value='Open portfolio home'
-                onSelect={() => setOpen(false)}
-                className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
-                <span>Open portfolio home</span>
-                <span className='text-muted-foreground'>↵</span>
+                value='Home'
+                onSelect={() => handleAction("home")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Go to Home</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>/</span>
               </Command.Item>
               <Command.Item
-                value='View engineering postmortems'
-                onSelect={() => {
-                  setOpen(false)
-                  window.location.href = '/postmortems'
-                }}
-                className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
-                <span>View engineering postmortems</span>
-                <span className='text-muted-foreground'>↵</span>
+                value='Work Projects Case Studies'
+                onSelect={() => handleAction("work")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>View Engineering Work</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>/work</span>
               </Command.Item>
               <Command.Item
-                value='Jump to contact'
-                onSelect={() => setOpen(false)}
-                className='flex cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-sm text-foreground transition-colors duration-150 data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
-                <span>Jump to contact</span>
-                <span className='text-muted-foreground'>↵</span>
+                value='Blog Technical Articles'
+                onSelect={() => handleAction("blog")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Read Blog Articles</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>/blog</span>
+              </Command.Item>
+              <Command.Item
+                value='Postmortems Incident Analysis'
+                onSelect={() => handleAction("postmortems")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Read Production Postmortems</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>/postmortems</span>
               </Command.Item>
             </Command.Group>
 
+            <Command.Separator className='my-1.5 h-px bg-border/60' />
+
+            <Command.Group heading='Interactive Systems' className='px-1 py-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground'>
+              <Command.Item
+                value='Replay Boot Sequence Loader Animation'
+                onSelect={() => handleAction("replay-intro")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span className='flex items-center gap-2'>
+                  <span className='size-1.5 rounded-full bg-emerald-500 animate-pulse' />
+                  Replay System Boot Sequence
+                </span>
+                <span className='rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground'>
+                  Boot OS
+                </span>
+              </Command.Item>
+              <Command.Item
+                value='Toggle Theme Light Dark Mode'
+                onSelect={() => handleAction("theme")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Toggle Color Theme</span>
+                <span className='rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground'>
+                  T
+                </span>
+              </Command.Item>
+              <Command.Item
+                value='Copy Email Contact'
+                onSelect={() => handleAction("copy-email")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Copy Direct Email (abhimanyug987@gmail.com)</span>
+                <span className='rounded border border-border/80 bg-muted/60 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground'>
+                  Copy
+                </span>
+              </Command.Item>
+              <Command.Item
+                value='Open GitHub Profile'
+                onSelect={() => handleAction("github")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Open GitHub Profile (@vishalgupta-02)</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>↗</span>
+              </Command.Item>
+            </Command.Group>
           </Command.List>
         </div>
       </Command.Dialog>

@@ -1,10 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
 import { renderToString } from "react-dom/server";
-
-import { Button } from "@/components/ui/button";
 
 interface Icon {
   x: number;
@@ -28,7 +25,6 @@ function easeOutCubic(t: number): number {
 export function IconCloud({
   icons,
   images,
-  showControl = true,
 }: IconCloudProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [iconPositions, setIconPositions] = useState<Icon[]>([]);
@@ -51,7 +47,6 @@ export function IconCloud({
   const imagesLoadedRef = useRef<boolean[]>([]);
   const [isDark, setIsDark] = useState(false);
 
-  // Track light/dark theme class on document element
   useEffect(() => {
     const updateTheme = () => {
       setIsDark(document.documentElement.classList.contains("dark"));
@@ -65,7 +60,6 @@ export function IconCloud({
     return () => observer.disconnect();
   }, []);
 
-  // Pause animation if user prefers reduced motion
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mediaQuery.matches) {
@@ -80,7 +74,6 @@ export function IconCloud({
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  // Create icon canvases once when icons/images change
   useEffect(() => {
     if (!icons && !images) return;
 
@@ -95,32 +88,23 @@ export function IconCloud({
 
       if (offCtx) {
         if (images) {
-          // Handle image URLs directly
           const img = new Image();
           img.crossOrigin = "anonymous";
           img.src = items[index] as string;
           img.onload = () => {
             offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
-
-            // Create circular clipping path
             offCtx.beginPath();
             offCtx.arc(20, 20, 20, 0, Math.PI * 2);
             offCtx.closePath();
             offCtx.clip();
-
-            // Draw the image
             offCtx.drawImage(img, 0, 0, 40, 40);
-
             imagesLoadedRef.current[index] = true;
           };
         } else {
-          // Handle SVG icons
           offCtx.scale(0.4, 0.4);
           try {
             let svgString = renderToString(item as React.ReactElement);
-            console.log("SUCCESS RENDER:", index, svgString.substring(0, 100));
 
-            // Ensure xmlns attribute is present for standalone SVG contexts
             if (!svgString.includes("xmlns=")) {
               svgString = svgString.replace(
                 "<svg",
@@ -128,7 +112,6 @@ export function IconCloud({
               );
             }
 
-            // Ensure width and height are present so browser knows dimensions
             if (!svgString.includes("width=")) {
               svgString = svgString.replace(
                 "<svg",
@@ -136,7 +119,6 @@ export function IconCloud({
               );
             }
 
-            // Replace currentColor with the correct theme color
             const color = isDark ? "#f7f6f3" : "#111110";
             const styledSvg = svgString.replaceAll("currentColor", color);
 
@@ -144,16 +126,11 @@ export function IconCloud({
             const dataUri =
               "data:image/svg+xml;base64," +
               btoa(unescape(encodeURIComponent(styledSvg)));
-            console.log("SVG DATA URI:", index, dataUri);
             img.src = dataUri;
             img.onload = () => {
-              console.log("SUCCESS IMG LOAD:", index);
               offCtx.clearRect(0, 0, offscreen.width, offscreen.height);
               offCtx.drawImage(img, 0, 0);
               imagesLoadedRef.current[index] = true;
-            };
-            img.onerror = (e) => {
-              console.error("ERROR IMG LOAD:", index, e);
             };
           } catch (err) {
             console.error("ERROR RENDER TO STRING:", index, err);
@@ -166,13 +143,11 @@ export function IconCloud({
     iconCanvasesRef.current = newIconCanvases;
   }, [icons, images, isDark]);
 
-  // Generate initial icon positions on a sphere
   useEffect(() => {
     const items = icons ?? images ?? [];
     const newIcons: Icon[] = [];
     const numIcons = items.length || 20;
 
-    // Fibonacci sphere parameters
     const offset = 2 / numIcons;
     const increment = Math.PI * (3 - Math.sqrt(5));
 
@@ -196,7 +171,6 @@ export function IconCloud({
     setIconPositions(newIcons);
   }, [icons, images]);
 
-  // Handle mouse events
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect || !canvasRef.current) return;
@@ -262,11 +236,9 @@ export function IconCloud({
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (rect && canvasRef.current) {
-      const scaleX = canvasRef.current.width / rect.width;
-      const scaleY = canvasRef.current.height / rect.height;
-      const x = (e.clientX - rect.left) * scaleX;
-      const y = (e.clientY - rect.top) * scaleY;
+    if (rect) {
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
       setMousePos({ x, y });
     }
 
@@ -275,7 +247,7 @@ export function IconCloud({
       const deltaY = e.clientY - lastMousePos.y;
 
       rotationRef.current = {
-        x: rotationRef.current.x + deltaY * 0.002,
+        x: rotationRef.current.x - deltaY * 0.002,
         y: rotationRef.current.y + deltaX * 0.002,
       };
 
@@ -288,75 +260,84 @@ export function IconCloud({
   };
 
   const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (e.touches.length === 1) {
-      const touch = e.touches[0];
-      const rect = canvasRef.current?.getBoundingClientRect();
-      if (!rect || !canvasRef.current) return;
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect || !canvasRef.current) return;
 
-      const scaleX = canvasRef.current.width / rect.width;
-      const scaleY = canvasRef.current.height / rect.height;
-      const x = (touch.clientX - rect.left) * scaleX;
-      const y = (touch.clientY - rect.top) * scaleY;
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
 
-      iconPositions.forEach((icon) => {
-        const cosX = Math.cos(rotationRef.current.x);
-        const sinX = Math.sin(rotationRef.current.x);
-        const cosY = Math.cos(rotationRef.current.y);
-        const sinY = Math.sin(rotationRef.current.y);
+    const x = (touch.clientX - rect.left) * scaleX;
+    const y = (touch.clientY - rect.top) * scaleY;
 
-        const rotatedX = icon.x * cosY - icon.z * sinY;
-        const rotatedZ = icon.x * sinY + icon.z * cosY;
-        const rotatedY = icon.y * cosX + rotatedZ * sinX;
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
 
-        const screenX = canvasRef.current!.width / 2 + rotatedX;
-        const screenY = canvasRef.current!.height / 2 + rotatedY;
+    iconPositions.forEach((icon) => {
+      const cosX = Math.cos(rotationRef.current.x);
+      const sinX = Math.sin(rotationRef.current.x);
+      const cosY = Math.cos(rotationRef.current.y);
+      const sinY = Math.sin(rotationRef.current.y);
 
-        const scale = (rotatedZ + 200) / 300;
-        const radius = 20 * scale;
-        const dx = x - screenX;
-        const dy = y - screenY;
+      const rotatedX = icon.x * cosY - icon.z * sinY;
+      const rotatedZ = icon.x * sinY + icon.z * cosY;
+      const rotatedY = icon.y * cosX + rotatedZ * sinX;
 
-        if (dx * dx + dy * dy < radius * radius) {
-          const targetX = -Math.atan2(
-            icon.y,
-            Math.sqrt(icon.x * icon.x + icon.z * icon.z),
-          );
-          const targetY = Math.atan2(icon.x, icon.z);
+      const screenX = canvasRef.current!.width / 2 + rotatedX;
+      const screenY = canvasRef.current!.height / 2 + rotatedY;
 
-          const currentX = rotationRef.current.x;
-          const currentY = rotationRef.current.y;
-          const distance = Math.sqrt(
-            Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2),
-          );
+      const scale = (rotatedZ + 200) / 300;
+      const radius = 20 * scale;
+      const dx = x - screenX;
+      const dy = y - screenY;
 
-          const duration = Math.min(2000, Math.max(800, distance * 1000));
+      if (dx * dx + dy * dy < radius * radius) {
+        const targetX = -Math.atan2(
+          icon.y,
+          Math.sqrt(icon.x * icon.x + icon.z * icon.z),
+        );
+        const targetY = Math.atan2(icon.x, icon.z);
 
-          setTargetRotation({
-            x: targetX,
-            y: targetY,
-            startX: currentX,
-            startY: currentY,
-            distance,
-            startTime: performance.now(),
-            duration,
-          });
-          return;
-        }
-      });
+        const currentX = rotationRef.current.x;
+        const currentY = rotationRef.current.y;
+        const distance = Math.sqrt(
+          Math.pow(targetX - currentX, 2) + Math.pow(targetY - currentY, 2),
+        );
 
-      setIsDragging(true);
-      setLastMousePos({ x: touch.clientX, y: touch.clientY });
-    }
+        const duration = Math.min(2000, Math.max(800, distance * 1000));
+
+        setTargetRotation({
+          x: targetX,
+          y: targetY,
+          startX: currentX,
+          startY: currentY,
+          distance,
+          startTime: performance.now(),
+          duration,
+        });
+        return;
+      }
+    });
+
+    setIsDragging(true);
+    setLastMousePos({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (isDragging && e.touches.length === 1) {
-      const touch = e.touches[0];
+    const touch = e.touches[0];
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      setMousePos({ x, y });
+    }
+
+    if (isDragging) {
       const deltaX = touch.clientX - lastMousePos.x;
       const deltaY = touch.clientY - lastMousePos.y;
 
       rotationRef.current = {
-        x: rotationRef.current.x + deltaY * 0.003,
+        x: rotationRef.current.x - deltaY * 0.003,
         y: rotationRef.current.y + deltaX * 0.003,
       };
 
@@ -368,7 +349,6 @@ export function IconCloud({
     setIsDragging(false);
   };
 
-  // Animation and rendering
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
@@ -430,7 +410,6 @@ export function IconCloud({
           ctx.globalAlpha = opacity;
 
           if (icons || images) {
-            // Only try to render icons/images if they exist
             if (
               iconCanvasesRef.current[index] &&
               imagesLoadedRef.current[index]
@@ -438,7 +417,6 @@ export function IconCloud({
               ctx.drawImage(iconCanvasesRef.current[index], -20, -20, 40, 40);
             }
           } else {
-            // Show numbered circles if no icons/images are provided
             ctx.beginPath();
             ctx.arc(0, 0, 20, 0, Math.PI * 2);
             ctx.fillStyle = "#4444ff";
@@ -502,17 +480,6 @@ export function IconCloud({
         aria-label="Interactive 3D Icon Cloud"
         role="img"
       />
-      {/* {showControl && (
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsPaused(!isPaused)}
-          aria-label={isPaused ? "Play Animation" : "Pause Animation"}
-          className="absolute top-2 right-2"
-        >
-          {isPaused ? <Play size={16} /> : <Pause size={16} />}
-        </Button> */}
-      {/* )} */}
     </div>
   );
 }

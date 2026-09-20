@@ -1,36 +1,34 @@
-"use client"
+"use client";
 
-import React from "react"
-import MainLayout from "./main-layout"
-import { GithubGraph } from "./github-graph"
+import React from "react";
+import { GithubGraph } from "./github-graph";
 
 export default function GithubSection() {
   return (
-    <MainLayout>
-      <section className="w-full max-w-2xl mx-auto py-4 px-4">
-        {/* <div className="mb-4">
-          <h2 className="text-[24px] font-semibold tracking-tight text-center md:text-left">
-            GitHub Activity
+    <section className="mx-auto w-full max-w-2xl px-4 py-8">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-xl font-semibold tracking-tight text-foreground font-sans">
+            Contributions
           </h2>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 text-center md:text-left">
-            Open-source contributions, repositories, and engineering streak.
+          <p className="text-xs text-muted-foreground font-display mt-0.5">
+            Open source commits, telemetry & continuous delivery
           </p>
-        </div> */}
-        <GithubGraph
-          account="vishalgupta-02"
-          months={12}
-          variant="github"
-          animation="wave"
-          animationSpeed={1.2}
-          cellSize={9}
-          cellGap={2.5}
-          cellRadius={2}
-          showStats={false}
-          showLegend
-          showAccount
-        />
-      </section>
-    </MainLayout>
-  )
-}
+        </div>
+      </div>
 
+      <GithubGraph
+        account="vishalgupta-02"
+        months={12}
+        variant="github"
+        animation="wave"
+        animationSpeed={1.2}
+        cellGap={3}
+        cellRadius={2.5}
+        showStats={false}
+        showLegend
+        showAccount={false}
+      />
+    </section>
+  );
+}

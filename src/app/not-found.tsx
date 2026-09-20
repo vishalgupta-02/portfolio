@@ -7,23 +7,11 @@ export default function NotFound() {
   const router = useRouter();
   return (
     <main className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-20 text-foreground">
-      {/* Background grid */}
       <div className="pointer-events-none absolute inset-0 -z-10">
-        {/* <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        /> */}
-
-        {/* Ambient glow */}
         <div className="absolute left-1/2 top-1/2 h-105 w-105 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]" />
       </div>
 
       <section className="w-full max-w-3xl text-center">
-        {/* Status badge */}
         <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/80 px-4 py-2 text-sm text-muted-foreground shadow-sm backdrop-blur">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -33,7 +21,6 @@ export default function NotFound() {
           <span>404 · Page not found</span>
         </div>
 
-        {/* 404 */}
         <div className="relative">
           <h1
             aria-label="404"
@@ -49,7 +36,6 @@ export default function NotFound() {
             404
           </h1>
 
-          {/* Decorative separator */}
           <div className="mx-auto mt-10 flex max-w-xs items-center gap-3">
             <div className="h-px flex-1 bg-border" />
             <div className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -57,7 +43,6 @@ export default function NotFound() {
           </div>
         </div>
 
-        {/* Message */}
         <div className="mx-auto mt-10 max-w-xl">
           <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
             This page doesn&apos;t exist.
@@ -69,7 +54,6 @@ export default function NotFound() {
           </p>
         </div>
 
-        {/* Route visualization */}
         <div className="mx-auto mt-10 flex max-w-md items-center justify-center gap-3 font-mono text-xs text-muted-foreground">
           <span className="rounded-md border border-border bg-muted/40 px-3 py-2">
             REQUEST
@@ -88,7 +72,6 @@ export default function NotFound() {
           </span>
         </div>
 
-        {/* Actions */}
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link
             href="/"
@@ -141,7 +124,6 @@ export default function NotFound() {
           </button>
         </div>
 
-        {/* Technical footer */}
         <div className="mt-12">
           <p className="font-mono text-xs text-muted-foreground/50">
             ROUTE_NOT_FOUND
@@ -152,6 +134,7 @@ export default function NotFound() {
           </p>
         </div>
       </section>
+
     </main>
   );
 }

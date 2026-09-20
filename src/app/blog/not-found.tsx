@@ -1,30 +1,3 @@
-// import MainLayout from "@/components/main-layout";
-// import Link from "next/link";
-
-// export default function BlogNotFound() {
-//   return (
-//     <MainLayout>
-//       <main className="mx-auto max-w-3xl px-6 py-24">
-//         <h1 className="text-3xl font-bold tracking-tight">Article not found</h1>
-
-//         <p className="mt-4 text-muted-foreground">
-//           The article you&apos;re looking for doesn&apos;t exist or may have
-//           been moved.
-//         </p>
-
-//         <Link
-//           href="/blog"
-//           className="mt-8 inline-block font-medium underline underline-offset-4"
-//         >
-//           Back to blog
-//         </Link>
-//       </main>
-//     </MainLayout>
-//   );
-// }
-
-// ! ---------------------------------------------------------
-
 import MainLayout from "@/components/main-layout";
 import Link from "next/link";
 
@@ -32,13 +5,11 @@ export default function BlogNotFound() {
   return (
     <MainLayout>
       <main className="relative isolate flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden px-6 py-16">
-        {/* Background */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute left-1/2 top-1/2 h-125 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]" />
         </div>
 
         <section className="relative mx-auto w-full max-w-3xl text-center">
-          {/* Status */}
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-4 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
@@ -48,7 +19,6 @@ export default function BlogNotFound() {
             <span>404 · Route not found</span>
           </div>
 
-          {/* 404 */}
           <div className="relative select-none">
             <h1
               aria-label="404"
@@ -57,7 +27,6 @@ export default function BlogNotFound() {
               404
             </h1>
 
-            {/* Decorative line */}
             <div className="mx-auto mt-8 flex max-w-xs items-center gap-3">
               <div className="h-px flex-1 bg-border" />
               <div className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -65,7 +34,6 @@ export default function BlogNotFound() {
             </div>
           </div>
 
-          {/* Content */}
           <div className="mx-auto mt-10 max-w-xl">
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Looks like this route took a wrong turn.
@@ -77,7 +45,6 @@ export default function BlogNotFound() {
             </p>
           </div>
 
-          {/* Route visualization */}
           <div className="mx-auto mt-10 flex max-w-md items-center justify-center gap-3 font-mono text-xs text-muted-foreground">
             <span className="rounded-md border border-border bg-muted/40 px-3 py-2">
               /blog
@@ -96,7 +63,6 @@ export default function BlogNotFound() {
             </span>
           </div>
 
-          {/* CTA */}
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href="/blog"
@@ -116,7 +82,6 @@ export default function BlogNotFound() {
             </Link>
           </div>
 
-          {/* Tiny developer easter egg */}
           <p className="mt-12 font-mono text-xs text-muted-foreground/50">
             Error: RESOURCE_NOT_FOUND
           </p>

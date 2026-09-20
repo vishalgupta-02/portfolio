@@ -33,33 +33,19 @@ export type GithubContributionCell = GithubContribution & {
 export type GithubContributionWeek = GithubContributionCell[];
 
 export interface GithubGraphProps {
-  /** GitHub username, with or without a leading @. @default "vishalgupta-02" */
   account?: string;
-  /** Number of recent calendar months to display. @default 12 */
   months?: number;
-  /** Color treatment for contribution levels. @default "github" */
   variant?: GithubGraphVariant;
-  /** Entrance choreography for graph cells. @default "wave" */
   animation?: GithubGraphAnimation;
-  /** Animation multiplier; higher values reveal the graph faster. @default 1 */
   animationSpeed?: number;
-  /** Size of each contribution cell in pixels. @default 12 */
   cellSize?: number;
-  /** Space between contribution cells in pixels. @default 3 */
   cellGap?: number;
-  /** Corner radius of contribution cells in pixels. @default 2.5 */
   cellRadius?: number;
-  /** Shows the contribution-level legend. @default true */
   showLegend?: boolean;
-  /** Shows the account header and stats above the graph. @default true */
   showAccount?: boolean;
-  /** Shows summary statistics cards. @default true */
   showStats?: boolean;
-  /** Persistent, subtle motion pattern applied to graph cells. @default "none" */
   ambientEffect?: GithubGraphAmbientEffect;
-  /** Strength of the persistent cell motion. @default 0.5 */
   ambientIntensity?: number;
-  /** Optional preloaded contributions, which bypass the public fetch. */
   data?: GithubContribution[];
   className?: string;
 }
@@ -75,7 +61,6 @@ type ResourceState =
 
 const CONTRIBUTIONS_ENDPOINT = "/api/github/contributions";
 
-// Theme-aware color palettes: [darkPalette, lightPalette]
 const THEMED_VARIANTS: Record<
   GithubGraphVariant,
   {
@@ -233,12 +218,10 @@ function calculateContributionStats(contributions: GithubContribution[]) {
     }
   });
 
-  // Calculate current streak from the end backwards
   for (let i = sorted.length - 1; i >= 0; i--) {
     if (sorted[i]!.count > 0) {
       currentStreak++;
     } else if (i === sorted.length - 1) {
-      // today might be 0 yet, check yesterday
       continue;
     } else {
       break;
@@ -314,45 +297,41 @@ function getAmbientCellMotion(
 }
 
 function LoadingSkeleton({
-  cellSize,
   cellGap,
   cellRadius,
 }: {
-  cellSize: number;
+  cellSize?: number;
   cellGap: number;
   cellRadius: number;
 }) {
-  const weekCount = 48;
+  const weekCount = 52;
 
   return (
-    <div className="w-full animate-pulse space-y-4">
-      {/* <div className="flex gap-4">
-        <div className="h-10 w-28 bg-muted/60 rounded-md" />
-        <div className="h-10 w-28 bg-muted/60 rounded-md" />
-        <div className="h-10 w-28 bg-muted/60 rounded-md" />
-      </div> */}
-      <div className="[scrollbar-width:none] overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden">
-        <div className="flex min-w-max" style={{ gap: cellGap }}>
-          {Array.from({ length: weekCount }, (_, week) => (
-            <div
-              key={week}
-              className="grid grid-rows-7"
-              style={{ gap: cellGap }}
-            >
-              {Array.from({ length: 7 }, (_, day) => (
-                <span
-                  key={day}
-                  className="bg-muted/40"
-                  style={{
-                    width: cellSize,
-                    height: cellSize,
-                    borderRadius: cellRadius,
-                  }}
-                />
-              ))}
-            </div>
-          ))}
-        </div>
+    <div className="w-full animate-pulse">
+      <div
+        className="grid w-full"
+        style={{
+          gridTemplateColumns: `repeat(${weekCount}, minmax(0, 1fr))`,
+          gap: cellGap,
+        }}
+      >
+        {Array.from({ length: weekCount }, (_, week) => (
+          <div
+            key={week}
+            className="grid grid-rows-7 w-full"
+            style={{ gap: cellGap }}
+          >
+            {Array.from({ length: 7 }, (_, day) => (
+              <span
+                key={day}
+                className="w-full aspect-square bg-muted/40"
+                style={{
+                  borderRadius: cellRadius,
+                }}
+              />
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -501,36 +480,6 @@ export function GithubGraph({
     return calculateContributionStats(filteredContributions);
   }, [filteredContributions]);
 
-  // Extract month label positions from the week columns
-  const monthLabels = React.useMemo(() => {
-    if (weeks.length === 0) return [];
-    const labels: { month: string; weekIndex: number }[] = [];
-    let prevMonth = -1;
-
-    weeks.forEach((week, weekIndex) => {
-      const firstDay = week[0];
-      if (!firstDay) return;
-      const date = dateFromISO(firstDay.date);
-      if (!date) return;
-      const currentMonth = date.getUTCMonth();
-
-      if (currentMonth !== prevMonth) {
-        const monthName = new Intl.DateTimeFormat("en", {
-          month: "short",
-        }).format(date);
-        labels.push({ month: monthName, weekIndex });
-        prevMonth = currentMonth;
-      }
-    });
-
-    // Filter out labels that are too close to previous label (< 3 weeks) to avoid overlapping
-    return labels.filter((label, idx, arr) => {
-      if (idx === 0) return true;
-      const prev = arr[idx - 1];
-      return label.weekIndex - prev!.weekIndex >= 3;
-    });
-  }, [weeks]);
-
   const animationKey = `${normalizedAccount}-${months}-${variant}-${animation}-${cellSize}-${cellGap}`;
 
   const showTooltip = React.useCallback(
@@ -565,110 +514,14 @@ export function GithubGraph({
     [],
   );
 
-  const dayLabels = ["Mon", "", "Wed", "", "Fri", "", ""];
-
-  React.useEffect(() => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollLeft =
-        scrollContainerRef.current.scrollWidth;
-    }
-  }, [weeks]);
-
   return (
     <div
       className={cn(
-        "border-border/70 bg-card/40 w-full overflow-hidden rounded-xl border p-4 shadow-sm backdrop-blur-sm transition-all sm:p-5",
+        "bg-card w-full overflow-hidden rounded-sm transition-all",
         className,
       )}
       aria-busy={resource.status === "loading"}
     >
-      {/* Header */}
-      {showAccount && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="border-border/80 bg-muted/60 text-foreground flex size-8 items-center justify-center rounded-lg border">
-              <Github />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <Link
-                  href={`https://github.com/${normalizedAccount}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground inline-flex items-center gap-1 text-sm font-medium hover:underline sm:text-base"
-                >
-                  @{normalizedAccount}
-                  <ExternalLink className="text-muted-foreground size-3.5" />
-                </Link>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
-                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-                  Active
-                </span>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                GitHub Open Source Contributions
-              </p>
-            </div>
-          </div>
-
-          <Link
-            href={`https://github.com/${normalizedAccount}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="border-border/80 bg-background text-foreground hover:bg-muted/70 inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium shadow-2xs transition-colors"
-          >
-            Follow on GitHub
-            <ExternalLink className="text-muted-foreground size-3" />
-          </Link>
-        </div>
-      )}
-
-      {/* Stats row - Commented out as requested to keep the UI clean & minimal */}
-      {/* {showStats && resource.status === "ready" && (
-        <div className="mb-5 grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div className="rounded-lg border border-border/50 bg-muted/30 p-2.5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <GitCommit className="size-3.5 text-emerald-500" />
-              <span>Total Commits</span>
-            </div>
-            <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-              {stats.total.toLocaleString()}
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border/50 bg-muted/30 p-2.5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Flame className="size-3.5 text-amber-500" />
-              <span>Longest Streak</span>
-            </div>
-            <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-              {stats.longestStreak} {stats.longestStreak === 1 ? "day" : "days"}
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border/50 bg-muted/30 p-2.5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Calendar className="size-3.5 text-sky-500" />
-              <span>Active Days</span>
-            </div>
-            <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-              {stats.activeDays} {stats.activeDays === 1 ? "day" : "days"}
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border/50 bg-muted/30 p-2.5">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Sparkles className="size-3.5 text-violet-500" />
-              <span>Current Streak</span>
-            </div>
-            <p className="mt-1 text-lg font-semibold tracking-tight text-foreground">
-              {stats.currentStreak} {stats.currentStreak === 1 ? "day" : "days"}
-            </p>
-          </div>
-        </div>
-      )} */}
-
-      {/* Loading state */}
       {resource.status === "loading" && (
         <LoadingSkeleton
           cellSize={cellSize}
@@ -677,7 +530,6 @@ export function GithubGraph({
         />
       )}
 
-      {/* Error state */}
       {resource.status === "error" && (
         <div className="text-muted-foreground flex flex-col items-center justify-center p-6 text-center text-sm">
           <p>{resource.message}</p>
@@ -691,176 +543,126 @@ export function GithubGraph({
         </div>
       )}
 
-      {/* Contribution Heatmap */}
       {resource.status === "ready" && weeks.length > 0 && (
         <div className="relative w-full">
           <div
-            ref={scrollContainerRef}
-            className="[scrollbar-width:none] overflow-x-auto pt-1 pb-2 [&::-webkit-scrollbar]:hidden"
+            className="grid w-full"
+            style={{
+              gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))`,
+              gap: cellGap,
+            }}
+            role="grid"
+            aria-label={`GitHub contributions for ${normalizedAccount}`}
+            onMouseLeave={() => setHoveredContribution(null)}
           >
-            <div className="min-w-max">
-              {/* Month row */}
+            {weeks.map((week, weekIndex) => (
               <div
-                className="text-muted-foreground relative mb-2 flex h-4 text-[11px]"
-                style={{ paddingLeft: 24 }}
+                key={`${animationKey}-${weekIndex}`}
+                className="grid grid-rows-7 w-full"
+                style={{ gap: cellGap }}
+                role="row"
               >
-                {monthLabels.map((item, idx) => (
-                  <span
-                    key={`${item.month}-${idx}`}
-                    className="absolute"
-                    style={{
-                      left: 24 + item.weekIndex * (cellSize + cellGap),
-                    }}
-                  >
-                    {item.month}
-                  </span>
-                ))}
-              </div>
+                {week.map((contribution, dayIndex) => {
+                  const label = formatContributionLabel(contribution);
+                  const entranceDelay = reducedMotion
+                    ? 0
+                    : getCellDelay(
+                        animation,
+                        weekIndex,
+                        dayIndex,
+                        animationSpeed,
+                      );
+                  const ambientMotion = getAmbientCellMotion(
+                    ambientEffect,
+                    ambientIntensity,
+                    weekIndex,
+                    dayIndex,
+                    entranceDelay,
+                    reducedMotion,
+                  );
+                  const distance = hoveredContribution
+                    ? Math.hypot(
+                        weekIndex - hoveredContribution.weekIndex,
+                        dayIndex - hoveredContribution.dayIndex,
+                      )
+                    : Infinity;
+                  const waveStrength = Math.max(0, 1 - distance / 3);
+                  const filter = `brightness(${1 + waveStrength * 0.4}) saturate(${1 + waveStrength * 0.2})`;
 
-              {/* Grid with Day of week indicators */}
-              <div className="flex items-start gap-1.5">
-                {/* Day of week labels */}
-                <div
-                  className="text-muted-foreground grid grid-rows-7 text-[9px] font-medium select-none"
-                  style={{
-                    gap: cellGap,
-                    width: 18,
-                    height: (cellSize + cellGap) * 7 - cellGap,
-                  }}
-                >
-                  {dayLabels.map((day, i) => (
-                    <span
-                      key={i}
-                      className="flex items-center justify-end leading-none"
-                      style={{ height: cellSize }}
-                    >
-                      {day}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Heatmap Columns */}
-                <div
-                  className="relative flex"
-                  style={{ gap: cellGap }}
-                  role="grid"
-                  aria-label={`GitHub contributions for ${normalizedAccount}`}
-                  onMouseLeave={() => setHoveredContribution(null)}
-                >
-                  {weeks.map((week, weekIndex) => (
-                    <div
-                      key={`${animationKey}-${weekIndex}`}
-                      className="grid grid-rows-7"
-                      style={{ gap: cellGap }}
-                      role="row"
-                    >
-                      {week.map((contribution, dayIndex) => {
-                        const label = formatContributionLabel(contribution);
-                        const entranceDelay = reducedMotion
-                          ? 0
-                          : getCellDelay(
-                              animation,
-                              weekIndex,
-                              dayIndex,
-                              animationSpeed,
-                            );
-                        const ambientMotion = getAmbientCellMotion(
-                          ambientEffect,
-                          ambientIntensity,
+                  return (
+                    <motion.button
+                      key={`${animationKey}-${contribution.date}`}
+                      type="button"
+                      role="gridcell"
+                      aria-label={label}
+                      className="ring-offset-background focus-visible:ring-foreground/60 relative w-full aspect-square cursor-pointer ring-offset-1 transition-shadow outline-none hover:z-10 focus-visible:ring-2"
+                      style={{
+                        borderRadius: resolvedCellRadius,
+                      }}
+                      initial={
+                        reducedMotion
+                          ? false
+                          : { opacity: 0, scale: 0.4, y: 3 }
+                      }
+                      animate={{ opacity: 1, scale: 1, y: 0, filter }}
+                      transition={{
+                        opacity: { duration: 0.12, delay: entranceDelay },
+                        y: {
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 28,
+                          delay: entranceDelay,
+                        },
+                        scale: {
+                          type: "spring",
+                          stiffness: 850,
+                          damping: 30,
+                        },
+                        filter: { duration: 0.08, ease: "easeOut" },
+                      }}
+                      onMouseEnter={(event) =>
+                        showTooltip(
+                          event.currentTarget,
+                          contribution,
                           weekIndex,
                           dayIndex,
-                          entranceDelay,
-                          reducedMotion,
-                        );
-                        const distance = hoveredContribution
-                          ? Math.hypot(
-                              weekIndex - hoveredContribution.weekIndex,
-                              dayIndex - hoveredContribution.dayIndex,
-                            )
-                          : Infinity;
-                        const waveStrength = Math.max(0, 1 - distance / 3);
-                        const filter = `brightness(${1 + waveStrength * 0.4}) saturate(${1 + waveStrength * 0.2})`;
-
-                        return (
-                          <motion.button
-                            key={`${animationKey}-${contribution.date}`}
-                            type="button"
-                            role="gridcell"
-                            aria-label={label}
-                            className="ring-offset-background focus-visible:ring-foreground/60 relative cursor-pointer ring-offset-1 transition-shadow outline-none hover:z-10 focus-visible:ring-2"
-                            style={{
-                              width: cellSize,
-                              height: cellSize,
-                              borderRadius: resolvedCellRadius,
-                            }}
-                            initial={
-                              reducedMotion
-                                ? false
-                                : { opacity: 0, scale: 0.4, y: 3 }
-                            }
-                            animate={{ opacity: 1, scale: 1, y: 0, filter }}
-                            transition={{
-                              opacity: { duration: 0.12, delay: entranceDelay },
-                              y: {
-                                type: "spring",
-                                stiffness: 500,
-                                damping: 28,
-                                delay: entranceDelay,
-                              },
-                              scale: {
-                                type: "spring",
-                                stiffness: 850,
-                                damping: 30,
-                              },
-                              filter: { duration: 0.08, ease: "easeOut" },
-                            }}
-                            onMouseEnter={(event) =>
-                              showTooltip(
-                                event.currentTarget,
-                                contribution,
-                                weekIndex,
-                                dayIndex,
-                              )
-                            }
-                            onFocus={(event) =>
-                              showTooltip(
-                                event.currentTarget,
-                                contribution,
-                                weekIndex,
-                                dayIndex,
-                              )
-                            }
-                            onBlur={() => setHoveredContribution(null)}
-                          >
-                            <motion.span
-                              aria-hidden="true"
-                              className="pointer-events-none absolute inset-0 transition-colors duration-150"
-                              style={{
-                                backgroundColor: palette[contribution.level],
-                                borderRadius: resolvedCellRadius,
-                                border:
-                                  contribution.level === 0
-                                    ? isDark
-                                      ? "1px solid rgba(255,255,255,0.05)"
-                                      : "1px solid rgba(0,0,0,0.05)"
-                                    : "none",
-                              }}
-                              animate={ambientMotion.animate}
-                              transition={ambientMotion.transition}
-                            />
-                          </motion.button>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
+                        )
+                      }
+                      onFocus={(event) =>
+                        showTooltip(
+                          event.currentTarget,
+                          contribution,
+                          weekIndex,
+                          dayIndex,
+                        )
+                      }
+                      onBlur={() => setHoveredContribution(null)}
+                    >
+                      <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 transition-colors duration-150"
+                        style={{
+                          backgroundColor: palette[contribution.level],
+                          borderRadius: resolvedCellRadius,
+                          border:
+                            contribution.level === 0
+                              ? isDark
+                                ? "1px solid rgba(255,255,255,0.05)"
+                                : "1px solid rgba(0,0,0,0.05)"
+                              : "none",
+                        }}
+                        animate={ambientMotion.animate}
+                        transition={ambientMotion.transition}
+                      />
+                    </motion.button>
+                  );
+                })}
               </div>
-            </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Floating tooltip mounted directly into document.body to prevent horizontal overflow */}
       {mounted &&
         typeof document !== "undefined" &&
         createPortal(
@@ -899,14 +701,13 @@ export function GithubGraph({
           document.body,
         )}
 
-      {/* Legend & Footer */}
       {showLegend && resource.status === "ready" && (
-        <div className="border-border/40 text-muted-foreground mt-3 flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs">
-          <span className="text-[11px]">
-            Updated live via GitHub Contributions API
+        <div className="border-border/40 text-muted-foreground mt-3 flex items-center justify-between gap-2 border-t pt-3 text-xs">
+          <span className="text-[11px] font-mono text-muted-foreground">
+            {stats.total.toLocaleString()} contributions in the last year
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px]">Less</span>
+            <span className="text-[11px] text-muted-foreground">Less</span>
             <div
               className="flex gap-1"
               aria-label="Contribution activity scale"
@@ -914,9 +715,8 @@ export function GithubGraph({
               {palette.map((color, level) => (
                 <span
                   key={color}
+                  className="size-2.5"
                   style={{
-                    width: cellSize,
-                    height: cellSize,
                     backgroundColor: color,
                     borderRadius: resolvedCellRadius,
                     border:
@@ -930,7 +730,7 @@ export function GithubGraph({
                 />
               ))}
             </div>
-            <span className="text-[11px]">More</span>
+            <span className="text-[11px] text-muted-foreground">More</span>
           </div>
         </div>
       )}

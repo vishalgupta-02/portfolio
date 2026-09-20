@@ -22,13 +22,13 @@ export const linkforgeProject: Project = {
   image: "/static/linkforge.webp",
   imageAlt: "Linkforge multi-tenant SaaS analytics platform dashboard",
   floatingChips: [
-    // { text: "Multi-Tenant Isolation", position: "top-left" },
     {
       text: "Migrating from Railway to Render due to cost",
       position: "top-left",
     },
     { text: "Real-time Analytics", position: "bottom-right" },
   ],
+
   liveUrl: "https://linkforge-web-iota.vercel.app",
   githubUrl: "https://github.com/vishalgupta-02/linkforge.git",
   hasCaseStudy: true,

@@ -3,28 +3,64 @@ import Link from "next/link";
 
 export const Socials = () => {
   return (
-    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-      <Link href="https://github.com/vishalgupta-02" target="_blank">
+    <nav aria-label="Social and Contact Profiles" className="flex flex-wrap items-center gap-3">
+      <Link
+        href="https://github.com/vishalgupta-02"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub Profile"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <Github />
       </Link>
-      <Link href="https://www.instagram.com/v1shal_gupta" target="_blank">
+      <Link
+        href="https://www.instagram.com/v1shal_gupta"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Instagram Profile"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <Instagram />
       </Link>
-      <Link href="https://x.com/v1shalworks" target="_blank">
+      <Link
+        href="https://x.com/v1shalworks"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="X (formerly Twitter) Profile"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <X />
       </Link>
-      <Link href="https://www.linkedin.com/in/v1shalgupt9" target="_blank">
+      <Link
+        href="https://www.linkedin.com/in/v1shalgupt9"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="LinkedIn Profile"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <LinkedIn />
       </Link>
-      <Link href="https://www.discord.com/users/v1shal_gupt9" target="_blank">
+      <Link
+        href="https://www.discord.com/users/v1shal_gupt9"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Discord Profile"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <Discord />
       </Link>
-      <Link href="mailto:abhimanyug987@gmail.com">
+      <Link
+        href="mailto:abhimanyug987@gmail.com"
+        aria-label="Send Email to Vishal Gupta"
+        className="text-muted-foreground hover:text-foreground hover:-translate-y-0.5 hover:scale-110 active:scale-95 transition-all duration-200 p-1 -m-1 rounded-md focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
         <Email />
       </Link>
-    </div>
+    </nav>
   );
 };
+
+
 
 export const Github = () => {
   return (
@@ -135,8 +171,6 @@ export const Email = ({ className }: { className?: string }) => {
     </svg>
   );
 };
-
-// -----------------------------------------------------------------------------------------------------------------
 
 export const CodeIcon = ({ className }: { className?: string }) => {
   return (

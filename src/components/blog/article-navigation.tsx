@@ -35,10 +35,6 @@ export function ArticleNavigation({ navigation }: ArticleNavigationProps) {
           <p className='mt-2 font-semibold group-hover:underline'>
             {previous.title}
           </p>
-
-          {/* <p className='mt-2 text-sm text-muted-foreground'>
-            {previous.description}
-          </p> */}
         </Link>
       )}
 
@@ -58,12 +54,9 @@ export function ArticleNavigation({ navigation }: ArticleNavigationProps) {
           <p className='mt-2 font-semibold group-hover:underline'>
             {next.title}
           </p>
-
-          {/* <p className='mt-2 text-sm text-muted-foreground'>
-            {next.description}
-          </p> */}
         </Link>
       )}
+
     </nav>
   )
 }

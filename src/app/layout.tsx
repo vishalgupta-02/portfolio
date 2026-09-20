@@ -13,7 +13,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
 
 const spaceGrotesk = localFont({
-  // for the heading
   src: "../../public/fonts/SpaceGrotesk-Variable.ttf",
   variable: "--font-space-grotesk",
   display: "swap",
@@ -21,7 +20,6 @@ const spaceGrotesk = localFont({
 })
 
 const publicSans = localFont({
-  // for the body
   src: "../../public/fonts/PublicSans-Variable.ttf",
   variable: "--font-public-sans",
   display: "swap",
@@ -29,7 +27,6 @@ const publicSans = localFont({
 })
 
 const jetbrainsMono = localFont({
-  // for the code
   src: "../../public/fonts/JetBrainsMono-Variable.ttf",
   variable: "--font-jetbrains-mono",
   display: "swap",
@@ -37,43 +34,12 @@ const jetbrainsMono = localFont({
 })
 
 const idGrotesk = localFont({
-  // for the code
   src: "../../public/fonts/IDGroteskRegular-BcJmFnYE.woff2",
   variable: "--font-id-grotesk",
   display: "swap",
   preload: true,
 })
 
-// export const metadata: Metadata = {
-//   metadataBase: new URL(siteConfig.url),
-//   title: {
-//     default: siteConfig.title,
-//     template: `%s | ${siteConfig.name}`,
-//   },
-//   description: siteConfig.description,
-//   keywords: [...siteConfig.keywords],
-//   authors: [
-//     {
-//       name: siteConfig.author,
-//     },
-//   ],
-//   alternates: {
-//     types: {
-//       "application/rss+xml": [
-//         {
-//           url: "/feed.xml",
-//           title: "Vishal Gupta RSS Feed",
-//         },
-//       ],
-//     },
-//   },
-//   creator: siteConfig.author,
-//   publisher: siteConfig.author,
-//   robots: {
-//     index: true,
-//     follow: true,
-//   },
-// }
 
 const ogImage = {
   url: siteConfig.ogImage,
@@ -175,6 +141,8 @@ export const metadata: Metadata = {
   },
 }
 
+import { ConsoleGreeting } from "@/components/console-greeting"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -201,6 +169,7 @@ export default function RootLayout({
           defaultTheme='dark'
           enableSystem
           disableTransitionOnChange>
+          <ConsoleGreeting />
           <Navbar />
           <main>{children}</main>
           <Footer />
@@ -210,3 +179,4 @@ export default function RootLayout({
     </html>
   )
 }
+

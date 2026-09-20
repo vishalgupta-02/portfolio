@@ -1,5 +1,3 @@
-// components/ui/line.tsx
-
 type LineProps = {
   type?: "horizontal" | "vertical" | "elbow-right" | "elbow-left"
   width?: number
@@ -28,8 +26,6 @@ export function Line({
     )
   }
 
-  // Similar to your uploaded image: │
-  //                                  └────
   if (type === "elbow-right") {
     return (
       <div
@@ -39,8 +35,6 @@ export function Line({
     )
   }
 
-  // ────┐
-  //     │
   if (type === "elbow-left") {
     return (
       <div
@@ -52,3 +46,4 @@ export function Line({
 
   return null
 }
+

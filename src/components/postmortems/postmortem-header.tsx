@@ -1,15 +1,15 @@
-import React from "react"
-import Link from "next/link"
-import { ArrowLeft, Clock } from "lucide-react"
-import { PostmortemSeverityBadge } from "./postmortem-severity"
-import { PostmortemStatusBadge } from "./postmortem-status"
-import { ShareButtons } from "@/components/ui/share-buttons"
-import type { PostmortemMetadata } from "@/lib/postmortems/types"
+import React from "react";
+import Link from "next/link";
+import { ArrowLeft, Clock } from "lucide-react";
+import { PostmortemSeverityBadge } from "./postmortem-severity";
+import { PostmortemStatusBadge } from "./postmortem-status";
+import { ShareButtons } from "@/components/ui/share-buttons";
+import type { PostmortemMetadata } from "@/lib/postmortems/types";
 
 interface PostmortemHeaderProps {
-  slug: string
-  metadata: PostmortemMetadata
-  readingMinutes: number
+  slug: string;
+  metadata: PostmortemMetadata;
+  readingMinutes: number;
 }
 
 export function PostmortemHeader({
@@ -19,33 +19,33 @@ export function PostmortemHeader({
 }: PostmortemHeaderProps) {
   return (
     <header className="mb-10 max-w-3xl">
-      <div className="mb-6 w-full border-b border-border pb-4">
+      <div className="border-border mb-6 w-full border-b pb-4">
         <Link
           href="/postmortems"
-          className="text-muted-foreground hover:text-foreground inline-flex items-center text-xs font-mono transition-colors"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center font-mono text-xs transition-colors"
         >
           <ArrowLeft className="mr-1.5 inline size-3.5" aria-hidden="true" />
           Back to Incident Index
         </Link>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="rounded border border-border bg-muted/40 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="border-border bg-muted/40 text-muted-foreground rounded border px-2 py-0.5 font-mono text-[11px] tracking-wider uppercase">
           {metadata.category}
         </span>
         <PostmortemSeverityBadge severity={metadata.severity} />
         <PostmortemStatusBadge status={metadata.status} />
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+      <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">
         {metadata.title}
       </h1>
 
-      <p className="text-muted-foreground mt-3 text-sm sm:text-base leading-relaxed">
+      <p className="text-muted-foreground mt-3 text-sm leading-relaxed sm:text-base">
         {metadata.description}
       </p>
 
-      <div className="text-muted-foreground mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs">
+      <div className="text-muted-foreground border-border/60 mt-5 flex flex-wrap items-center justify-between gap-3 border-t pt-3 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <time dateTime={metadata.date} className="font-mono">
             {new Date(metadata.date).toLocaleDateString("en-US", {
@@ -91,7 +91,7 @@ export function PostmortemHeader({
           {metadata.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-md border border-border/80 bg-muted/30 px-2 py-0.5 font-mono text-[10px] text-muted-foreground"
+              className="border-border/80 bg-muted/30 text-muted-foreground rounded-md border px-2 py-0.5 font-mono text-[10px]"
             >
               #{tag}
             </span>
@@ -99,5 +99,5 @@ export function PostmortemHeader({
         </div>
       )}
     </header>
-  )
+  );
 }
