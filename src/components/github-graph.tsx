@@ -2,19 +2,10 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
 import { useTheme } from "next-themes";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import {
-  Calendar,
-  ExternalLink,
-  Flame,
-  GitCommit,
-  Sparkles,
-} from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Github } from "@/components/socials";
 
 export type GithubGraphVariant = "github" | "graphite" | "ocean" | "violet";
 export type GithubGraphAnimation = "wave" | "scan" | "cascade";
@@ -318,13 +309,13 @@ function LoadingSkeleton({
         {Array.from({ length: weekCount }, (_, week) => (
           <div
             key={week}
-            className="grid grid-rows-7 w-full"
+            className="grid w-full grid-rows-7"
             style={{ gap: cellGap }}
           >
             {Array.from({ length: 7 }, (_, day) => (
               <span
                 key={day}
-                className="w-full aspect-square bg-muted/40"
+                className="bg-muted/40 aspect-square w-full"
                 style={{
                   borderRadius: cellRadius,
                 }}
@@ -356,9 +347,7 @@ export function GithubGraph({
 }: GithubGraphProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme !== "light";
-  const reducedMotion = useReducedMotion();
   const [mounted, setMounted] = React.useState(false);
-  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     setMounted(true);
@@ -423,12 +412,23 @@ export function GithubGraph({
       },
     )
       .then(async (response) => {
-        const payload = await response.json();
         if (!response.ok) {
-          throw new Error(
-            payload.error || "Failed to fetch contributions from GitHub API.",
-          );
+          let errorMessage = `Failed to fetch contributions (${response.status})`;
+          try {
+            const errorPayload = await response.json();
+            if (errorPayload?.error) errorMessage = errorPayload.error;
+          } catch {
+            // Server returned non-JSON error (e.g. HTML 404/500 page)
+          }
+          throw new Error(errorMessage);
         }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Contributions API returned a non-JSON response.");
+        }
+
+        const payload = await response.json();
         if (!Array.isArray(payload.contributions)) {
           throw new Error("No contributions were returned.");
         }
@@ -558,28 +558,12 @@ export function GithubGraph({
             {weeks.map((week, weekIndex) => (
               <div
                 key={`${animationKey}-${weekIndex}`}
-                className="grid grid-rows-7 w-full"
+                className="grid w-full grid-rows-7"
                 style={{ gap: cellGap }}
                 role="row"
               >
                 {week.map((contribution, dayIndex) => {
                   const label = formatContributionLabel(contribution);
-                  const entranceDelay = reducedMotion
-                    ? 0
-                    : getCellDelay(
-                        animation,
-                        weekIndex,
-                        dayIndex,
-                        animationSpeed,
-                      );
-                  const ambientMotion = getAmbientCellMotion(
-                    ambientEffect,
-                    ambientIntensity,
-                    weekIndex,
-                    dayIndex,
-                    entranceDelay,
-                    reducedMotion,
-                  );
                   const distance = hoveredContribution
                     ? Math.hypot(
                         weekIndex - hoveredContribution.weekIndex,
@@ -590,35 +574,15 @@ export function GithubGraph({
                   const filter = `brightness(${1 + waveStrength * 0.4}) saturate(${1 + waveStrength * 0.2})`;
 
                   return (
-                    <motion.button
+                    <button
                       key={`${animationKey}-${contribution.date}`}
                       type="button"
                       role="gridcell"
                       aria-label={label}
-                      className="ring-offset-background focus-visible:ring-foreground/60 relative w-full aspect-square cursor-pointer ring-offset-1 transition-shadow outline-none hover:z-10 focus-visible:ring-2"
+                      className="ring-offset-background focus-visible:ring-foreground/60 relative aspect-square w-full cursor-pointer ring-offset-1 transition-all duration-150 outline-none hover:z-10 hover:scale-110 focus-visible:ring-2 active:scale-95"
                       style={{
                         borderRadius: resolvedCellRadius,
-                      }}
-                      initial={
-                        reducedMotion
-                          ? false
-                          : { opacity: 0, scale: 0.4, y: 3 }
-                      }
-                      animate={{ opacity: 1, scale: 1, y: 0, filter }}
-                      transition={{
-                        opacity: { duration: 0.12, delay: entranceDelay },
-                        y: {
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 28,
-                          delay: entranceDelay,
-                        },
-                        scale: {
-                          type: "spring",
-                          stiffness: 850,
-                          damping: 30,
-                        },
-                        filter: { duration: 0.08, ease: "easeOut" },
+                        filter: hoveredContribution ? filter : undefined,
                       }}
                       onMouseEnter={(event) =>
                         showTooltip(
@@ -638,7 +602,7 @@ export function GithubGraph({
                       }
                       onBlur={() => setHoveredContribution(null)}
                     >
-                      <motion.span
+                      <span
                         aria-hidden="true"
                         className="pointer-events-none absolute inset-0 transition-colors duration-150"
                         style={{
@@ -651,10 +615,8 @@ export function GithubGraph({
                                 : "1px solid rgba(0,0,0,0.05)"
                               : "none",
                         }}
-                        animate={ambientMotion.animate}
-                        transition={ambientMotion.transition}
                       />
-                    </motion.button>
+                    </button>
                   );
                 })}
               </div>
@@ -703,11 +665,11 @@ export function GithubGraph({
 
       {showLegend && resource.status === "ready" && (
         <div className="border-border/40 text-muted-foreground mt-3 flex items-center justify-between gap-2 border-t pt-3 text-xs">
-          <span className="text-[11px] font-mono text-muted-foreground">
+          <span className="text-muted-foreground font-mono text-[11px]">
             {stats.total.toLocaleString()} contributions in the last year
           </span>
           <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-muted-foreground">Less</span>
+            <span className="text-muted-foreground text-[11px]">Less</span>
             <div
               className="flex gap-1"
               aria-label="Contribution activity scale"
@@ -730,7 +692,7 @@ export function GithubGraph({
                 />
               ))}
             </div>
-            <span className="text-[11px] text-muted-foreground">More</span>
+            <span className="text-muted-foreground text-[11px]">More</span>
           </div>
         </div>
       )}

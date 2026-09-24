@@ -2,9 +2,25 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import CommandMenu from "./command-k"
+import dynamic from "next/dynamic"
 import { AnimatedThemeToggler } from "./ui/animated-theme-toggler"
 import { cn } from "@/lib/utils"
+
+const CommandMenu = dynamic(() => import("./command-k"), {
+  ssr: false,
+  loading: () => (
+    <button
+      type='button'
+      aria-label="Open command palette"
+      className='group flex items-center gap-2 rounded-full border border-border/60 bg-muted/20 px-2.5 py-1 text-xs font-medium text-muted-foreground shadow-xs'>
+      <span className='hidden sm:inline font-mono text-[11px]'>Search</span>
+      <span className='inline-flex items-center gap-0.5 rounded border border-border/80 bg-background/80 px-1.5 py-0.2 font-mono text-[10px] font-semibold text-muted-foreground'>
+        <span>⌘</span>
+        <span>K</span>
+      </span>
+    </button>
+  ),
+})
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },

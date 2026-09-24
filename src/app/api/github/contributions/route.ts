@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 const GITHUB_GRAPHQL_ENDPOINT = "https://api.github.com/graphql";
 
 const GITHUB_CONTRIBUTIONS_QUERY = `
