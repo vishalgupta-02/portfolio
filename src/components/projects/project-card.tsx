@@ -59,6 +59,7 @@ export default function ProjectCard({
 
       <Link
         href={projectPageUrl}
+        prefetch={false}
         aria-label={`View ${project.name} overview`}
         className="block relative aspect-video w-full overflow-hidden rounded-lg border border-border/50 bg-muted/20 mb-3.5 cursor-pointer group/img"
       >
@@ -100,6 +101,7 @@ export default function ProjectCard({
           ) : (
             <Link
               href={projectPageUrl}
+              prefetch={false}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background hover:bg-muted/60 px-3 py-1.5 text-xs font-medium text-foreground transition-colors active:scale-[0.98]"
             >
               <span>Overview</span>

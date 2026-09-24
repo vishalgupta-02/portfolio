@@ -4,7 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/ui/theme-provider"
 import { Geist } from "next/font/google"
 import { cn } from "@/lib/utils"
-import { IntroLoader } from "@/components/intro-loader"
+// import { IntroLoader } from "@/components/intro-loader"
 import { siteConfig } from "@/lib/blog/site"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer/footer"
@@ -16,21 +16,21 @@ const spaceGrotesk = localFont({
   src: "../../public/fonts/SpaceGrotesk-Variable.ttf",
   variable: "--font-space-grotesk",
   display: "swap",
-  preload: true,
+  preload: false,
 })
 
 const publicSans = localFont({
   src: "../../public/fonts/PublicSans-Variable.ttf",
   variable: "--font-public-sans",
   display: "swap",
-  preload: true,
+  preload: false,
 })
 
 const jetbrainsMono = localFont({
   src: "../../public/fonts/JetBrainsMono-Variable.ttf",
   variable: "--font-jetbrains-mono",
   display: "swap",
-  preload: true,
+  preload: false,
 })
 
 const idGrotesk = localFont({
