@@ -1,4 +1,5 @@
 import About from "@/components/about";
+import ContactSection from "@/components/contact-section";
 import ExperienceSection from "@/components/experience-section";
 import GithubSection from "@/components/github-section";
 import Hero from "@/components/hero";
@@ -30,6 +31,9 @@ export default async function Home() {
         </div>
         <div className="animate-enter [animation-delay:440ms]">
           <GithubSection />
+        </div>
+        <div className="animate-enter [animation-delay:520ms]">
+          <ContactSection />
         </div>
       </MainLayout>
     </>

@@ -1,17 +1,20 @@
 import { linkforgeProject } from "./data/linkforge"
 import { clarivProject } from "./data/clariv"
 import { careerlyProject } from "./data/careerly"
+import { whiteboardProject } from "./data/whiteboard"
 import type { Project } from "./types"
 
 export * from "./types"
 export { linkforgeProject } from "./data/linkforge"
 export { clarivProject } from "./data/clariv"
 export { careerlyProject } from "./data/careerly"
+export { whiteboardProject } from "./data/whiteboard"
 
 export const PROJECTS: Project[] = [
   linkforgeProject,
-  clarivProject,
+  whiteboardProject,
   careerlyProject,
+  clarivProject,
 ]
 
 export function getAllProjects(): Project[] {
