@@ -24,6 +24,7 @@ const CommandMenu = dynamic(() => import("./command-k"), {
 
 const NAV_ITEMS = [
   { href: "/", label: "Home" },
+  { href: "/projects", label: "Projects" },
   { href: "/work", label: "Work" },
   { href: "/blog", label: "Blog" },
   { href: "/postmortems", label: "Postmortems" },

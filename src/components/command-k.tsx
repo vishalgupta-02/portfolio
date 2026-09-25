@@ -29,6 +29,9 @@ const CommandMenu = () => {
       case "home":
         router.push("/")
         break
+      case "projects":
+        router.push("/projects")
+        break
       case "work":
         router.push("/work")
         break
@@ -102,7 +105,14 @@ const CommandMenu = () => {
                 <span className='font-mono text-[10px] text-muted-foreground'>/</span>
               </Command.Item>
               <Command.Item
-                value='Work Projects Case Studies'
+                value='Projects Systems Case Studies Whiteboard Linkforge'
+                onSelect={() => handleAction("projects")}
+                className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
+                <span>Browse Projects & Systems</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>/projects</span>
+              </Command.Item>
+              <Command.Item
+                value='Work Experience Production History'
                 onSelect={() => handleAction("work")}
                 className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
                 <span>View Engineering Work</span>

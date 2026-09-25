@@ -1,19 +1,24 @@
 "use client";
 
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import ProjectCard from "./project-card";
-import { getFeaturedProjects, type Project } from "@/lib/projects";
+import { getAllProjects, getFeaturedProjects, type Project } from "@/lib/projects";
 
 export interface FeaturedProjectsProps {
   projects?: Project[];
   title?: string;
+  showViewAll?: boolean;
 }
 
 export default function FeaturedProjects({
   projects,
   title = "Projects",
+  showViewAll = true,
 }: FeaturedProjectsProps) {
   const projectsList =
     projects && projects.length > 0 ? projects : getFeaturedProjects();
+  const totalAllProjects = getAllProjects().length;
 
   if (!projectsList || projectsList.length === 0) {
     return null;
@@ -35,13 +40,11 @@ export default function FeaturedProjects({
           </p>
         </div>
         <span className="text-xs font-mono text-muted-foreground/80">
-          {projectsList.length} {projectsList.length === 1 ? "project" : "projects"}
+          {projectsList.length} of {totalAllProjects} featured
         </span>
       </div>
 
-
       <div className="flex flex-col gap-6">
-
         {projectsList.map((project, index) => (
           <ProjectCard
             key={project.id || project.slug}
@@ -50,6 +53,18 @@ export default function FeaturedProjects({
           />
         ))}
       </div>
+
+      {showViewAll && (
+        <div className="mt-6 flex justify-center">
+          <Link
+            href="/projects"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/50 px-4 py-2 text-xs font-medium text-foreground transition-all active:scale-[0.98]"
+          >
+            <span>View All Projects ({totalAllProjects})</span>
+            <ArrowRight className="size-3.5 text-muted-foreground" />
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

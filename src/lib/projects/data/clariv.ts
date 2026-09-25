@@ -3,7 +3,7 @@ import type { Project } from "../types"
 export const clarivProject: Project = {
   id: "clariv",
   slug: "clariv",
-  number: "02",
+  number: "04",
   name: "Clariv",
   title: "Clariv — Document Context Extractor & AI Reader",
   subtitle: "Document context extractor & AI reader",
@@ -17,7 +17,7 @@ export const clarivProject: Project = {
   role: "Full-Stack Engineer",
   timeline: "January 2026 – February 2026",
   tags: ["AI Document Extraction", "Google GenAI", "MongoDB", "Next.js"],
-  featured: true,
+  featured: false,
   image: "/static/clariv.webp",
   imageAlt: "Clariv AI document extractor screenshot",
   floatingChips: [
