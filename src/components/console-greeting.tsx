@@ -7,7 +7,7 @@ export function ConsoleGreeting() {
     if (typeof window === "undefined") return;
 
     const banner = `
-%c🚀 Vishal Gupta | Backend & Distributed Systems Engineer
+%cVishal Gupta | Backend & Distributed Systems Engineer
 %c• Core Focus: High-throughput architecture, multi-tenant databases, concurrency safety
 • Linkforge SaaS: https://linkforge-web-iota.vercel.app/
 • Contact: abhimanyug987@gmail.com

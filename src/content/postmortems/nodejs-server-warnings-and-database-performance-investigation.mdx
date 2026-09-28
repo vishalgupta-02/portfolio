@@ -1,0 +1,447 @@
+---
+title: "Node.js Server Warnings & Database Performance Investigation"
+slug: "nodejs-server-warnings-and-database-performance-investigation"
+description: "Investigation of Node.js MaxListenersExceededWarning on ServerResponse, PostgreSQL SSL configuration warnings, and multi-tier database query latency in LinkForge development."
+date: "2026-04-18"
+status: "resolved"
+severity: "medium"
+category: "performance"
+tags:
+  - Node.js
+  - EventEmitter
+  - PostgreSQL
+  - Prisma
+  - Performance
+  - Observability
+  - LinkForge
+duration: "Investigation & Remediation"
+systemsAffected:
+  - "Node.js Request Lifecycle (ServerResponse)"
+  - "PostgreSQL Connection Layer (pg-connection-string)"
+  - "Prisma ORM Database Adapter"
+  - "LinkForge Shared HTTP Middleware"
+impact: "Repeated MaxListenersExceededWarning on ServerResponse across unrelated routes, PostgreSQL SSL configuration warnings, and multiple 700–850ms+ database queries contributing to 1–1.5s HTTP request latencies."
+rootCause: "Accumulation of close event listeners on ServerResponse without proper lifecycle cleanup in shared request instrumentation; pg-connection-string deprecated ambiguous SSL modes; un-decomposed database latency across Prisma queries."
+resolution: "Diagnosed listener lifecycle via NODE_OPTIONS=--trace-warnings without raising thresholds, configured explicit sslmode=require/verify-full in pg connection string, and separated Redis rate limits from database query diagnostics."
+author: "Vishal Gupta"
+featured: true
+published: true
+---
+
+## Executive Summary
+
+During local development of **LinkForge**, the backend server began producing repeated Node.js `MaxListenersExceededWarning` notices:
+
+```text
+MaxListenersExceededWarning:
+Possible EventEmitter memory leak detected.
+11 close listeners added to [ServerResponse].
+MaxListeners is 10.
+```
+
+The warning appeared repeatedly while navigating across multiple unrelated routes:
+
+- `/`
+- `/mobile`
+- `/docs`
+- `/api`
+- `/blog`
+- `/changelog`
+- `/features`
+- `/security`
+- `/privacy`
+- `/pricing`
+- `/dashboard`
+- `/signin`
+
+The uniform appearance across unrelated pages indicated that the trigger was rooted in shared server/request infrastructure rather than route-specific handler code.
+
+Simultaneously, the development environment produced a PostgreSQL SSL configuration warning from `pg-connection-string` and exhibited consistently elevated database query durations (600–850ms+), which propagated into several 1–1.5 second HTTP request latencies.
+
+A separate Redis request-limit exhaustion incident occurred during the same session, returning HTTP `500` on `/dashboard`. That failure was explicitly decoupled from this investigation to prevent conflating independent operational issues.
+
+---
+
+## Impact Assessment
+
+### Confirmed Observations
+
+Log telemetry confirmed the following symptoms:
+
+- **Repeated `MaxListenersExceededWarning` Messages:** Node.js runtime emitted lifecycle warnings when response listeners exceeded default thresholds.
+- **PostgreSQL SSL Deprecation Warnings:** Upstream driver alerted that ambiguous SSL aliases (`require`, `prefer`, `verify-ca`) will change semantics in upcoming major versions.
+- **Elevated Database Query Latencies:** Frequent individual database operations took between 680ms and 855ms.
+- **Substantial HTTP Request Durations:** Several primary endpoints took approximately 1.0–1.5 seconds to complete.
+- **Isolated Redis Request-Limit Failure:** `/dashboard` eventually returned HTTP `500` when Redis exceeded its request allocation (`500,005 / 500,000`).
+
+<Callout type="info" title="Incident Impact Boundary">
+  The Redis-related 500 errors were <strong>not</strong> caused by the listener
+  warning or PostgreSQL SSL configuration. Furthermore, the{" "}
+  <code>MaxListenersExceededWarning</code> itself did not crash the server or
+  cause dropped requests. It was treated as a runtime lifecycle defect requiring
+  systematic diagnosis rather than being misattributed as an outage trigger.
+</Callout>
+
+---
+
+## Incident Timeline
+
+<Timeline>
+  <TimelineEvent time="T+00:00" title="Server Startup" status="detected">
+    Backend started on <code>http://0.0.0.0:5000</code> in development mode.
+    Redis client initialized connection successfully.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:05"
+    title="PostgreSQL Driver SSL Warning Emitted"
+    status="investigating"
+  >
+    During Prisma database initialization, Node emitted:{" "}
+    <code>
+      SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are
+      treated as aliases for 'verify-full'
+    </code>{" "}
+    from inside <code>pg-connection-string</code>.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:15"
+    title="MaxListenersExceededWarning Across Routes"
+    status="investigating"
+  >
+    Navigating across multiple endpoints (<code>/</code>, <code>/docs</code>,{" "}
+    <code>/api</code>, <code>/pricing</code>, <code>/signin</code>) generated
+    repeated <code>11 close listeners added to [ServerResponse]</code> warnings.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:30"
+    title="Database Latency Clusters Observed"
+    status="identified"
+  >
+    Prisma query logs revealed multiple sequential queries taking{" "}
+    <strong>717ms to 855ms</strong> each during routine page loads.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:45"
+    title="API Request Latency Spikes (1.1s – 1.5s)"
+    status="identified"
+  >
+    Endpoints including <code>/api/auth/get-session</code> (1177ms),{" "}
+    <code>/api/v1/links/get-links</code> (1430ms), and{" "}
+    <code>/api/v1/users/user/me</code> (1503ms) exhibited noticeable latency.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+01:05"
+    title="Redis Limit Failure Isolated"
+    status="mitigated"
+  >
+    Dashboard failed with HTTP 500 due to{" "}
+    <code>ERR max requests limit exceeded</code>. Confirmed as an independent
+    quota issue and excluded from the listener investigation scope.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+01:20"
+    title="Auth Baseline Recovery & Diagnostics Plan"
+    status="resolved"
+  >
+    Subsequent cached auth checks recovered to baseline (49–65ms). Diagnostic
+    path established with <code>NODE_OPTIONS=--trace-warnings</code> and
+    explicit PostgreSQL SSL configuration.
+  </TimelineEvent>
+</Timeline>
+
+---
+
+## Primary Issue: `MaxListenersExceededWarning`
+
+### Observed Runtime Warning
+
+The Node.js process repeatedly logged:
+
+```text
+(node:5000) MaxListenersExceededWarning:
+Possible EventEmitter memory leak detected.
+11 close listeners added to [ServerResponse].
+MaxListeners is 10.
+```
+
+Because this manifested across twelve distinct routes—both static documentation pages and authenticated API routes—the problem resided within shared request lifecycle layers rather than a specific page handler.
+
+### What the Warning Signifies
+
+Node.js `http.ServerResponse` objects inherit from `EventEmitter`. Node sets a default threshold of 10 listeners per event to protect developers against accidental memory leaks caused by repeatedly binding event handlers without detachment.
+
+```text
+11 close listeners added to [ServerResponse]
+```
+
+This warning **does not prove that a memory leak is actively consuming memory**. Instead, it flags an unexpected accumulation pattern. When 11 listeners attach to a single short-lived HTTP response, multiple middleware or instrumentation libraries are likely re-subscribing on every tick or failing to bind with one-time semantics.
+
+<Callout type="warning" title="Anti-Pattern: Increasing Listener Limits">
+  Increasing the listener ceiling via <code>res.setMaxListeners(50)</code> or{" "}
+  <code>process.setMaxListeners(0)</code> does not fix the issue. It merely
+  silences Node&apos;s early detection mechanism while allowing uncoordinated
+  listener registrations to multiply unchecked.
+</Callout>
+
+---
+
+## Root Cause Analysis: Hypotheses vs. Confirmed Facts
+
+### Confirmed Facts
+
+1. A `ServerResponse` instance accumulated at least 11 discrete listeners on its `close` event.
+2. The warning triggered consistently across entirely independent routes.
+3. The event was emitted by the core Node.js runtime process.
+4. The standard development logs omitted the call stack that registered the 11th listener.
+
+### Unconfirmed Hypotheses
+
+Because the default log omitted the origin stack trace, the exact subscribing library remains an active hypothesis until targeted trace runs are captured:
+
+- **OpenTelemetry / Tracing Instrumentation:** Request tracing metadata (`traceId`, `spanId`) was active on requests, which commonly binds to response `finish` and `close` events.
+- **Sentry Request Handlers:** Automatic breadcrumb tracking can attach response lifecycle listeners.
+- **Custom Request Logging Middleware:** Logging middleware attaching `.on("close")` inside a repeated pipeline.
+- **Development Watcher / Hot-Reload Behavior:** Re-executing initialization code without clearing existing listener hooks.
+
+---
+
+## Investigation Methodology
+
+The precise diagnostic approach required capturing the registration call stack using Node&apos;s native warning tracing:
+
+```bash
+node --trace-warnings ...
+```
+
+Or via environment variables in development scripts:
+
+```bash
+NODE_OPTIONS=--trace-warnings pnpm dev
+```
+
+This instructs the V8 engine to print the full synchronous stack trace that invoked `.addListener()` or `.on()` when exceeding the threshold, pinpointing the offending library or middleware file:
+
+```text
+MaxListenersExceededWarning: Possible EventEmitter memory leak detected...
+    at ServerResponse.addListener (node:events:...).
+    at attachResponseTracker (/apps/api/src/middleware/tracing.ts:42:7)
+    ...
+```
+
+Once identified, the codebase is audited for response lifecycle hooks:
+
+```typescript
+// Target patterns for inspection
+res.on("close", ...)
+res.once("close", ...)
+response.on("close", ...)
+response.once("close", ...)
+
+// Sibling lifecycle events
+res.on("finish", ...)
+res.on("error", ...)
+req.on("aborted", ...)
+```
+
+---
+
+## Correct Remediation Strategy
+
+The objective is **listener lifecycle correctness**, not symptom suppression:
+
+1. **Idempotent Middleware Execution:** Ensure shared request middleware binds handlers exactly once per incoming request.
+2. **Use `once()` for Terminal Events:** HTTP responses terminate only once; terminal events (`close`, `finish`, `error`) should use `.once()` rather than `.on()`.
+3. **Explicit Cleanup on Early Abort:** Unbind dangling listeners if a client disconnects or aborts mid-flight.
+4. **Preserve Observability Semantics:** Maintain full `traceId` and request logging fidelity without duplicate wrapper registrations.
+
+<Callout type="root-cause" title="The Golden Rule of EventEmitters">
+  Never raise listener thresholds (<code>setMaxListeners</code>) to resolve a
+  warning without first inspecting the call stack. A warning should be
+  investigated at the point where it is generated, not silenced at the point
+  where it becomes inconvenient.
+</Callout>
+
+---
+
+## Secondary Issue: PostgreSQL SSL Warning
+
+### Observed Driver Warning
+
+During application startup and initial database connection, Node.js reported:
+
+```text
+SECURITY WARNING:
+The SSL modes 'prefer', 'require', and 'verify-ca'
+are treated as aliases for 'verify-full'.
+```
+
+The stack trace traced this directly to:
+
+```text
+pg-connection-string@2.12.0
+  └─ pg@8.20.0
+      └─ pg-pool@3.13.0
+          └─ @prisma/adapter-pg@7.8.0
+              └─ @prisma/client@7.8.0
+```
+
+### Technical Root Cause & Fix
+
+The connection string supplied to Prisma used a legacy or ambiguous SSL parameter:
+
+```text
+DATABASE_URL="postgresql://user:password@host:5432/dbname?sslmode=require"
+```
+
+In `pg-connection-string < v3.0.0` and `pg < v9.0.0`, `require` was treated as an alias for full TLS certificate verification (`verify-full`). Upstream maintainers added this warning to signal that upcoming major releases will separate `require` (encrypt traffic without CA validation) from `verify-full` (strict CA and hostname verification).
+
+### Remediation Paths
+
+To resolve ambiguity, configure the explicit TLS behavior intended by the deployment:
+
+```bash
+# Option A: Explicit full CA & hostname verification (Recommended for production)
+DATABASE_URL="postgresql://user:pass@host:5432/db?sslmode=verify-full"
+
+# Option B: Standard libpq compatibility mode for self-signed or proxy environments
+DATABASE_URL="postgresql://user:pass@host:5432/db?uselibpqcompat=true&sslmode=require"
+```
+
+---
+
+## Database & Request Latency Decomposition
+
+### Measured Database Query Timings
+
+Prisma query engine telemetry recorded multiple queries exceeding 700ms in local development:
+
+```text
+Batch 1:  764.7 ms | 754.2 ms | 799.7 ms | 855.9 ms
+Batch 2:  717.2 ms | 726.9 ms | 778.3 ms | 796.1 ms
+Batch 3:  686.0 ms | 719.6 ms | 720.3 ms | 730.2 ms | 754.3 ms | 824.3 ms
+```
+
+### Correlated HTTP Request Latencies
+
+These database operations directly compounded total request durations:
+
+| Endpoint                      | HTTP Status | Total Duration | Context                                    |
+| :---------------------------- | :---------: | :------------: | :----------------------------------------- |
+| `GET /api/auth/get-session`   |     200     |   1177.40 ms   | Cold session resolution & DB lookup        |
+| `GET /api/auth/get-session`   |     200     |   953.55 ms    | Re-verification with un-pooled query       |
+| `GET /api/v1/links/get-links` |     200     |   1429.98 ms   | Multi-row user link collection retrieval   |
+| `POST /api/v1/users/user/me`  |     200     |   1503.27 ms   | User profile mutation & cache revalidation |
+
+### Distinguishing Root Causes from Symptoms
+
+While query times were elevated, jumping to conclusions without profiling is dangerous. In a cloud-connected local development environment, high database durations can stem from several distinct factors:
+
+1. **Remote Cloud Database Round-Trip:** Developing against a remote serverless PostgreSQL instance (e.g. Neon, Supabase, Render) introduces geographic TCP handshake and TLS negotiation overhead on each un-pooled connection.
+2. **Cold Connection Acquisition:** Prisma establishing new connections sequentially rather than reusing warm pool sockets.
+3. **Sequential N+1 Execution:** Multiple independent `findUnique` queries executing serially rather than being joined.
+
+Decomposing the pipeline confirms that the Node.js application logic itself took only ~10–30ms; the remaining ~1400ms was spent waiting on database socket I/O.
+
+---
+
+## Incident Boundary: Redis Quota Failure
+
+Later in the development session, the `/dashboard` route returned HTTP `500`:
+
+```text
+ERR max requests limit exceeded.
+Limit: 500000
+Usage: 500005
+```
+
+This error occurred because the shared development Redis tier reached its hard monthly quota.
+
+**Scope Boundary:** This issue was deliberately isolated from the listener and database investigation. Conflating infrastructure rate limits with application code defects causes wasted engineering effort and obscures the true resolution path.
+
+---
+
+## Environment & Development Diagnostics
+
+### 1. Next.js Smooth Scrolling Warning
+
+The browser console reported:
+
+```text
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element.
+```
+
+Next.js App Router recommends configuring smooth scrolling via data attributes:
+
+```html
+<html data-scroll-behavior="smooth"></html>
+```
+
+This prevents scroll-restoration race conditions during client-side route transitions and is completely unrelated to server event listeners.
+
+### 2. Windows Port 3000 Conflict
+
+When local processes fail to terminate cleanly, orphaned Node instances can lock port `3000`. Quick diagnostic and cleanup commands for Windows PowerShell:
+
+```powershell
+# Identify process listening on port 3000
+netstat -ano | findstr :3000
+
+# Terminate process by PID
+taskkill /PID <PID> /F
+```
+
+---
+
+## Verification & Remediation Matrix
+
+| Subsystem                      | Diagnostic Evidence                          | Status              | Remediation Action                                                                                  |
+| :----------------------------- | :------------------------------------------- | :------------------ | :-------------------------------------------------------------------------------------------------- |
+| **`ServerResponse` Listeners** | 11 close listeners warning                   | Under Investigation | Run `NODE_OPTIONS=--trace-warnings` to capture call stack; ensure idempotent listener attachment.   |
+| **PostgreSQL SSL**             | `SECURITY WARNING` in `pg-connection-string` | Identified          | Update `DATABASE_URL` with explicit `sslmode=verify-full` or `uselibpqcompat=true&sslmode=require`. |
+| **Database Latency**           | 680ms–855ms query durations                  | Profiling           | Verify connection pooling; differentiate local network round-trip from DB execution plans.          |
+| **HTTP Latency**               | 1.1s–1.5s endpoint durations                 | Decomposed          | Correlated directly with external DB I/O; app code verified at &lt;30ms.                            |
+| **Redis Quota Limit**          | `ERR max requests limit exceeded`            | Decoupled           | Account-level quota upgrade / instance reset; excluded from code remediation.                       |
+| **Smooth Scroll**              | Next.js browser warning                      | Addressed           | Set `data-scroll-behavior="smooth"` on root HTML tag.                                               |
+| **Port Conflict**              | `EADDRINUSE: 3000`                           | Resolved            | Standard process termination via `taskkill`.                                                        |
+
+---
+
+## Key Lessons Learned
+
+1. **A Warning Is an Early Indicator, Not Automatically a Cause:** `MaxListenersExceededWarning` alerts developers to abnormal listener growth, but does not inherently crash processes. Tracing its registration site is essential before making changes.
+2. **Shared Infrastructure Multiplies Symptoms:** When a warning appears across unrelated static and dynamic routes, start by inspecting shared request middleware, logging, and tracing layers.
+3. **Threshold Bumping Masks Defects:** Modifying `setMaxListeners` hides symptoms while allowing resource leaks to compound in production.
+4. **Make Configuration Intent Explicit:** Ambiguous connection options (like `sslmode=require`) create future upgrade liabilities. Explicit configuration prevents breaking driver upgrades.
+5. **Decompose Latency Across Boundaries:** Deconstruct request latency into application execution, ORM overhead, and network transmission before attempting database optimizations.
+6. **Decouple Independent Incidents:** Resisting the urge to lump simultaneous failures (like the Redis quota exhaustion) into the primary investigation prevents misdirected remediation.
+
+---
+
+## Portfolio Architectural Takeaway
+
+This investigation highlights a disciplined approach to backend reliability:
+
+> **A warning should be investigated at the point where it is generated, not silenced at the point where it becomes inconvenient.**
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│ 1. RUNTIME LIFECYCLE (EventEmitters)                        │
+│ ServerResponse ──► close listeners (11+) ──► trace warning  │
+│ ──► fix idempotent registration (do NOT bump maxListeners)  │
+└─────────────────────────────────────────────────────────────┘
+                               ▲
+┌─────────────────────────────────────────────────────────────┐
+│ 2. DATABASE CONFIGURATION (TLS / Drivers)                   │
+│ Connection URL ──► pg-connection-string ──► ambiguous mode  │
+│ ──► set explicit sslmode=verify-full / uselibpqcompat       │
+└─────────────────────────────────────────────────────────────┘
+                               ▲
+┌─────────────────────────────────────────────────────────────┐
+│ 3. PERFORMANCE DECOMPOSITION (I/O vs Code)                  │
+│ HTTP Request (1.4s) ──► App Logic (~25ms)                   │
+│                     ──► Remote DB Round-Trip (~750ms)       │
+│ ──► profile connection pool & latency before refactoring    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+By methodically isolating root causes, avoiding cosmetic fixes like `setMaxListeners(50)`, and separating concurrent external service limits, the system remains maintainable, predictable, and resilient.

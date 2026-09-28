@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, ArrowUpRight } from "lucide-react"
+import { ArrowLeft, ArrowUpRight, Globe } from "lucide-react"
 import { Github } from "@/components/socials"
 import { ShareButtons } from "@/components/ui/share-buttons"
 import type { Project } from "@/lib/projects/types"
@@ -28,12 +28,25 @@ export default function CaseStudyFooter({ project }: CaseStudyFooterProps) {
           variant="compact"
         />
 
+        {project.liveUrl && (
+          <Link
+            href={project.liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-all"
+          >
+            <Globe className="size-3.5" />
+            <span>Launch Live App</span>
+            <ArrowUpRight className="size-3.5" />
+          </Link>
+        )}
+
         {project.githubUrl && (
           <Link
             href={project.githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-all"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/30 bg-background hover:bg-muted/40 text-xs font-medium text-foreground transition-all"
           >
             <Github />
             <span>Source Code</span>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
   BrainIcon,
@@ -36,10 +35,10 @@ export default function About() {
         </div>
         <div className="min-w-0 flex-1">
           <span className="text-muted-foreground block font-mono text-[11px] tracking-wider uppercase">
-            Specialization
+            Currently exploring
           </span>
           <span className="text-foreground text-sm font-semibold">
-            Backend Architecture & Distributed Systems
+            Backend, Systems & AI Engineering
           </span>
         </div>
       </div>
@@ -50,10 +49,10 @@ export default function About() {
         </div>
         <div className="min-w-0 flex-1">
           <span className="text-muted-foreground block font-mono text-[11px] tracking-wider uppercase">
-            Current Project
+            Building
           </span>
           <span className="text-foreground text-sm font-semibold">
-            Building Linkforge · Multi-tenant SaaS & Real-Time Analytics
+            Link management, AI agents & collaborative tools
           </span>
         </div>
       </div>
@@ -64,7 +63,7 @@ export default function About() {
         </div>
         <div className="min-w-0">
           <span className="text-muted-foreground block font-mono text-[11px] tracking-wider uppercase">
-            Location
+            Based In
           </span>
           <span className="text-foreground font-medium">Delhi, India</span>
         </div>
@@ -94,7 +93,7 @@ export default function About() {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-muted-foreground block font-mono text-[11px] tracking-wider uppercase">
-                Direct Email
+                Want to talk?
               </span>
               <span className="text-muted-foreground/60 group-hover:text-foreground/80 hidden font-mono text-[9px] transition-colors sm:inline">
                 (click to copy)
@@ -150,10 +149,10 @@ export default function About() {
         </div>
         <div className="min-w-0">
           <span className="text-muted-foreground block font-mono text-[11px] tracking-wider uppercase">
-            Work Preference
+            Available For
           </span>
           <span className="text-foreground block truncate font-medium">
-            Remote & High-Impact Backend Roles
+            Backend / Fullstack Roles
           </span>
         </div>
       </div>

@@ -7,7 +7,6 @@ export type IconType =
   | "git"
   | "layers"
   | "server"
-  | "sparkles"
   | "fileText"
 
 export type TechnologyItem = {
@@ -145,11 +144,6 @@ export type ProjectCaseStudy = {
   }
 }
 
-export type FloatingChip = {
-  text: string
-  position: "top-left" | "bottom-right"
-}
-
 export type Project = {
   id: string
   slug: string
@@ -160,18 +154,20 @@ export type Project = {
   description: string
   longDescription?: string[]
   status: string
+  badge?: string
   role?: string
   timeline?: string
   tags: string[]
   featured?: boolean
   image: string
   imageAlt: string
-  floatingChips?: FloatingChip[]
   liveUrl?: string
-  githubUrl: string
+  githubUrl?: string
   hasCaseStudy?: boolean
   ctaText?: string
   highlights?: EngineeringHighlight[]
   techStack?: TechnologyCategory[]
   caseStudy?: ProjectCaseStudy
 }
+
+

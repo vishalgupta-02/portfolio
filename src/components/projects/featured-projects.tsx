@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import ProjectCard from "./project-card";
-import { getAllProjects, getFeaturedProjects, type Project } from "@/lib/projects";
+import {
+  getAllProjects,
+  getFeaturedProjects,
+  type Project,
+} from "@/lib/projects";
 
 export interface FeaturedProjectsProps {
   projects?: Project[];
@@ -27,21 +31,18 @@ export default function FeaturedProjects({
   return (
     <section
       id="projects"
-      className="w-full max-w-2xl mx-auto py-8 px-4 border-b border-border/40"
+      className="border-border/40 mx-auto w-full max-w-2xl border-b px-4 py-8"
       aria-label="Featured Projects"
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground font-sans">
+          <h2 className="text-foreground font-sans text-xl font-semibold tracking-tight">
             {title}
           </h2>
-          <p className="text-xs text-muted-foreground font-display mt-0.5">
+          <p className="text-muted-foreground font-display mt-0.5 text-xs">
             Systems, SaaS platforms & backend infrastructure
           </p>
         </div>
-        <span className="text-xs font-mono text-muted-foreground/80">
-          {projectsList.length} of {totalAllProjects} featured
-        </span>
       </div>
 
       <div className="flex flex-col gap-6">
@@ -58,10 +59,10 @@ export default function FeaturedProjects({
         <div className="mt-6 flex justify-center">
           <Link
             href="/projects"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/50 px-4 py-2 text-xs font-medium text-foreground transition-all active:scale-[0.98]"
+            className="border-border/60 bg-muted/20 hover:bg-muted/50 text-foreground inline-flex items-center gap-1.5 rounded-lg border px-4 py-2 text-xs font-medium transition-all active:scale-[0.98]"
           >
             <span>View All Projects ({totalAllProjects})</span>
-            <ArrowRight className="size-3.5 text-muted-foreground" />
+            <ArrowRight className="text-muted-foreground size-3.5" />
           </Link>
         </div>
       )}

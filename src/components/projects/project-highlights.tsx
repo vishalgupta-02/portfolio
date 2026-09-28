@@ -3,7 +3,6 @@ import {
   Zap,
   Cpu,
   Lock,
-  Sparkles,
   Layers,
   FileText,
   Server,
@@ -24,7 +23,6 @@ const iconMap: Record<
   database: Database,
   layers: Layers,
   server: Server,
-  sparkles: Sparkles,
   fileText: FileText,
   git: Github,
 }

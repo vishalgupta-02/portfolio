@@ -105,7 +105,7 @@ const CommandMenu = () => {
                 <span className='font-mono text-[10px] text-muted-foreground'>/</span>
               </Command.Item>
               <Command.Item
-                value='Projects Systems Case Studies Whiteboard Linkforge'
+                value='Projects Systems Case Studies Infinity Whiteboard Linkforge'
                 onSelect={() => handleAction("projects")}
                 className='flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-foreground transition-colors data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground'>
                 <span>Browse Projects & Systems</span>

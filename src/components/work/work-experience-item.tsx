@@ -10,7 +10,7 @@ import {
   TypeScript,
 } from "@/components/ui/svgs-of-techs"
 import type { WorkExperience } from "@/lib/experience"
-import { Calendar, CheckCircle2, MapPin, Sparkles } from "lucide-react"
+import { Calendar, CheckCircle2, MapPin } from "lucide-react"
 import type React from "react"
 
 const TECH_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -82,9 +82,9 @@ export default function WorkExperienceItem({
           {experience.impactMetrics.map((metric) => (
             <span
               key={metric}
-              className='inline-flex items-center gap-1 rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 font-mono text-[11px] font-medium text-foreground/80'
+              className='inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 font-mono text-[11px] font-medium text-foreground/80'
             >
-              <Sparkles className='size-2.5 text-amber-500 shrink-0' aria-hidden='true' />
+              <span className='size-1 rounded-full bg-foreground/40' aria-hidden='true' />
               {metric}
             </span>
           ))}

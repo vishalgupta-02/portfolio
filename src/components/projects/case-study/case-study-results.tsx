@@ -33,7 +33,7 @@ export default function CaseStudyResults({
             className="p-3 rounded-lg border border-border/25 bg-card/30 space-y-1"
           >
             <span className="font-mono text-xs font-semibold text-emerald-500">
-              ✓ {res.title}
+              {res.title}
             </span>
             <p>{res.description}</p>
           </div>

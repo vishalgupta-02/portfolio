@@ -83,7 +83,7 @@ export default function CaseStudyChallenges({
                   The Result
                 </span>
                 <p className="text-emerald-600 dark:text-emerald-400 font-medium">
-                  ✓ {ch.result}
+                  {ch.result}
                 </p>
               </div>
             </div>

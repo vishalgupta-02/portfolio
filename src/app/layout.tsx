@@ -1,52 +1,52 @@
-import type { Metadata } from "next"
-import localFont from "next/font/local"
-import "./globals.css"
-import { ThemeProvider } from "@/components/ui/theme-provider"
-import { Geist } from "next/font/google"
-import { cn } from "@/lib/utils"
+import type { Metadata } from "next";
+import localFont from "next/font/local";
+import "./globals.css";
+import { ThemeProvider } from "@/components/ui/theme-provider";
+import { Geist } from "next/font/google";
+import { cn } from "@/lib/utils";
 // import { IntroLoader } from "@/components/intro-loader"
-import { siteConfig } from "@/lib/blog/site"
-import Navbar from "@/components/navbar"
-import Footer from "@/components/footer/footer"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { siteConfig } from "@/lib/blog/site";
+import Navbar from "@/components/navbar";
+import Footer from "@/components/footer/footer";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from "next/script";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" })
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const spaceGrotesk = localFont({
   src: "../../public/fonts/SpaceGrotesk-Variable.ttf",
   variable: "--font-space-grotesk",
   display: "swap",
   preload: false,
-})
+});
 
 const publicSans = localFont({
   src: "../../public/fonts/PublicSans-Variable.ttf",
   variable: "--font-public-sans",
   display: "swap",
   preload: false,
-})
+});
 
 const jetbrainsMono = localFont({
   src: "../../public/fonts/JetBrainsMono-Variable.ttf",
   variable: "--font-jetbrains-mono",
   display: "swap",
   preload: false,
-})
+});
 
 const idGrotesk = localFont({
   src: "../../public/fonts/IDGroteskRegular-BcJmFnYE.woff2",
   variable: "--font-id-grotesk",
   display: "swap",
   preload: true,
-})
-
+});
 
 const ogImage = {
   url: siteConfig.ogImage,
   width: 1200,
   height: 630,
   alt: "Vishal Gupta — Software Engineer",
-}
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
@@ -139,19 +139,19 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-}
+};
 
-import { ConsoleGreeting } from "@/components/console-greeting"
+import { ConsoleGreeting } from "@/components/console-greeting";
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
     <html
-      data-scroll-behavior='smooth'
-      lang='en'
+      data-scroll-behavior="smooth"
+      lang="en"
       className={cn(
         "h-full",
         "antialiased",
@@ -162,21 +162,27 @@ export default function RootLayout({
         "font-sans",
         geist.variable,
       )}
-      suppressHydrationWarning>
-      <body className='min-h-full flex flex-col'>
+      suppressHydrationWarning
+    >
+      <body className="flex min-h-full flex-col">
         <ThemeProvider
-          attribute='class'
-          defaultTheme='dark'
+          attribute="class"
+          defaultTheme="dark"
           enableSystem
-          disableTransitionOnChange>
+          disableTransitionOnChange
+        >
           <ConsoleGreeting />
           <Navbar />
           <main>{children}</main>
           <Footer />
         </ThemeProvider>
         <SpeedInsights />
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="c82a8e58-bf77-43ba-b52f-6de70409b200"
+        />
       </body>
     </html>
-  )
+  );
 }
-
