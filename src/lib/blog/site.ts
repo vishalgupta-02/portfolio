@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "Vishal Gupta",
-  title: "Vishal Gupta — Software Engineer",
+  title: "Vishal Gupta | Software Engineer",
 
   description:
     "Software Engineer building scalable full-stack applications with Next.js, TypeScript, MongoDB, Redis, and System Design.",
@@ -45,4 +45,5 @@ export const siteConfig = {
 
   github: "https://github.com/vishalgupta-02",
   linkedin: "https://linkedin.com/in/v1shalgupt9",
-} as const
+  medium: "https://medium.com/@v1shal-gupta",
+} as const;

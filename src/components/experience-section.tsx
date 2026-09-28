@@ -1,4 +1,5 @@
 import ExperienceCard from "./experience-card";
+import { WORK_EXPERIENCES } from "@/lib/experience";
 
 export default function ExperienceSection() {
   return (
@@ -15,18 +16,17 @@ export default function ExperienceSection() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <ExperienceCard
-          companyName="Reospark Technologies Pvt. Ltd."
-          timeline="July 2025 - August 2026"
-          role="Software Engineer"
-          locations="Noida, India (On-site)"
-        />
-        <ExperienceCard
-          companyName="Vomyra AI"
-          timeline="January 2025 - June 2025"
-          role="Software Engineer Intern"
-          locations="Noida, India (On-site)"
-        />
+        {WORK_EXPERIENCES.map((exp) => (
+          <ExperienceCard
+            key={exp.id}
+            companyName={exp.company}
+            timeline={exp.period}
+            role={exp.role}
+            locations={`${exp.location} (${exp.locationType})`}
+            summary={exp.summary}
+            technologies={exp.technologies}
+          />
+        ))}
       </div>
     </section>
   );
