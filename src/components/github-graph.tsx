@@ -3,7 +3,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { useTheme } from "next-themes";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 
 import { cn } from "@/lib/utils";
 
@@ -222,70 +222,7 @@ function calculateContributionStats(contributions: GithubContribution[]) {
   return { total, activeDays, longestStreak, currentStreak };
 }
 
-function getCellDelay(
-  animation: GithubGraphAnimation,
-  weekIndex: number,
-  dayIndex: number,
-  speed: number,
-): number {
-  const step =
-    animation === "wave"
-      ? weekIndex * 0.015 + dayIndex * 0.01
-      : animation === "scan"
-        ? weekIndex * 0.02
-        : (weekIndex + dayIndex * 2) * 0.012;
-  return step / Math.max(speed, 0.1);
-}
 
-function getAmbientCellMotion(
-  effect: GithubGraphAmbientEffect,
-  intensity: number,
-  weekIndex: number,
-  dayIndex: number,
-  entranceDelay: number,
-  reducedMotion: boolean | null,
-) {
-  if (reducedMotion || effect === "none") {
-    return {
-      animate: { opacity: 1, scale: 1 },
-      transition: {
-        opacity: { duration: 0.14, delay: entranceDelay },
-        scale: { type: "spring" as const, stiffness: 900, damping: 32 },
-      },
-    };
-  }
-
-  const strength = Math.min(1, Math.max(0, intensity));
-  const seed = ((weekIndex * 17 + dayIndex * 31) % 11) / 10;
-  const isTide = effect === "tide";
-  const isDrift = effect === "drift";
-  const duration = isTide ? 3.2 : isDrift ? 3.8 + seed : 2 + seed * 1.4;
-  const delay =
-    entranceDelay +
-    (isTide ? (weekIndex + dayIndex * 1.8) * 0.055 : seed * 0.85);
-  const lowOpacity = 1 - (isTide ? 0.24 : isDrift ? 0.16 : 0.34) * strength;
-  const smallScale = 1 - (isTide ? 0.07 : isDrift ? 0.04 : 0.08) * strength;
-
-  return {
-    animate: {
-      opacity: isDrift
-        ? [1, lowOpacity, 1 - 0.06 * strength, 1]
-        : [1, lowOpacity, 1],
-      scale: isDrift
-        ? [1, smallScale, 1 + 0.025 * strength, 1]
-        : [1, smallScale, 1],
-    },
-    transition: {
-      opacity: {
-        duration,
-        delay,
-        ease: "easeInOut" as const,
-        repeat: Infinity,
-      },
-      scale: { duration, delay, ease: "easeInOut" as const, repeat: Infinity },
-    },
-  };
-}
 
 function LoadingSkeleton({
   cellGap,
@@ -333,15 +270,10 @@ export function GithubGraph({
   months = 12,
   variant = "github",
   animation = "wave",
-  animationSpeed = 1.2,
   cellSize = 9,
   cellGap = 2.5,
   cellRadius = 2,
   showLegend = true,
-  showAccount = true,
-  showStats = true,
-  ambientEffect = "none",
-  ambientIntensity = 0.5,
   data,
   className,
 }: GithubGraphProps) {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Clock, Compass, Layers, Terminal } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Clock } from "lucide-react";
 import MainLayout from "@/components/main-layout";
 import { siteConfig } from "@/lib/blog/site";
 

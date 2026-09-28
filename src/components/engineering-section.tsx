@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, ArrowUpRight, ShieldAlert, Cpu, Terminal, FileText } from "lucide-react";
+import { ArrowRight, ArrowUpRight } from "lucide-react";
 
 interface EngineeringItem {
   id: string;

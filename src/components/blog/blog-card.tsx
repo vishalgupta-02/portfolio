@@ -35,7 +35,7 @@ function normalizePostItem(
     };
   }
 
-  const anyPost = post as Record<string, any>;
+  const anyPost = post as unknown as Record<string, unknown>;
   return {
     slug: post.slug,
     title: post.title,
@@ -44,7 +44,7 @@ function normalizePostItem(
     readingMinutes: post.readingTime.minutes,
     tags: post.tags || [],
     hasDeveloperView: Boolean(anyPost.hasDeveloperView),
-    imageSrc: anyPost.image || siteConfig.ogImage,
+    imageSrc: (typeof anyPost.image === "string" ? anyPost.image : undefined) || siteConfig.ogImage,
   };
 }
 

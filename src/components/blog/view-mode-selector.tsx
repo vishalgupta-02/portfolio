@@ -5,6 +5,12 @@ import { useCallback, useId } from "react";
 import { User, Code2 } from "lucide-react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+    process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 export type ViewMode = "user" | "developer";
 
@@ -28,6 +34,10 @@ export function ViewModeSelector({ contentPanelId }: ViewModeSelectorProps) {
   const handleSelect = useCallback(
     (view: ViewMode) => {
       if (view === activeView) return;
+
+      if (posthogConfigured) {
+        posthog.capture("article_view_mode_selected", { view });
+      }
 
       const params = new URLSearchParams(searchParams.toString());
 

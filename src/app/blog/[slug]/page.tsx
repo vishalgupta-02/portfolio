@@ -21,7 +21,7 @@ import { copyCodeTransformer } from "@/lib/blog/shiki";
 import rehypeShiki from "@shikijs/rehype";
 import { ArrowLeft, Calendar, Clock, Layers } from "lucide-react";
 import type { Metadata } from "next";
-import { MDXRemote } from "next-mdx-remote/rsc";
+import { MDXRemote, type MDXRemoteProps } from "next-mdx-remote/rsc";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -56,10 +56,7 @@ export async function generateMetadata({
   return generateBlogMetadata(slug, post);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const mdxOptions: {
-  mdxOptions: { remarkPlugins: any[]; rehypePlugins: any[] };
-} = {
+const mdxOptions: NonNullable<MDXRemoteProps["options"]> = {
   mdxOptions: {
     remarkPlugins: [remarkGfm],
     rehypePlugins: [
@@ -72,7 +69,7 @@ const mdxOptions: {
           },
           transformers: [copyCodeTransformer],
         },
-      ],
+      ] as never,
     ],
   },
 };

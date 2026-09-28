@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, ChevronDown, Layers, Terminal } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import {
-  ChatGPT,
   Claude,
   Docker,
   Gemini,
@@ -20,7 +19,6 @@ import {
   React,
   ShadCN,
   TailwindCSS,
-  TanStack,
   TypeScript,
   Vercel,
 } from "./ui/svgs-of-techs";

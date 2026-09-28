@@ -12,7 +12,13 @@ import {
   Loader2,
   MessageSquare,
 } from "lucide-react";
-import { Github, LinkedIn, X, Discord } from "@/components/socials";
+import { Github, LinkedIn, Discord } from "@/components/socials";
+import posthog from "posthog-js";
+
+const posthogConfigured = Boolean(
+  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
+    process.env.NEXT_PUBLIC_POSTHOG_HOST,
+);
 
 type ContactIntent = "hiring" | "collab" | "opensource" | "hello";
 
@@ -60,6 +66,9 @@ export default function ContactSection() {
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText("abhimanyug987@gmail.com");
+      if (posthogConfigured) {
+        posthog.capture("email_address_copied");
+      }
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
     } catch {
@@ -96,11 +105,17 @@ export default function ContactSection() {
         throw new Error(data.error || "Failed to send message.");
       }
 
+      if (posthogConfigured) {
+        posthog.capture("contact_message_submitted", { intent });
+      }
       setStatus("success");
       setName("");
       setEmail("");
       setMessage("");
     } catch (err: unknown) {
+      if (posthogConfigured) {
+        posthog.capture("contact_message_failed", { intent });
+      }
       setStatus("error");
       setErrorMessage(
         err instanceof Error
