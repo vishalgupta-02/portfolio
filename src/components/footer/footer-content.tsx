@@ -126,15 +126,34 @@ export default function FooterContent({ quote }: Props) {
 
       <hr className="border-border/40 mt-8 mb-4" />
 
-      <div className="text-muted-foreground flex flex-col justify-between gap-3 font-mono text-xs sm:flex-row sm:items-center">
-        <p className="font-display text-xs font-light">
-          &copy; {new Date().getFullYear()} Vishal Gupta. All rights reserved.
-        </p>
+      <div className="flex flex-col gap-4 font-mono text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div>
+            <span className="font-sans font-semibold text-foreground">Vishal Gupta</span>
+            <span className="text-muted-foreground ml-2 text-[11px]">Backend & Systems Engineer</span>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <div className="bg-muted/40 border-border/50 flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px]">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            <span className="text-foreground/80">Systems Nominal</span>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-sans">
+            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+            <Link href="/projects" className="hover:text-foreground transition-colors">Projects</Link>
+            <Link href="/#engineering" className="hover:text-foreground transition-colors">Engineering</Link>
+            <Link href="/blog" className="hover:text-foreground transition-colors">Writing</Link>
+            <Link href="/postmortems" className="hover:text-foreground transition-colors">Postmortems</Link>
+            <Link href="/now" className="hover:text-foreground transition-colors">Now</Link>
+            <Link href="/#contact" className="hover:text-foreground transition-colors">Contact</Link>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-border/20 pt-3">
+          <p className="font-display text-xs font-light">
+            &copy; {new Date().getFullYear()} Vishal Gupta. All rights reserved.
+          </p>
+
+          <div className="flex items-center gap-3">
+            <div className="bg-muted/40 border-border/50 flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px]">
+              <span className="size-1.5 rounded-full bg-emerald-500/80" />
+              <span className="text-foreground/80 font-mono">Portfolio v2.4</span>
+            </div>
           </div>
         </div>
       </div>

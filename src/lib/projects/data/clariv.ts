@@ -18,7 +18,7 @@ export const clarivProject: Project = {
   role: "Full-Stack Engineer",
   timeline: "January 2026 – February 2026",
   tags: ["Document Parsing", "Google GenAI", "MongoDB", "Next.js"],
-  featured: true,
+  featured: false,
   image: "/static/clariv.webp",
   imageAlt: "Clariv AI document extractor screenshot",
   liveUrl: "https://clariv.vercel.app",

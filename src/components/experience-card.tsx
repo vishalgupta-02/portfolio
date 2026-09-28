@@ -9,6 +9,8 @@ interface ExperienceCardProps {
   timeline: string;
   role: string;
   locations: string;
+  summary?: string;
+  technologies?: { name: string }[];
 }
 
 export default function ExperienceCard({
@@ -16,6 +18,8 @@ export default function ExperienceCard({
   timeline,
   role,
   locations,
+  summary,
+  technologies = [],
 }: ExperienceCardProps) {
   const pathname = usePathname();
   const isHomePage = pathname === "/";
@@ -47,6 +51,19 @@ export default function ExperienceCard({
     </div>
   );
 
+  const techBadges = technologies.length > 0 && (
+    <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-1 border-t border-border/20">
+      {technologies.slice(0, 5).map((tech) => (
+        <span
+          key={tech.name}
+          className="font-mono text-[10px] text-muted-foreground bg-muted/30 px-1.5 py-0.5 rounded border border-border/30"
+        >
+          {tech.name}
+        </span>
+      ))}
+    </div>
+  );
+
   if (isHomePage) {
     return (
       <Link
@@ -55,6 +72,12 @@ export default function ExperienceCard({
       >
         {content}
         {details}
+        {summary && (
+          <p className="text-xs text-muted-foreground mt-2 line-clamp-2 leading-relaxed">
+            {summary}
+          </p>
+        )}
+        {techBadges}
       </Link>
     );
   }
@@ -63,6 +86,12 @@ export default function ExperienceCard({
     <div className="w-full rounded-xl border border-border/40 bg-card/30 p-3.5 sm:p-4">
       {content}
       {details}
+      {summary && (
+        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+          {summary}
+        </p>
+      )}
+      {techBadges}
     </div>
   );
 }

@@ -18,7 +18,7 @@ export const careerlyProject: Project = {
   role: "Full-Stack Engineer",
   timeline: "November 2025 – December 2025",
   tags: ["Assessment Engine", "Resume Parsing", "PostgreSQL", "Next.js"],
-  featured: true,
+  featured: false,
   image: "/static/careerly.webp",
   imageAlt: "Careerly AI career coach platform screenshot",
   liveUrl: "https://careerly.vishalbuild.tech/",

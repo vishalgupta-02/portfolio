@@ -4,7 +4,6 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
-// import { IntroLoader } from "@/components/intro-loader"
 import { siteConfig } from "@/lib/blog/site";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer/footer";
@@ -45,7 +44,7 @@ const ogImage = {
   url: siteConfig.ogImage,
   width: 1200,
   height: 630,
-  alt: "Vishal Gupta — Software Engineer",
+  alt: "Vishal Gupta | Software Engineer",
 };
 
 export const metadata: Metadata = {

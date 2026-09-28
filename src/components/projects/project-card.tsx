@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Globe } from "lucide-react";
+import { ArrowUpRight, BookOpen, Globe, ChevronDown, Cpu, Layers } from "lucide-react";
 import { Github } from "@/components/socials";
 import type { Project } from "@/lib/projects/types";
 
@@ -15,6 +16,7 @@ export default function ProjectCard({
   project,
   priorityImage = false,
 }: ProjectCardProps) {
+  const [showArchitecture, setShowArchitecture] = useState(false);
   const projectPageUrl = `/projects/${project.slug}`;
   const caseStudyUrl = project.hasCaseStudy
     ? `/projects/${project.slug}/case-study`
@@ -100,9 +102,60 @@ export default function ProjectCard({
         />
       </Link>
 
-      <p className="font-display text-foreground/80 mb-4 text-xs leading-relaxed sm:text-sm">
+      <p className="font-display text-foreground/80 mb-3.5 text-xs leading-relaxed sm:text-sm">
         {project.description}
       </p>
+
+      {/* Expandable Architecture & Engineering Highlights */}
+      {project.highlights && project.highlights.length > 0 && (
+        <div className="mb-3.5">
+          <button
+            type="button"
+            onClick={() => setShowArchitecture((prev) => !prev)}
+            aria-expanded={showArchitecture}
+            className="group/btn inline-flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            <Layers className="size-3 text-muted-foreground" />
+            <span>{showArchitecture ? "Hide Architecture Highlights" : "Inspect Architecture & Decisions"}</span>
+            <ChevronDown
+              className={`size-3 transition-transform duration-200 ${
+                showArchitecture ? "rotate-180 text-foreground" : ""
+              }`}
+            />
+          </button>
+
+          {showArchitecture && (
+            <div className="mt-2.5 space-y-2 rounded-lg border border-border/40 bg-muted/20 p-3 text-xs animate-in fade-in-50 duration-200">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
+                Engineered Highlights & Constraints
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                {project.highlights.map((hl) => (
+                  <div key={hl.title} className="space-y-0.5 border-l border-border/60 pl-2.5">
+                    <p className="font-sans font-semibold text-foreground text-[11px]">
+                      {hl.title}
+                    </p>
+                    <p className="font-display text-muted-foreground text-[11px] leading-relaxed">
+                      {hl.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              {caseStudyUrl && (
+                <div className="pt-1.5 text-right">
+                  <Link
+                    href={caseStudyUrl}
+                    className="inline-flex items-center gap-1 font-mono text-[10px] text-foreground hover:underline"
+                  >
+                    <span>Read Full Engineering Case Study</span>
+                    <span>&rarr;</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="border-border/30 flex flex-col justify-between gap-3 border-t pt-3 sm:flex-row sm:items-center">
         <div className="flex flex-wrap items-center gap-1.5">

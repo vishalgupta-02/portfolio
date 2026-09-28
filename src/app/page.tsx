@@ -1,9 +1,10 @@
 import About from "@/components/about";
+import BuildLog from "@/components/build-log";
 import ContactSection from "@/components/contact-section";
+import EngineeringSection from "@/components/engineering-section";
 import ExperienceSection from "@/components/experience-section";
 import GithubSection from "@/components/github-section";
 import Hero from "@/components/hero";
-// import { IntroLoader } from "@/components/intro-loader";
 import MainLayout from "@/components/main-layout";
 import ProjectSection from "@/components/project-section";
 import SkillsSection from "@/components/skills-section";
@@ -11,8 +12,6 @@ import SkillsSection from "@/components/skills-section";
 export default async function Home() {
   return (
     <>
-      {/* IntroLoader preserved and commented out in favor of hardware-accelerated CSS bottom-to-top stagger */}
-      {/* <IntroLoader /> */}
       <MainLayout>
         <div className="animate-enter [animation-delay:40ms]">
           <Hero />
@@ -24,15 +23,21 @@ export default async function Home() {
           <ProjectSection />
         </div>
         <div className="animate-enter [animation-delay:280ms]">
-          <ExperienceSection />
+          <EngineeringSection />
         </div>
         <div className="animate-enter [animation-delay:360ms]">
-          <SkillsSection />
+          <ExperienceSection />
         </div>
         <div className="animate-enter [animation-delay:440ms]">
-          <GithubSection />
+          <SkillsSection />
         </div>
         <div className="animate-enter [animation-delay:520ms]">
+          <BuildLog />
+        </div>
+        <div className="animate-enter [animation-delay:600ms]">
+          <GithubSection />
+        </div>
+        <div className="animate-enter [animation-delay:680ms]">
           <ContactSection />
         </div>
       </MainLayout>

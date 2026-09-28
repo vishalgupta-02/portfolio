@@ -30,7 +30,7 @@ export const whiteboardProject: Project = {
     "Infinity AI-agentic whiteboard architecture canvas and diagram generator",
 
   liveUrl: "https://infinity.vishalbuild.tech",
-  githubUrl: "",
+  githubUrl: "https://github.com/vishalgupta-02/ai-agentic-whiteboard.git",
   hasCaseStudy: true,
   ctaText: "View Case Study",
   highlights: [
@@ -94,7 +94,8 @@ export const whiteboardProject: Project = {
       items: [
         {
           name: "Google Gemini 2.5",
-          description: "Multi-prompt structured diagram generation (@google/genai)",
+          description:
+            "Multi-prompt structured diagram generation (@google/genai)",
         },
         {
           name: "Zod Schema Validator",
@@ -103,7 +104,8 @@ export const whiteboardProject: Project = {
         },
         {
           name: "RenderAIDiagram",
-          description: "Custom canvas ingestion & Excalidraw element constructor",
+          description:
+            "Custom canvas ingestion & Excalidraw element constructor",
         },
       ],
     },
@@ -121,7 +123,8 @@ export const whiteboardProject: Project = {
         },
         {
           name: "WebP Rasterizer",
-          description: "Base64 WebP preview thumbnail generation for board cards",
+          description:
+            "Base64 WebP preview thumbnail generation for board cards",
         },
       ],
     },
@@ -130,11 +133,13 @@ export const whiteboardProject: Project = {
       items: [
         {
           name: "Clerk Auth",
-          description: "User authentication, route middleware & session resolution",
+          description:
+            "User authentication, route middleware & session resolution",
         },
         {
           name: "Workspace Engine",
-          description: "Board listing, search, sort, soft delete & archive restore",
+          description:
+            "Board listing, search, sort, soft delete & archive restore",
         },
       ],
     },
@@ -330,7 +335,8 @@ export function validateAndAdjustGeometry(diagram: z.infer<typeof AIDiagramSchem
       },
       {
         number: "02",
-        title: "Eliminating Viewport Distortion & Map Crashes via appState Normalization",
+        title:
+          "Eliminating Viewport Distortion & Map Crashes via appState Normalization",
         problemStatement:
           "Excalidraw's runtime appState contains ephemeral properties such as active tool selection, cursor zoom, panning offsets, and JavaScript Map instances (such as collaborators). Serializing raw appState directly into PostgreSQL resulted in runtime TypeError crashes during JSON serialization and caused distorted viewports or locked element selections upon board reload.",
         risk: "Corrupted boards that fail to load, locked selection states, and jarring camera jumps for users reopening projects.",
@@ -383,7 +389,8 @@ export function hydrateAppState(savedState?: Partial<NormalizedWhiteboardState>)
       },
       {
         number: "03",
-        title: "Debounced 10-Second Autosave with Base64 WebP Thumbnail Generation",
+        title:
+          "Debounced 10-Second Autosave with Base64 WebP Thumbnail Generation",
         problemStatement:
           "Whiteboard canvas activity produces rapid state updates during freehand drawing or shape manipulation. Writing every stroke to PostgreSQL via serverless route handlers quickly exhausted database connection pools and caused UI micro-stutters.",
         risk: "Neon connection pooling limits exceeded, high network payload overhead, and lagged canvas rendering.",
@@ -627,7 +634,8 @@ export async function DELETE(req: Request) {
         },
         {
           number: 3,
-          title: "Debouncing paired with client-side WebP thumbnails saves database load",
+          title:
+            "Debouncing paired with client-side WebP thumbnails saves database load",
           description:
             "Batching canvas saves into 10-second debounce windows while generating WebP preview thumbnails directly in the browser delivers sub-second dashboard rendering with zero database connection exhaustion.",
         },
