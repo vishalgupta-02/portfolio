@@ -6,28 +6,22 @@ export const linkforgeProject: Project = {
   number: "01",
   name: "Linkforge",
   title: "Linkforge — Multi-tenant SaaS & Analytics Platform",
-  subtitle: "Multi-tenant SaaS · Link-in-bio & Real-Time Analytics",
+  subtitle: "Multi-tenant SaaS · Link infrastructure & analytics",
   description:
-    "Built the parts that don't show up in a demo: tenant-isolated data, username-change race conditions, and scalable event analytics.",
+    "Production-ready link infrastructure featuring tenant-isolated data partitioning, atomic vanity handle mutations, and low-latency clickstream analytics.",
   longDescription: [
     "I built the core backend and analytics infrastructure that powers Linkforge. From tenant isolation and event tracking to analytics aggregation and secure username management.",
     "Linkforge is a developer-centric link-in-bio and real-time analytics platform built from scratch with an emphasis on resilient backend fundamentals before applying abstractions.",
     "While surface-level bio tools present simple lists of links, the underlying architecture must support multi-tenant database partitioning, race-condition-free vanity slug changes, fail-fast configuration checks, and high-throughput async event logging.",
   ],
-  status: "In Progress(Migrating Backend from Railway to Render)",
-  role: "Full-Stack / Backend Engineer",
+  status: "Testing Phase",
+  badge: "Testing Phase",
+  role: "Full-Stack Engineer",
   timeline: "March 2026 – Present",
-  tags: ["Analytics", "Advance Backend", "Production-Ready", "System Design"],
+  tags: ["Multi-Tenancy", "Analytics", "PostgreSQL", "Next.js"],
   featured: true,
   image: "/static/linkforge.webp",
   imageAlt: "Linkforge multi-tenant SaaS analytics platform dashboard",
-  floatingChips: [
-    {
-      text: "Migrating from Railway to Render due to cost",
-      position: "top-left",
-    },
-    { text: "Real-time Analytics", position: "bottom-right" },
-  ],
 
   liveUrl: "https://linkforge.vishalbuild.tech",
   githubUrl: "https://github.com/vishalgupta-02/linkforge.git",
@@ -118,7 +112,7 @@ export const linkforgeProject: Project = {
     description:
       "An in-depth breakdown of designing tenant-isolated data architectures, fail-fast configuration schemas, atomic slug mutations, and asynchronous clickstream analytics pipelines.",
     role: "Full-Stack / Backend Engineer",
-    status: "In Progress",
+    status: "In Active Development",
     timeline: "March 2026 – Present",
     architectureLabel: "pnpm workspaces",
     sections: [
@@ -327,7 +321,7 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(process.env)
 
 if (!parsed.success) {
-  console.error("❌ Invalid environment configuration:", parsed.error.format())
+  console.error("[config-error] Invalid environment configuration:", parsed.error.format())
   process.exit(1)
 }
 

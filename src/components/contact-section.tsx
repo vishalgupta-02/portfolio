@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -23,6 +23,23 @@ export default function ContactSection() {
   >("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [copiedEmail, setCopiedEmail] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const feedbackTarget = params.get("feedback") || params.get("ref");
+    if (feedbackTarget) {
+      const targetName =
+        feedbackTarget.charAt(0).toUpperCase() + feedbackTarget.slice(1);
+      setMessage((prev) =>
+        prev ? prev : `Hi Vishal, sharing some feedback regarding ${targetName}: `
+      );
+      const textarea = document.getElementById("contact-message");
+      if (textarea) {
+        setTimeout(() => textarea.focus(), 250);
+      }
+    }
+  }, []);
 
   const handleCopyEmail = async () => {
     try {
@@ -76,7 +93,7 @@ export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="border-border/40 mx-auto w-full max-w-2xl border-b px-4 py-8"
+      className="border-border/40 mx-auto w-full max-w-2xl border-b px-4 py-8 scroll-mt-20"
     >
       {/* Header */}
       <div className="mb-6 flex flex-col gap-2">

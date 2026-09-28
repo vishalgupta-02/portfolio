@@ -47,7 +47,7 @@ export default function ProjectsPage() {
         {/* Header Section */}
         <header className="mb-8">
           <div className="text-muted-foreground mb-2 flex items-center gap-2 font-mono text-xs tracking-wider uppercase">
-            <span className="inline-block size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-block size-1.5 rounded-full bg-emerald-500" />
             Engineering Portfolio & Case Studies
           </div>
 
@@ -63,8 +63,8 @@ export default function ProjectsPage() {
 
           <div className="border-border bg-card/60 mt-6 grid grid-cols-3 gap-3 rounded-xl border p-3 text-center sm:p-4">
             <div className="border-border/60 border-r pr-2">
-              <span className="text-muted-foreground flex items-center justify-center gap-1 font-mono text-xs">
-                <Layers className="size-3.5 text-blue-500" aria-hidden="true" />
+              <span className="text-muted-foreground flex items-center justify-center gap-1.5 font-mono text-xs">
+                <Layers className="size-3.5 text-muted-foreground" aria-hidden="true" />
                 Projects
               </span>
               <p className="text-foreground mt-1 font-mono text-lg font-bold">
@@ -73,9 +73,9 @@ export default function ProjectsPage() {
             </div>
 
             <div className="border-border/60 border-r px-2">
-              <span className="text-muted-foreground flex items-center justify-center gap-1 font-mono text-xs">
+              <span className="text-muted-foreground flex items-center justify-center gap-1.5 font-mono text-xs">
                 <BookOpen
-                  className="size-3.5 text-emerald-500"
+                  className="size-3.5 text-muted-foreground"
                   aria-hidden="true"
                 />
                 Case Studies
@@ -86,8 +86,8 @@ export default function ProjectsPage() {
             </div>
 
             <div className="pl-2">
-              <span className="text-muted-foreground flex items-center justify-center gap-1 font-mono text-xs">
-                <Terminal className="size-3.5 text-amber-500" aria-hidden="true" />
+              <span className="text-muted-foreground flex items-center justify-center gap-1.5 font-mono text-xs">
+                <Terminal className="size-3.5 text-muted-foreground" aria-hidden="true" />
                 Active Work
               </span>
               <p className="text-foreground mt-1 font-mono text-lg font-bold">

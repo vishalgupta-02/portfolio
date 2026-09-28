@@ -28,7 +28,13 @@ export function getFeaturedProjects(): Project[] {
 export function getProjectBySlug(slug: string): Project | undefined {
   const normalized = slug.toLowerCase().trim()
   return PROJECTS.find(
-    (p) => p.slug.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+    (p) =>
+      p.slug.toLowerCase() === normalized ||
+      p.id.toLowerCase() === normalized ||
+      (p.id === "infinity" &&
+        (normalized === "whiteboard" ||
+          normalized === "ai-agentic-whiteboard" ||
+          normalized === "ai-native-collaborative-whiteboard"))
   )
 }
 
@@ -42,7 +48,13 @@ export function getAdjacentProjects(slug: string): {
 } {
   const normalized = slug.toLowerCase().trim()
   const index = PROJECTS.findIndex(
-    (p) => p.slug.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+    (p) =>
+      p.slug.toLowerCase() === normalized ||
+      p.id.toLowerCase() === normalized ||
+      (p.id === "infinity" &&
+        (normalized === "whiteboard" ||
+          normalized === "ai-agentic-whiteboard" ||
+          normalized === "ai-native-collaborative-whiteboard"))
   )
 
   if (index === -1) {

@@ -44,6 +44,21 @@ export default function ProjectCTA({ project }: ProjectCTAProps) {
             <span>Back to Portfolio</span>
           </Link>
         </div>
+
+        {project.id === "infinity" && (
+          <div className="pt-4 border-t border-border/20 max-w-md mx-auto space-y-2">
+            <p className="text-xs text-foreground/75 font-display">
+              Have thoughts, critiques, or feature requests for Infinity?
+            </p>
+            <Link
+              href="/#contact?feedback=infinity"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 hover:bg-muted/60 px-3.5 py-1.5 text-xs font-mono font-medium text-foreground transition-colors"
+            >
+              <span>Give Feedback via Contact Form</span>
+              <ArrowUpRight className="size-3.5 text-muted-foreground" />
+            </Link>
+          </div>
+        )}
       </section>
     )
   }

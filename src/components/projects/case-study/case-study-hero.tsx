@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Terminal } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Globe, Terminal, MessageSquare } from "lucide-react";
 import { Github } from "@/components/socials";
 import { ShareButtons } from "@/components/ui/share-buttons";
 import type { Project } from "@/lib/projects/types";
@@ -15,7 +15,7 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
   }
 
   const role = caseStudy.role || project.role;
-  const status = caseStudy.status || project.status;
+  const status = caseStudy.status || project.badge || project.status;
   const timeline = caseStudy.timeline || project.timeline;
   const architectureLabel = caseStudy.architectureLabel || "Monorepo";
 
@@ -43,6 +43,30 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {project.id === "infinity" && (
+            <Link
+              href="/#contact?feedback=infinity"
+              className="inline-flex items-center gap-1 hover:text-foreground text-foreground/80 transition-colors"
+            >
+              <MessageSquare className="size-3.5" />
+              <span>Feedback</span>
+              <ArrowUpRight className="size-3" />
+            </Link>
+          )}
+
+          {project.liveUrl && (
+            <Link
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-foreground text-foreground/80 transition-colors"
+            >
+              <Globe className="size-3.5" />
+              <span>Live App</span>
+              <ArrowUpRight className="size-3" />
+            </Link>
+          )}
+
           {project.githubUrl && (
             <Link
               href={project.githubUrl}
@@ -68,7 +92,7 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
 
       <header className="space-y-4">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-border/30 bg-card/60 text-[11px] font-mono uppercase tracking-wider text-foreground/80">
-          <Terminal className="size-3 text-emerald-500" />
+          <Terminal className="size-3 text-muted-foreground" />
           <span>Engineering Case Study</span>
         </div>
 
@@ -94,9 +118,9 @@ export default function CaseStudyHero({ project }: CaseStudyHeroProps) {
               <span className="text-[10px] font-mono text-foreground/50 uppercase">
                 Status
               </span>
-              <p className="font-medium text-foreground flex items-center gap-1">
+              <p className="font-medium text-foreground flex items-center gap-1.5">
                 <span className="size-1.5 rounded-full bg-emerald-500" />
-                {status}
+                <span className="truncate">{status}</span>
               </p>
             </div>
           )}
