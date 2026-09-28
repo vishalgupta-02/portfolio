@@ -43,3 +43,5 @@ next-env.d.ts
 # walkthroughs
 /src/walkthroughs
 /personal-stuffs
+.env.local
+/.claude

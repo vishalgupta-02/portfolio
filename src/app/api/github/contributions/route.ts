@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { SeverityNumber } from "@opentelemetry/api-logs";
+import { after, NextResponse } from "next/server";
+import { posthogLog, posthogLogProvider } from "../../../../../instrumentation";
 
 export const dynamic = "force-dynamic";
 
@@ -32,12 +34,22 @@ const LEVEL_MAP: Record<string, number> = {
 };
 
 export async function GET(request: Request) {
+  after(async () => {
+    await posthogLogProvider.forceFlush();
+  });
+
   const { searchParams } = new URL(request.url);
   const username = searchParams.get("username") || "vishalgupta-02";
 
   const token = process.env.GITHUB_TOKEN;
 
   if (!token) {
+    posthogLog.emit({
+      body: "GitHub contributions request cannot run without server credentials",
+      severityNumber: SeverityNumber.WARN,
+      attributes: { "log.operation": "github_contributions" },
+    });
+
     return NextResponse.json(
       { error: "GITHUB_TOKEN is not configured in environment variables." },
       { status: 500 },
@@ -70,6 +82,14 @@ export async function GET(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      posthogLog.emit({
+        body: "GitHub contributions upstream request failed",
+        severityNumber: SeverityNumber.ERROR,
+        attributes: {
+          "log.operation": "github_contributions",
+          "http.response.status_code": response.status,
+        },
+      });
       return NextResponse.json(
         { error: `GitHub API error: ${response.status} ${errorText}` },
         { status: response.status },
@@ -109,6 +129,12 @@ export async function GET(request: Request) {
       }
     }
 
+    posthogLog.emit({
+      body: "GitHub contributions served",
+      severityNumber: SeverityNumber.INFO,
+      attributes: { "log.operation": "github_contributions" },
+    });
+
     return NextResponse.json(
       {
         total: {
@@ -123,6 +149,11 @@ export async function GET(request: Request) {
       },
     );
   } catch (error) {
+    posthogLog.emit({
+      body: "GitHub contributions request failed unexpectedly",
+      severityNumber: SeverityNumber.ERROR,
+      attributes: { "log.operation": "github_contributions" },
+    });
     console.error("Error fetching GitHub contributions:", error);
     return NextResponse.json(
       {

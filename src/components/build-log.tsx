@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, History, GitCommit } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { BUILD_LOG_ENTRIES } from "@/lib/content-index";
 
 export default function BuildLog() {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowUpRight, BookOpen, Globe, ChevronDown, Cpu, Layers } from "lucide-react";
+import { ArrowUpRight, BookOpen, Globe, ChevronDown, Layers } from "lucide-react";
 import { Github } from "@/components/socials";
 import type { Project } from "@/lib/projects/types";
 
