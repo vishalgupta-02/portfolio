@@ -13,6 +13,7 @@ import {
 } from "./socials";
 import TimeDisplay from "./time-stamp";
 import { Copy, ArrowUpRight } from "lucide-react";
+import { trackEvent } from "@/lib/analytics/tracker";
 
 export default function About() {
   const [copied, setCopied] = useState(false);
@@ -21,6 +22,7 @@ export default function About() {
     e.preventDefault();
     try {
       await navigator.clipboard.writeText("abhimanyug987@gmail.com");
+      trackEvent("contact_click", { method: "copy_email", source: "about_section" });
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -158,6 +160,7 @@ export default function About() {
 
       <Link
         href="/#contact?intent=hiring"
+        onClick={() => trackEvent("contact_click", { intent: "hiring", source: "about_section" })}
         className="border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/60 group col-span-1 flex items-center justify-between gap-3 rounded-lg border p-2.5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xs cursor-pointer"
       >
         <div className="flex items-center gap-3 min-w-0">

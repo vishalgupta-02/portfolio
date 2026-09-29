@@ -4,12 +4,6 @@ import * as React from "react";
 import { Check, Copy, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { siteConfig } from "@/lib/blog/site";
-import posthog from "posthog-js";
-
-const posthogConfigured = Boolean(
-  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-    process.env.NEXT_PUBLIC_POSTHOG_HOST,
-);
 
 interface ShareButtonsProps {
   url?: string;
@@ -63,11 +57,6 @@ export function ShareButtons({
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(shareUrl);
-        if (posthogConfigured) {
-          posthog.capture("content_share_initiated", {
-            share_method: "copy_link",
-          });
-        }
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }
@@ -76,18 +65,13 @@ export function ShareButtons({
     }
   };
 
-  const handleShareLink = (shareMethod: "x" | "linkedin" | "whatsapp") => {
-    if (posthogConfigured) {
-      posthog.capture("content_share_initiated", { share_method: shareMethod });
-    }
+  const handleShareLink = (_shareMethod: "x" | "linkedin" | "whatsapp") => {
+    void _shareMethod;
   };
 
   const handleNativeShare = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (typeof navigator !== "undefined" && navigator.share) {
-      if (posthogConfigured) {
-        posthog.capture("content_share_initiated", { share_method: "native" });
-      }
       try {
         await navigator.share({
           title,

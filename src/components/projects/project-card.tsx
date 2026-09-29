@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ArrowUpRight, BookOpen, Globe, ChevronDown, Layers } from "lucide-react";
 import { Github } from "@/components/socials";
 import type { Project } from "@/lib/projects/types";
+import { trackEvent } from "@/lib/analytics/tracker";
 
 interface ProjectCardProps {
   project: Project;
@@ -64,6 +65,9 @@ export default function ProjectCard({
               href={project.liveUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                trackEvent("live_demo_click", { project: project.name, url: project.liveUrl });
+              }}
               aria-label={`Open live demo for ${project.name}`}
               className="border-border/50 bg-background/80 hover:bg-muted/50 text-foreground inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-all active:scale-[0.98]"
             >
@@ -77,6 +81,9 @@ export default function ProjectCard({
               href={project.githubUrl}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                trackEvent("github_click", { project: project.name, url: project.githubUrl });
+              }}
               aria-label={`View source code for ${project.name}`}
               className="border-border/50 bg-background/80 hover:bg-muted/50 text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-lg border transition-all active:scale-[0.98]"
             >

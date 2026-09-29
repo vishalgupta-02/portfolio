@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import MainLayout from "@/components/main-layout"
 import ProjectHero from "./project-hero"
 import ProjectOverview from "./project-overview"
@@ -8,12 +9,20 @@ import ProjectTechStack from "./project-tech-stack"
 import ProjectCTA from "./project-cta"
 import ProjectNavigation from "./project-navigation"
 import type { Project } from "@/lib/projects/types"
+import { trackEvent } from "@/lib/analytics/tracker"
 
 interface ProjectPageViewProps {
   project: Project
 }
 
 export default function ProjectPageView({ project }: ProjectPageViewProps) {
+  useEffect(() => {
+    trackEvent("project_view", {
+      project: project.name,
+      slug: project.slug,
+    });
+  }, [project.name, project.slug]);
+
   return (
     <MainLayout>
       <div className="w-full max-w-2xl mx-auto px-4 py-6 space-y-12">

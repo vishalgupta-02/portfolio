@@ -13,12 +13,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { Github, LinkedIn, Discord } from "@/components/socials";
-import posthog from "posthog-js";
-
-const posthogConfigured = Boolean(
-  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-    process.env.NEXT_PUBLIC_POSTHOG_HOST,
-);
+import { trackEvent } from "@/lib/analytics/tracker";
 
 type ContactIntent = "hiring" | "collab" | "opensource" | "hello";
 
@@ -66,9 +61,7 @@ export default function ContactSection() {
   const handleCopyEmail = async () => {
     try {
       await navigator.clipboard.writeText("abhimanyug987@gmail.com");
-      if (posthogConfigured) {
-        posthog.capture("email_address_copied");
-      }
+      trackEvent("contact_click", { method: "copy_email" });
       setCopiedEmail(true);
       setTimeout(() => setCopiedEmail(false), 2000);
     } catch {
@@ -105,17 +98,12 @@ export default function ContactSection() {
         throw new Error(data.error || "Failed to send message.");
       }
 
-      if (posthogConfigured) {
-        posthog.capture("contact_message_submitted", { intent });
-      }
+      trackEvent("contact_click", { method: "form_submit", intent });
       setStatus("success");
       setName("");
       setEmail("");
       setMessage("");
     } catch (err: unknown) {
-      if (posthogConfigured) {
-        posthog.capture("contact_message_failed", { intent });
-      }
       setStatus("error");
       setErrorMessage(
         err instanceof Error
@@ -388,6 +376,7 @@ export default function ContactSection() {
               href="https://github.com/vishalgupta-02"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("github_click", { channel: "contact_section" })}
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -411,6 +400,7 @@ export default function ContactSection() {
               href="https://linkedin.com/in/v1shalgupt9"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("contact_click", { channel: "linkedin" })}
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -434,6 +424,7 @@ export default function ContactSection() {
               href="https://www.discord.com/users/v1shal_gupt9"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent("contact_click", { channel: "discord" })}
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
