@@ -4,12 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Compass } from "lucide-react";
 import { getRandomInterestingItem } from "@/lib/content-index";
-import posthog from "posthog-js";
-
-const posthogConfigured = Boolean(
-  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-    process.env.NEXT_PUBLIC_POSTHOG_HOST,
-);
 
 interface RandomInterestingButtonProps {
   variant?: "hero" | "banner";
@@ -24,11 +18,6 @@ export default function RandomInterestingButton({
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleDiscovery = () => {
-    if (posthogConfigured) {
-      posthog.capture("random_content_discovered", {
-        discovery_surface: variant,
-      });
-    }
     setIsNavigating(true);
     const item = getRandomInterestingItem();
     setTimeout(() => {

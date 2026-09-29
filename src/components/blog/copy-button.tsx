@@ -1,12 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import posthog from "posthog-js";
-
-const posthogConfigured = Boolean(
-  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-    process.env.NEXT_PUBLIC_POSTHOG_HOST,
-);
 
 interface CopyButtonProps {
   code: string;
@@ -18,11 +12,6 @@ export function CopyButton({ code }: CopyButtonProps) {
   async function handleCopy() {
     try {
       await navigator.clipboard.writeText(code);
-
-      if (posthogConfigured) {
-        posthog.capture("code_example_copied");
-      }
-
       setCopied(true);
 
       window.setTimeout(() => {

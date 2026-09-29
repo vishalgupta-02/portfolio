@@ -12,12 +12,6 @@ import {
   Compass,
 } from "lucide-react";
 import { GLOBAL_SEARCH_ITEMS, getRandomInterestingItem, type SearchItem } from "@/lib/content-index";
-import posthog from "posthog-js";
-
-const posthogConfigured = Boolean(
-  process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN &&
-    process.env.NEXT_PUBLIC_POSTHOG_HOST,
-);
 
 export default function CommandMenu() {
   const [open, setOpen] = useState(false);
@@ -115,11 +109,6 @@ export default function CommandMenu() {
 
   const handleSelect = useCallback(
     (item: SearchItem) => {
-      if (posthogConfigured) {
-        posthog.capture("content_discovery_selected", {
-          content_category: item.category,
-        });
-      }
       setOpen(false);
       setSearch("");
       if (item.external) {

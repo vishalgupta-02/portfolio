@@ -8,7 +8,6 @@ import { siteConfig } from "@/lib/blog/site";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer/footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import Script from "next/script";
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -140,7 +139,7 @@ export const metadata: Metadata = {
   },
 };
 
-import { ConsoleGreeting } from "@/components/console-greeting";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export default function RootLayout({
   children,
@@ -170,17 +169,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ConsoleGreeting />
+          {/* <ConsoleGreeting /> */}
+          <PageViewTracker />
           <Navbar />
           <main>{children}</main>
           <Footer />
         </ThemeProvider>
         <SpeedInsights />
-        <Script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="c82a8e58-bf77-43ba-b52f-6de70409b200"
-        />
       </body>
     </html>
   );

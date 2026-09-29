@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Github, X, LinkedIn, Discord, Email } from "../socials";
 import { usePathname } from "next/navigation";
+import { VisitorCount } from "./visitor-count";
 
 type Props = {
   quote: Awaited<ReturnType<typeof import("@/hooks/get-quotes").getQuotes>>;
@@ -150,6 +151,7 @@ export default function FooterContent({ quote }: Props) {
           </p>
 
           <div className="flex items-center gap-3">
+            <VisitorCount />
             <div className="bg-muted/40 border-border/50 flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px]">
               <span className="size-1.5 rounded-full bg-emerald-500/80" />
               <span className="text-foreground/80 font-mono">Portfolio v2.4</span>

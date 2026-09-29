@@ -7,6 +7,7 @@ import { WORK_EXPERIENCES } from "@/lib/experience"
 import { ArrowUpRight, Mail } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
+import { ResumeButton } from "@/components/work/resume-button"
 
 export const metadata: Metadata = {
   title: "Work Experience | Vishal Gupta",
@@ -97,6 +98,7 @@ export default function WorkPage() {
               <Mail className='size-3.5' />
               <span>Get in Touch</span>
             </a>
+            <ResumeButton />
             <Link
               href='/postmortems'
               className='inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted/60 active:scale-95 transition-all'
