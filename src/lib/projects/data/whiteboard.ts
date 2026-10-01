@@ -13,6 +13,7 @@ export const whiteboardProject: Project = {
     "Infinity is an AI-agentic whiteboard and system architecture workspace engineered to bridge the gap between high-level architectural ideation and visual canvas modeling.",
     "Built with Next.js 16 (App Router), React 19, Excalidraw, and Tailwind CSS v4, Infinity pairs a vector canvas with Google Gemini 2.5 (@google/genai). Rather than generating unconstrained graphics, an agentic synthesis layer generates structured JSON diagram schemas that are strictly validated against spatial overlap and bounds constraints via Zod (lib/validate.ts) before rendering onto the canvas via RenderAIDiagram.tsx.",
     "The platform features dynamic context-aware floating element property inspectors, a debounced 10-second multi-tier autosave pipeline (persisting elements, files, normalized appState, and Base64 WebP preview thumbnails to Neon Serverless PostgreSQL via Drizzle ORM), Clerk authentication, and a complete soft-delete and archive recovery lifecycle.",
+    "Beyond the code, taking an AI canvas platform into production surfaced the hectic, tedious realities of edge infrastructure—wrestling with Vercel custom domain routing, DNS propagation delays, and keeping immense patience when things don't resolve instantly.",
   ],
   status: "In Development",
   badge: "Feedback Welcome",
@@ -201,6 +202,11 @@ export const whiteboardProject: Project = {
           title: "Destructive Deletion without Recovery:",
           description:
             "In multi-board dashboard workflows, accidental deletion leads to unrecoverable data loss without a soft-delete and dedicated archive recovery mechanism.",
+        },
+        {
+          title: "Production Deployment Friction & Custom Domain DNS Routing:",
+          description:
+            "Transitioning from local development to edge production hosting surfaces tedious DNS routing issues, edge propagation delays, and cryptic NXDOMAIN errors that require immense patience and systematic verification under pressure.",
         },
       ],
     },
@@ -517,6 +523,17 @@ export async function DELETE(req: Request) {
             "Enforces user tenant isolation in Drizzle ORM while supporting both non-destructive soft-delete archiving and hard permanent purging.",
         },
       },
+      {
+        number: "05",
+        title: "Production Deployment, Custom Domains & The Patience of DNS Propagation",
+        problemStatement:
+          "After stabilizing the AI canvas, state normalizers, and Neon persistence pipelines, shipping to production on Vercel under a custom domain (infinity.vishalbuild.tech) hit classic DNS routing friction and intermittent NXDOMAIN lookup errors.",
+        risk: "Premature debugging rabbit holes, frantic re-configurations that reset propagation timers, and developer burnout from hectic infrastructure troubleshooting.",
+        approach:
+          "Treated domain configuration with calm, systematic verification rather than reactionary config thrashing. Diagnosed DNS records (CNAME routing, TTL propagation, nameserver delegation), maintained patience through edge propagation cycles, and resisted the urge to prematurely dismantle working build pipelines.",
+        result:
+          "A crucial reminder that shipping software isn't just about code—handling deployment edge-cases, DNS propagation, and infrastructure hiccups demands composure, steady patience, and resilience through tedious, hectic hurdles.",
+      },
     ],
     implementation: {
       title: "Security, Authorization & Guardrails",
@@ -638,6 +655,13 @@ export async function DELETE(req: Request) {
             "Debouncing paired with client-side WebP thumbnails saves database load",
           description:
             "Batching canvas saves into 10-second debounce windows while generating WebP preview thumbnails directly in the browser delivers sub-second dashboard rendering with zero database connection exhaustion.",
+        },
+        {
+          number: 4,
+          title:
+            "Patience and composure are core engineering skills during production deployment",
+          description:
+            "Building high-tech features like AI canvas agents is exciting, but real-world production deployments often test patience with tedious domain routing, Vercel DNS propagation (such as chasing down DNS_PROBE_FINISHED_NXDOMAIN), and registrar caching. Keeping a level head through hectic deployment friction is just as essential as writing clean code.",
         },
       ],
     },

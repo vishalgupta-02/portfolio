@@ -18,9 +18,12 @@ import { trackEvent } from "@/lib/analytics/tracker";
 type ContactIntent = "hiring" | "collab" | "opensource" | "hello";
 
 const INTENT_PLACEHOLDERS: Record<ContactIntent, string> = {
-  hiring: "Hi Vishal, we have an open role for a Backend / Systems Engineer. Here are details about the team, stack, and scope...",
-  collab: "Hi Vishal, I am designing/troubleshooting a distributed system and wanted to discuss...",
-  opensource: "Hi Vishal, reaching out regarding open source, telemetry, or tool development...",
+  hiring:
+    "Hi Vishal, we have an open role for a Backend / Systems Engineer. Here are details about the team, stack, and scope...",
+  collab:
+    "Hi Vishal, I am designing/troubleshooting a distributed system and wanted to discuss...",
+  opensource:
+    "Hi Vishal, reaching out regarding open source, telemetry, or tool development...",
   hello: "Hi Vishal, just dropping a quick note to say hello and connect...",
 };
 
@@ -49,7 +52,9 @@ export default function ContactSection() {
       const targetName =
         feedbackTarget.charAt(0).toUpperCase() + feedbackTarget.slice(1);
       setMessage((prev) =>
-        prev ? prev : `Hi Vishal, sharing some feedback regarding ${targetName}: `
+        prev
+          ? prev
+          : `Hi Vishal, sharing some feedback regarding ${targetName}: `,
       );
       const textarea = document.getElementById("contact-message");
       if (textarea) {
@@ -116,7 +121,7 @@ export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="border-border/40 mx-auto w-full max-w-2xl border-b px-4 py-8 scroll-mt-20"
+      className="border-border/40 mx-auto w-full max-w-2xl scroll-mt-20 border-b px-4 py-8"
       aria-label="Contact and Technical Collaboration"
     >
       {/* Header */}
@@ -138,16 +143,18 @@ export default function ContactSection() {
         </div>
 
         <p className="text-muted-foreground font-display text-xs leading-relaxed sm:text-sm">
-          Open for backend &amp; systems engineering roles, architecture reviews, distributed systems collaboration, and technical discussions. Send a direct note or connect below.
+          Open for backend &amp; systems engineering roles, architecture
+          reviews, distributed systems collaboration, and technical discussions.
+          Send a direct note or connect below.
         </p>
       </div>
 
       <div className="flex flex-col gap-6">
         {/* Direct Contact Form with Intent Selection */}
         <div className="border-border/40 bg-card/25 space-y-4 rounded-xl border p-4 shadow-xs sm:p-5">
-          <div className="border-border/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b pb-3">
+          <div className="border-border/30 flex flex-col justify-between gap-2 border-b pb-3 sm:flex-row sm:items-center">
             <div className="flex items-center gap-2">
-              <MessageSquare className="size-4 text-muted-foreground" />
+              <MessageSquare className="text-muted-foreground size-4" />
               <span className="text-foreground font-sans text-xs font-semibold">
                 Direct Message
               </span>
@@ -158,9 +165,9 @@ export default function ContactSection() {
               <button
                 type="button"
                 onClick={() => setIntent("hiring")}
-                className={`rounded px-2 py-0.5 transition-all cursor-pointer ${
+                className={`cursor-pointer rounded px-2 py-0.5 transition-all ${
                   intent === "hiring"
-                    ? "bg-foreground/10 text-foreground font-semibold border border-border/80"
+                    ? "bg-foreground/10 text-foreground border-border/80 border font-semibold"
                     : "text-muted-foreground hover:text-foreground border border-transparent"
                 }`}
               >
@@ -169,9 +176,9 @@ export default function ContactSection() {
               <button
                 type="button"
                 onClick={() => setIntent("collab")}
-                className={`rounded px-2 py-0.5 transition-all cursor-pointer ${
+                className={`cursor-pointer rounded px-2 py-0.5 transition-all ${
                   intent === "collab"
-                    ? "bg-foreground/10 text-foreground font-semibold border border-border/80"
+                    ? "bg-foreground/10 text-foreground border-border/80 border font-semibold"
                     : "text-muted-foreground hover:text-foreground border border-transparent"
                 }`}
               >
@@ -180,9 +187,9 @@ export default function ContactSection() {
               <button
                 type="button"
                 onClick={() => setIntent("opensource")}
-                className={`rounded px-2 py-0.5 transition-all cursor-pointer ${
+                className={`cursor-pointer rounded px-2 py-0.5 transition-all ${
                   intent === "opensource"
-                    ? "bg-foreground/10 text-foreground font-semibold border border-border/80"
+                    ? "bg-foreground/10 text-foreground border-border/80 border font-semibold"
                     : "text-muted-foreground hover:text-foreground border border-transparent"
                 }`}
               >
@@ -191,9 +198,9 @@ export default function ContactSection() {
               <button
                 type="button"
                 onClick={() => setIntent("hello")}
-                className={`rounded px-2 py-0.5 transition-all cursor-pointer ${
+                className={`cursor-pointer rounded px-2 py-0.5 transition-all ${
                   intent === "hello"
-                    ? "bg-foreground/10 text-foreground font-semibold border border-border/80"
+                    ? "bg-foreground/10 text-foreground border-border/80 border font-semibold"
                     : "text-muted-foreground hover:text-foreground border border-transparent"
                 }`}
               >
@@ -257,7 +264,7 @@ export default function ContactSection() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder={INTENT_PLACEHOLDERS[intent]}
                 maxLength={3000}
-                className="border-border/50 bg-background/70 text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:ring-foreground/20 font-display min-h-[100px] max-h-[260px] w-full resize-y rounded-lg border px-3 py-2 text-xs transition-all focus:ring-1 focus:outline-none"
+                className="border-border/50 bg-background/70 text-foreground placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:ring-foreground/20 font-display max-h-[260px] min-h-[100px] w-full resize-y rounded-lg border px-3 py-2 text-xs transition-all focus:ring-1 focus:outline-none"
               />
             </div>
 
@@ -282,7 +289,8 @@ export default function ContactSection() {
               >
                 <Check className="size-4 shrink-0 text-emerald-500" />
                 <span>
-                  Message delivered directly to Vishal&apos;s inbox. You will receive a direct reply to your email shortly.
+                  Message delivered directly to Vishal&apos;s inbox. You will
+                  receive a direct reply to your email shortly.
                 </span>
               </motion.div>
             )}
@@ -296,7 +304,7 @@ export default function ContactSection() {
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium shadow-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-medium shadow-xs transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {status === "loading" ? (
                   <>
@@ -333,11 +341,11 @@ export default function ContactSection() {
                 }
               }}
               aria-label="Copy direct email address"
-              className="group border-border/40 bg-card/30 hover:bg-card/70 relative flex cursor-pointer items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 hover:border-border/80 active:scale-[0.99]"
+              className="group border-border/40 bg-card/30 hover:bg-card/70 hover:border-border/80 relative flex cursor-pointer items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
                 <div className="border-border/50 bg-muted/40 text-foreground flex size-8 shrink-0 items-center justify-center rounded-lg border transition-transform group-hover:scale-105">
-                  <Mail className="size-4 text-muted-foreground" />
+                  <Mail className="text-muted-foreground size-4" />
                 </div>
                 <div className="min-w-0">
                   <span className="text-foreground block truncate font-sans text-xs font-semibold">
@@ -376,7 +384,9 @@ export default function ContactSection() {
               href="https://github.com/vishalgupta-02"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent("github_click", { channel: "contact_section" })}
+              onClick={() =>
+                trackEvent("github_click", { channel: "contact_section" })
+              }
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -400,7 +410,9 @@ export default function ContactSection() {
               href="https://linkedin.com/in/v1shalgupt9"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent("contact_click", { channel: "linkedin" })}
+              onClick={() =>
+                trackEvent("contact_click", { channel: "linkedin" })
+              }
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
@@ -424,7 +436,9 @@ export default function ContactSection() {
               href="https://www.discord.com/users/v1shal_gupt9"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => trackEvent("contact_click", { channel: "discord" })}
+              onClick={() =>
+                trackEvent("contact_click", { channel: "discord" })
+              }
               className="group border-border/40 bg-card/30 hover:border-border/80 hover:bg-card/70 flex items-center justify-between rounded-xl border p-3 shadow-xs transition-all duration-200 active:scale-[0.99]"
             >
               <div className="flex min-w-0 items-center gap-3">
