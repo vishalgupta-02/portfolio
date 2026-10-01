@@ -43,7 +43,7 @@ const ogImage = {
   url: siteConfig.ogImage,
   width: 1200,
   height: 630,
-  alt: "Vishal Gupta | Software Engineer",
+  alt: "Vishal Gupta | Backend & Systems Engineer",
 };
 
 export const metadata: Metadata = {

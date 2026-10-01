@@ -1,9 +1,9 @@
 export const siteConfig = {
   name: "Vishal Gupta",
-  title: "Vishal Gupta | Software Engineer",
+  title: "Vishal Gupta | Backend & Systems Engineer",
 
   description:
-    "Software Engineer building scalable full-stack applications with Next.js, TypeScript, MongoDB, Redis, and System Design.",
+    "Backend-focused Software Engineer building scalable full-stack applications with Next.js, Node.js, Express, TypeScript, MongoDB, Redis, and System Design.",
 
   url: "https://vishalbuild.tech",
 
@@ -28,10 +28,15 @@ export const siteConfig = {
     "Software Engineer",
     "Full Stack Developer",
     "Full Stack Engineer",
+    "Systems Engineer",
+    "Backend Engineer",
+    "Backend Developer",
+    "Distributed Systems",
     "Next.js",
     "React",
     "TypeScript",
     "Node.js",
+    "Express",
     "MongoDB",
     "PostgreSQL",
     "Redis",
