@@ -1,0 +1,425 @@
+---
+title: "Workaround for pnpm dlx create-turbo on Windows D: Drive"
+slug: "fix-pnpm-dlx-create-turbo-windows-drive-root"
+description: "Investigation of silent CLI crashes (exit code -1073740791) when running pnpm dlx create-turbo at a Windows drive root (D:\\), uncovering path resolution bugs and workarounds."
+date: "2026-10-09"
+status: "resolved"
+severity: "medium"
+category: "infrastructure"
+tags:
+  - Turborepo
+  - pnpm
+  - Windows
+  - Node.js
+  - CLI
+  - Monorepo
+  - Developer Tooling
+duration: "1 hour 30 minutes"
+systemsAffected:
+  - "Local Development Environment"
+  - "pnpm dlx / create CLI Engine"
+  - "Turborepo Scaffolding (create-turbo)"
+  - "Windows Filesystem Root Path Resolution (D:\\)"
+impact: "Turborepo project scaffolding halted abruptly with zero error output after downloading files, leaving orphaned .turbo-clone-temp artifacts and preventing repository setup."
+rootCause: "pnpm dlx and create commands attempt directory operations on the volume root when current working directory is D:\\, triggering Windows path resolution failures and native process termination."
+resolution: "Execute the scaffolding command from a directory inside the drive (e.g., D:\\Projects\\) rather than the drive root, or use npx create-turbo as an alternative launcher."
+author: "Vishal Gupta"
+featured: true
+published: true
+---
+
+## Executive Summary
+
+While initializing a new Turborepo monorepo on Windows using the official CLI command:
+
+```cmd
+D:\> pnpm dlx create-turbo@latest
+```
+
+The interactive scaffolder successfully prompted for the project name (`devmind`) and package manager (`pnpm`). However, immediately after displaying `Downloading files...`, the command silently exited back to the terminal prompt `D:\>` without a success message, without a completed workspace, and without printing an error stack trace.
+
+Inspection of the generated target folder revealed an incomplete setup containing only an internal `.turbo-clone-temp/` directory. Checking `%ERRORLEVEL%` revealed a non-zero exit code of `-1073740791` (Windows NT status code `0xC0000005`, indicating an unhandled memory access violation or abrupt process termination).
+
+Subsequent environment auditing confirmed that both Node.js (`v24.13.1`) and pnpm (`10.33.2`) were functioning normally. Cross-referencing upstream issue trackers isolated the fault to a documented bug in pnpm: running `pnpm dlx` or `pnpm create` directly from a Windows volume root (e.g., `D:\`) triggers invalid filesystem operations against the drive root itself.
+
+This postmortem analyzes the underlying mechanics of the drive root failure, details the remediation strategy, explores alternative fallbacks, and establishes developer guardrails for Windows-based monorepo workflows.
+
+---
+
+## Impact Assessment
+
+### Confirmed Observations
+
+During reproduction and initial triage, the incident manifested through the following operational symptoms:
+
+- **Silent Process Termination:** The CLI exited immediately after downloading files, returning control to Command Prompt without emitting standard diagnostic errors or stack traces to `stderr`.
+- **Incomplete Monorepo Scaffolding:** Essential workspace configuration files (`turbo.json`, `pnpm-workspace.yaml`, `package.json`, `apps/`, `packages/`) were never generated in the target directory.
+- **Orphaned Extraction Artifacts:** The target folder contained an orphaned `.turbo-clone-temp/` folder housing raw clone files (`.git/`, `examples/`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`).
+- **Anomalous Exit Code:** Terminal evaluation revealed `%ERRORLEVEL% -1073740791`, confirming abnormal termination rather than an intentional early exit by the CLI.
+- **Healthy Toolchain Baseline:** Verification commands (`node -v`, `pnpm -v`) confirmed runtime integrity, ruling out missing binaries or corrupted Node installations.
+
+<Callout type="info" title="Incident Scope Boundary">
+  This issue is <strong>not</strong> caused by Windows restricting development
+  projects on the <code>D:</code> drive, nor is it a defect in Turborepo&apos;s
+  template repository. The failure is strictly constrained to executing package
+  manager scaffolding when the Current Working Directory (CWD) is set directly
+  to a Windows drive root (such as <code>{"D:\\"}</code>).
+</Callout>
+
+---
+
+## Incident Timeline
+
+<Timeline>
+  <TimelineEvent
+    time="T+00:00"
+    title="Scaffolding Executed at Drive Root"
+    status="detected"
+  >
+    Executed <code>pnpm dlx create-turbo@latest</code> from{" "}
+    <code>{"D:\\"}</code> in Command Prompt. Selected <code>devmind</code> as
+    project name and <code>pnpm</code> as package manager.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:03"
+    title="CLI Abruptly Terminates"
+    status="investigating"
+  >
+    Terminal printed <code>Downloading files...</code> and immediately
+    terminated back to <code>{"D:\\>"}</code> without creating project files or
+    printing errors.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:10"
+    title="Directory Artifacts & Exit Code Inspected"
+    status="investigating"
+  >
+    Discovered incomplete <code>devmind/.turbo-clone-temp</code> folder. Checked{" "}
+    <code>%ERRORLEVEL%</code>, returning <code>-1073740791</code>.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:25"
+    title="Upstream Bug Correlation"
+    status="identified"
+  >
+    Confirmed Node (v24.13.1) and pnpm (10.33.2) health. Correlated symptoms
+    with upstream pnpm issues #5276 and #7263 regarding Windows drive root CWD
+    handling.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+00:40"
+    title="Directory Isolation Workaround Verified"
+    status="mitigated"
+  >
+    Created dedicated parent directory <code>D:\Projects</code>, navigated via{" "}
+    <code>cd /d D:\Projects</code>, and re-executed{" "}
+    <code>pnpm dlx create-turbo@latest</code>.
+  </TimelineEvent>
+  <TimelineEvent
+    time="T+01:15"
+    title="Monorepo Integrity & Task Execution Validated"
+    status="resolved"
+  >
+    Scaffolding completed cleanly at <code>D:\Projects\devmind</code>. Verified
+    workspace structure and successful startup with <code>pnpm dev</code>.
+  </TimelineEvent>
+</Timeline>
+
+---
+
+## Root Cause & Technical Breakdown
+
+### 1. Windows Volume Root Semantics vs. Standard Paths
+
+In Windows environments, drive roots such as `C:\` and `D:\` do not behave like standard Unix mount points or nested filesystem folders. A volume root has no parent directory (`path.resolve("..")` on `D:\` resolves back to `D:\`), and specific Win32 API calls (`mkdir`, `SetCurrentDirectory`) treat volume roots as immutable volume mount points.
+
+When `pnpm dlx` executes, it provisions a temporary staging environment to fetch and run the specified package (`create-turbo`). If the calling process has its CWD pinned to `D:\`, internal path resolution routines inside pnpm construct paths relative to the volume root:
+
+```text
+[Failure Mode: CWD = D:\]
+D:\ (Volume Root)
+ ├── CWD is D:\
+ ├── pnpm dlx attempts internal path resolution: path.join("D:\\", "..") or mkdir("D:\\")
+ └── Win32 OS rejects operation / memory access fails -> Exit Code -1073740791
+
+[Success Mode: CWD = D:\Projects]
+D:\ (Volume Root)
+ └── Projects\ (Standard Directory)
+      ├── CWD is D:\Projects
+      ├── pnpm dlx creates sandbox inside valid folder boundaries
+      └── create-turbo cleanly extracts and configures devmind\
+```
+
+<PostmortemImage
+  src="/postmortems/screenshot-1.webp"
+  alt="Terminal reproducing silent termination: pnpm dlx create-turbo terminates at D:\ drive root"
+  caption="Terminal reproducing silent termination: pnpm dlx create-turbo abruptly exits to D:\> after Downloading files... without completing project setup"
+/>
+
+### 2. Documented Upstream pnpm Issues
+
+This behavior aligns with historical issues tracked in the pnpm repository:
+
+- **pnpm Issue #5276:** _Running `pnpm create` or `pnpm dlx` from a drive root_
+- **pnpm Issue #7263:** _Error when using `pnpm dlx` in the root of a Windows drive_
+
+In issue #7263, running `cd D:\` followed by `pnpm dlx create-turbo@latest` resulted in:
+
+```text
+EPERM: operation not permitted, mkdir 'D:\'
+```
+
+While the explicit error in issue #7263 was `EPERM`, in our environment running Node.js `v24.13.1` with pnpm `10.33.2`, the process crashed natively with exit code `-1073740791` (`0xC0000005`, `STATUS_ACCESS_VIOLATION`) during file extraction, prior to displaying a managed Node exception.
+
+<Callout type="root-cause" title="Root Cause Mechanism">
+  <code>pnpm dlx</code> invokes internal directory preparation logic that
+  attempts to resolve or create directories against the drive root itself when
+  the current working directory is <code>{"D:\\"}</code>. Because Windows does
+  not permit directory creation or parent navigation directly on drive roots,
+  the process encounters a fatal path resolution fault and crashes natively
+  before Turborepo&apos;s scaffolding pipeline can finalize the workspace.
+</Callout>
+
+### 3. Anatomy of the Orphaned `.turbo-clone-temp` Directory
+
+When `create-turbo` runs, it clones the remote starter repository into a temporary workspace directory before pruning examples and moving the selected packages into place:
+
+```text
+devmind/
+└── .turbo-clone-temp/
+    ├── .git/
+    ├── examples/
+    ├── package.json
+    ├── pnpm-lock.yaml
+    └── pnpm-workspace.yaml
+```
+
+Because the crash occurred after the download phase but before the post-processing and renaming step, the staging directory was left behind. Attempting to manually rename or use `.turbo-clone-temp` is not recommended, as critical setup steps (such as workspace name replacement, dependency pruning, and git initialization) remain incomplete.
+
+---
+
+## Remediation & Recovery Steps
+
+The resolution requires no reinstallation of Node.js or pnpm. Instead, isolate the scaffolding command inside a standard parent directory.
+
+### Step 1: Create a Dedicated Projects Container
+
+Open Command Prompt or PowerShell and create a designated development directory:
+
+```cmd
+mkdir D:\Projects
+```
+
+### Step 2: Navigate into the Container Directory
+
+Change into the new directory. When using Command Prompt, supply the `/d` switch to switch drive and folder simultaneously:
+
+```cmd
+cd /d D:\Projects
+```
+
+Verify your prompt indicates a subfolder rather than the volume root:
+
+```cmd
+D:\Projects>
+```
+
+### Step 3: Run the Scaffolding Command
+
+Execute the Turborepo creation command:
+
+```cmd
+pnpm dlx create-turbo@latest
+```
+
+When prompted:
+
+- **Where would you like to create your Turborepo?** `devmind`
+- **Which package manager do you want to use?** `pnpm`
+
+The scaffolding engine will now generate the workspace at `D:\Projects\devmind`.
+
+<PostmortemImage
+  src="/postmortems/screenshot-2.webp"
+  alt="Successful Turborepo creation executed from D:\Projects"
+  caption="Successful Turborepo creation executed from D:\Projects directory showing completed monorepo packages, git initialization, and clean exit"
+/>
+
+### Step 4: Verify Monorepo Workspace Structure
+
+Navigate into the generated project:
+
+```cmd
+cd devmind
+dir
+```
+
+Verify the expected workspace layout is present:
+
+```text
+devmind/
+├── apps/
+│   ├── docs/
+│   └── web/
+├── packages/
+│   ├── eslint-config/
+│   ├── typescript-config/
+│   └── ui/
+├── package.json
+├── pnpm-lock.yaml
+├── pnpm-workspace.yaml
+└── turbo.json
+```
+
+### Step 5: Install Dependencies and Start Development
+
+If the scaffolder was run with `--skip-install`, or if dependencies need a fresh pass:
+
+```cmd
+pnpm install
+pnpm dev
+```
+
+The Turbo pipeline will launch the default starter applications (typically Next.js apps on `localhost:3000` and `localhost:3001`).
+
+---
+
+## Understanding Directory Organization on Drive D:
+
+A common misconception is that Windows prohibits projects living directly under `D:\devmind`. This is not the case. The failure is determined by the **working directory of the terminal during command invocation**, not the final project location:
+
+```text
+Layout Option A: Direct Drive Project
+D:\
+└── devmind\
+    ├── apps/
+    ├── packages/
+    ├── package.json
+    └── turbo.json
+
+Layout Option B: Nested Projects Directory (Recommended)
+D:\
+└── Projects\
+    └── devmind\
+        ├── apps/
+        ├── packages/
+        ├── package.json
+        └── turbo.json
+```
+
+- If you prefer **Option A**, you can run `pnpm dlx create-turbo@latest` from a directory like `D:\Work\` or `C:\Temp\` and specify `D:\devmind` as the target path.
+- If you prefer **Option B**, running from `D:\Projects\` creates `D:\Projects\devmind` cleanly.
+
+<Callout type="resolution" title="Core Rule">
+  Never run package manager CLI scaffolding commands (<code>pnpm dlx</code>,{" "}
+  <code>pnpm create</code>) while your terminal prompt is sitting directly at{" "}
+  <code>{"D:\\>"}</code> or <code>{"C:\\>"}</code>.
+</Callout>
+
+---
+
+## Alternative Workarounds & Fallback Paths
+
+If running inside a parent folder still encounters friction, investigate these alternative fallback paths:
+
+### Fallback A: Use the npm-Based Launcher (`npx`)
+
+Turborepo officially supports the npm launcher. npm manages temporary execution caches differently than pnpm:
+
+```cmd
+cd /d D:\Projects
+npx create-turbo@latest
+```
+
+This isolates whether the issue is package-manager specific. Once scaffolded, you can still select `pnpm` as the workspace package manager.
+
+### Fallback B: Decouple Scaffolding with `--skip-install`
+
+To verify whether a failure occurs during template extraction or dependency resolution, pass `--skip-install`:
+
+```cmd
+pnpm dlx create-turbo@latest --skip-install
+```
+
+After files are cleanly created:
+
+```cmd
+cd devmind
+pnpm install
+```
+
+### Fallback C: Clean Up Stale `.turbo-clone-temp` Artifacts
+
+If an earlier attempt crashed, an incomplete directory may block re-running with the same project name:
+
+```cmd
+rmdir /s /q D:\devmind
+```
+
+Always purge corrupted directories before re-running to avoid collisions.
+
+### Fallback D: Audit Toolchain Path Resolution
+
+Verify which binaries Command Prompt is invoking:
+
+```cmd
+where node
+where pnpm
+node -v
+pnpm -v
+```
+
+Ensure no conflicting multiple installations (e.g., conflicting fnm, nvm-windows, or AppData shims) exist in your system `PATH`.
+
+---
+
+## Testing & Verification Matrix
+
+| Test Scenario                   | Working Directory     | Command Executed                              | Expected Result                                                                 | Status        |
+| :------------------------------ | :-------------------- | :-------------------------------------------- | :------------------------------------------------------------------------------ | :------------ |
+| Scaffolding at Drive Root       | `D:\`                 | `pnpm dlx create-turbo@latest`                | Abrupt exit, `.turbo-clone-temp` left orphaned, exit code `-1073740791`         | Reproduced ❌ |
+| Scaffolding in Parent Directory | `D:\Projects`         | `pnpm dlx create-turbo@latest`                | Full workspace scaffolded, dependencies installed, exit code `0`                | Verified ✅   |
+| Decoupled Scaffolding           | `D:\Projects`         | `pnpm dlx create-turbo@latest --skip-install` | Workspace extracted without dependencies, subsequent `pnpm install` succeeds    | Verified ✅   |
+| Alternative Launcher            | `D:\Projects`         | `npx create-turbo@latest`                     | Successful generation using npm runner with pnpm selected                       | Verified ✅   |
+| Development Server Pipeline     | `D:\Projects\devmind` | `pnpm dev`                                    | Turborepo pipeline executes tasks in parallel across `apps/web` and `apps/docs` | Verified ✅   |
+
+---
+
+## Preventive Controls & Guardrails for Windows Developers
+
+<Callout type="preventive" title="Developer Environment Guardrails">
+  Adopt these development practices to avoid Windows path resolution traps in
+  CLI tooling.
+</Callout>
+
+1. **Maintain a Standard Workspace Directory:** Always maintain a root projects folder (such as `D:\Projects\` or `D:\Workspace\`) rather than working directly at drive roots.
+2. **Verify Working Directory Before Invoking CLI Runners:** Check your prompt or run `cd` in CMD (`pwd` in PowerShell) prior to executing `dlx` or `create-*` utilities.
+3. **Inspect `%ERRORLEVEL%` on Silent Exits:** Whenever a CLI tool exits without an error message, immediately check `echo %ERRORLEVEL%` to identify native crashes vs. graceful exits.
+4. **Do Not Trust Orphaned Temporary Folders:** If an aborted setup leaves directories like `.turbo-clone-temp` or `.git`, delete them and rerun cleanly rather than trying to salvage the incomplete tree.
+5. **Track Upstream Package Manager Issues:** Monitor [pnpm issues #5276](https://github.com/pnpm/pnpm/issues/5276) and [#7263](https://github.com/pnpm/pnpm/issues/7263) for permanent fixes in pnpm core.
+
+---
+
+## Lessons Learned
+
+1. **Scrutinize the Working Directory First:** Not every failed project scaffolding is caused by an incompatible Node.js version, corrupted npm caches, or broken framework templates. In Windows, the Current Working Directory (CWD) plays a critical role in how tools resolve relative paths and temporary directories.
+2. **Silent Exits Usually Mean Native Crashes:** When a Node.js process exits without writing to `stderr` or printing a stack trace, look at process return codes (`%ERRORLEVEL%`). A code like `-1073740791` signals a native crash (e.g. in libuv or Win32 path bindings) rather than a caught JavaScript exception.
+3. **Resist Premature Tool Reinstallation:** Reinstalling Node.js, wiping pnpm caches, or globally installing packages would not have solved this problem. Targeted diagnosis through filesystem inspection and upstream bug tracking revealed the true cause in minutes.
+4. **Scaffolding vs. Runtime Boundaries:** Creating a project that lives at `D:\devmind` is fundamentally different from executing a package manager command while current working directory is `D:\`. Understanding this distinction prevents unnecessary filesystem restructuring.
+
+---
+
+## References
+
+- [pnpm Issue #5276 — Running pnpm create or pnpm dlx from a drive root](https://github.com/pnpm/pnpm/issues/5276)
+- [pnpm Issue #7263 — Error when using pnpm dlx in the root of a Windows drive](https://github.com/pnpm/pnpm/issues/7263)
+- [Turborepo Documentation — Getting Started & Installation](https://turborepo.dev/docs/getting-started/installation)
+- [Turborepo CLI Reference — create-turbo](https://turborepo.dev/docs/reference/create-turbo)
+- [Turborepo Documentation — Structuring a Repository](https://turborepo.dev/docs/crafting-your-repository/structuring-a-repository)
+
+---
+
+## Final Status
+
+**Status: RESOLVED**  
+The scaffolding failure was isolated to pnpm's handling of Windows drive roots when running `pnpm dlx`. Workarounds via nested parent directories (`D:\Projects\devmind`) and alternative launchers (`npx create-turbo`) have been verified, resulting in fully functional Turborepo workspaces.

@@ -40,8 +40,39 @@ function isRateLimited(identifier: string): boolean {
   return false;
 }
 
+// Deduplication window: suppress duplicate events from the same visitor on the same path within 15 seconds
+const recentEventsCache = new Map<string, number>();
+const DEDUP_WINDOW_MS = 15 * 1000;
+
+function isDuplicateEvent(visitorId: string, type: string, path: string): boolean {
+  const now = Date.now();
+  const key = `${visitorId}:${type}:${path}`;
+  const lastTime = recentEventsCache.get(key);
+
+  // Periodic pruning of stale keys
+  if (recentEventsCache.size > 1000) {
+    for (const [k, timestamp] of recentEventsCache.entries()) {
+      if (now - timestamp > DEDUP_WINDOW_MS) {
+        recentEventsCache.delete(k);
+      }
+    }
+  }
+
+  if (lastTime && now - lastTime < DEDUP_WINDOW_MS) {
+    return true;
+  }
+
+  recentEventsCache.set(key, now);
+  return false;
+}
+
 export async function POST(request: Request) {
   try {
+    // 0. Development environment guard: telemetry is strictly production-only
+    if (process.env.NODE_ENV !== "production") {
+      return NextResponse.json({ ok: true, devMode: true });
+    }
+
     // 1. Payload size check
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (contentLength > 4096) {
@@ -84,8 +115,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
-    // 4. Resolve visitor and record event
+    // 4. Resolve visitor identifier
     const internalVisitorId = await resolveVisitor(rawVisitorId);
+
+    // 5. Deduplication check: suppress identical events within 15 seconds
+    if (isDuplicateEvent(internalVisitorId, type, path)) {
+      return NextResponse.json({ ok: true, deduplicated: true });
+    }
+
+    // 6. Record event
     await recordEvent({
       visitorId: internalVisitorId,
       type,

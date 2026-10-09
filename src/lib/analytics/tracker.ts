@@ -64,8 +64,40 @@ function sanitizeMetadata(
   return clean;
 }
 
+// Client-side deduplication: suppress identical events within 15 seconds
+const recentDispatchedEvents = new Map<string, number>();
+const CLIENT_DEDUP_WINDOW_MS = 15 * 1000;
+
+function isDuplicateClientEvent(
+  type: AnalyticsEventType,
+  path: string,
+  metadata?: Record<string, unknown>,
+): boolean {
+  const now = Date.now();
+  const metaId = metadata?.slug || metadata?.project || metadata?.target || "";
+  const key = `${type}:${path}:${metaId}`;
+  const lastDispatched = recentDispatchedEvents.get(key);
+
+  // Evict stale entries
+  if (recentDispatchedEvents.size > 50) {
+    for (const [k, ts] of recentDispatchedEvents.entries()) {
+      if (now - ts > CLIENT_DEDUP_WINDOW_MS * 2) {
+        recentDispatchedEvents.delete(k);
+      }
+    }
+  }
+
+  if (lastDispatched && now - lastDispatched < CLIENT_DEDUP_WINDOW_MS) {
+    return true;
+  }
+
+  recentDispatchedEvents.set(key, now);
+  return false;
+}
+
 /**
  * Primary telemetry dispatch function. Non-blocking and fails silently.
+ * Strictly inactive in non-production environments.
  */
 export function trackEvent(
   type: AnalyticsEventType,
@@ -73,8 +105,19 @@ export function trackEvent(
 ): void {
   if (typeof window === "undefined") return;
 
+  // 1. Strictly disabled in development / test environments
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
   try {
     const path = window.location.pathname || "/";
+
+    // 2. Client-side deduplication against rapid duplicate dispatches
+    if (isDuplicateClientEvent(type, path, metadata)) {
+      return;
+    }
+
     const visitorId = getOrCreateVisitorId();
     const payload = JSON.stringify({
       type,

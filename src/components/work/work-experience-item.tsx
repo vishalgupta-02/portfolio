@@ -35,40 +35,39 @@ export default function WorkExperienceItem({
 
   return (
     <article className='group relative rounded-2xl border border-border/40 bg-card/30 p-5 sm:p-6 transition-all duration-300 hover:border-border/80 hover:bg-card/60 hover:shadow-md'>
-      {/* Top Header Row */}
-      <div className='flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between'>
-        <div>
-          <div className='flex flex-wrap items-center gap-2'>
-            <h2 className='font-sans text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-foreground sm:text-xl'>
-              {experience.company}
-            </h2>
-            <span
-              className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-mono font-medium border ${
-                isFullTime
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
-                  : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
-              }`}
-            >
-              {experience.type}
-            </span>
-          </div>
-
-          <p className='font-display text-sm font-semibold text-foreground/85 mt-1'>
-            {experience.role}
-          </p>
-        </div>
-
-        {/* Date & Location Badges */}
-        <div className='flex flex-col items-start gap-1.5 sm:items-end font-mono text-xs text-muted-foreground'>
-          <span className='inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-muted/40 px-2.5 py-0.5'>
-            <Calendar className='size-3 text-muted-foreground/80' aria-hidden='true' />
-            {experience.period}
-          </span>
-          <span className='inline-flex items-center gap-1.5 text-[11px] font-display text-muted-foreground'>
-            <MapPin className='size-3 text-muted-foreground/70' aria-hidden='true' />
-            {experience.location} ({experience.locationType})
+      {/* Top Header: Row 1 (Company + Badge | Period) */}
+      <div className='flex items-center justify-between gap-3 sm:gap-4'>
+        <div className='flex items-center gap-2 min-w-0'>
+          <h2 className='font-sans text-base sm:text-lg font-bold tracking-tight text-foreground transition-colors group-hover:text-foreground truncate'>
+            {experience.company}
+          </h2>
+          <span
+            className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[11px] font-mono font-medium border whitespace-nowrap ${
+              isFullTime
+                ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                : "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+            }`}
+          >
+            {experience.type}
           </span>
         </div>
+
+        <span className='inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border/50 bg-muted/40 px-2.5 py-0.5 font-mono text-xs text-muted-foreground whitespace-nowrap'>
+          <Calendar className='size-3 text-muted-foreground/80 shrink-0' aria-hidden='true' />
+          {experience.period}
+        </span>
+      </div>
+
+      {/* Top Header: Row 2 (Role | Location) */}
+      <div className='flex items-center justify-between gap-3 sm:gap-4 mt-1.5'>
+        <p className='font-display text-xs sm:text-sm font-semibold text-foreground/85 truncate'>
+          {experience.role}
+        </p>
+
+        <span className='inline-flex shrink-0 items-center gap-1.5 text-[11px] font-display text-muted-foreground whitespace-nowrap'>
+          <MapPin className='size-3 text-muted-foreground/70 shrink-0' aria-hidden='true' />
+          {experience.location} ({experience.locationType})
+        </span>
       </div>
 
       {/* Role Summary */}

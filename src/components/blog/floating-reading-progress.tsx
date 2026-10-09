@@ -29,12 +29,14 @@ export function FloatingReadingProgress({
   const popoverRef = React.useRef<HTMLDivElement>(null);
 
   const getArticleContainer = React.useCallback(() => {
-    const panel = document.getElementById("article-content-panel");
+    const panel =
+      document.getElementById("article-content-panel") ||
+      document.querySelector("article");
     if (!panel) return null;
     return (
       (panel.querySelector('[data-view="developer"][style*="display: block"]') as HTMLElement) ||
       (panel.querySelector('[data-view="user"]:not([style*="display: none"])') as HTMLElement) ||
-      panel
+      (panel as HTMLElement)
     );
   }, []);
 
@@ -128,7 +130,7 @@ export function FloatingReadingProgress({
       setIsVisible(scrollY > threshold);
 
       const headingElements = Array.from(
-        container.querySelectorAll("h1, h2")
+        container.querySelectorAll("h1, h2, h3")
       ) as HTMLElement[];
 
       if (headingElements.length === 0) {

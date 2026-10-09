@@ -93,7 +93,7 @@ export default async function PostmortemDetailPage({
       <JsonLd data={jsonLd} />
 
       <main className="mx-auto max-w-2xl px-4 pt-6 pb-12">
-        <article className="min-w-0">
+        <article id="article-content-panel" className="min-w-0">
           <PostmortemHeader
             slug={slug}
             metadata={postmortem.metadata}

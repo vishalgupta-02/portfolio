@@ -101,6 +101,16 @@ export async function recordEvent({
   const eventId = crypto.randomUUID();
 
   if (!sql) {
+    const fifteenSecondsAgo = new Date(Date.now() - 15 * 1000);
+    const isDuplicate = memoryStore.events.some(
+      (ev) =>
+        ev.visitorId === visitorId &&
+        ev.type === type &&
+        ev.path === path &&
+        ev.createdAt > fifteenSecondsAgo,
+    );
+    if (isDuplicate) return;
+
     memoryStore.events.push({
       id: eventId,
       visitorId,
@@ -113,6 +123,20 @@ export async function recordEvent({
   }
 
   try {
+    // Database-level deduplication: suppress identical event from same visitor on same path within 15s
+    const duplicates = await sql`
+      SELECT id FROM analytics_events
+      WHERE visitor_id = ${visitorId}
+        AND type = ${type}
+        AND path = ${path}
+        AND created_at > NOW() - INTERVAL '15 seconds'
+      LIMIT 1;
+    `;
+
+    if (duplicates && duplicates.length > 0) {
+      return;
+    }
+
     const jsonMetadata = JSON.stringify(metadata);
     await sql`
       INSERT INTO analytics_events (id, visitor_id, type, path, metadata, created_at)
